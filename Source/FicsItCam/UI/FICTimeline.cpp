@@ -1,31 +1,57 @@
 ﻿#include "FICTimeline.h"
 
-FSlateColorBrush RangeBackground = FSlateColorBrush(FColor::FromHex("131313"));
-
-void SFICRangeSelector::Construct(const FArguments& InArgs) {
-	RangeStart = InArgs._RangeStart;
-	RangeEnd = InArgs._RangeEnd;
-	SelectStart = InArgs._SelectStart;
-	SelectEnd = InArgs._SelectEnd;
-	SelectStartChanged = InArgs._SelectStartChanged;
-	SelectEndChanged = InArgs._SelectEndChanged;
-}
-
-int32 SFICRangeSelector::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
-	// Draw Background
-	FSlateDrawElement::MakeBox(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), &RangeBackground);
-
-	return LayerId;
-}
-
-FVector2D SFICRangeSelector::ComputeDesiredSize(float) const {
-	return FVector2D(100, 100);
-}
+#include "FICEditorContext.h"
+#include "FICRangeSelector.h"
+#include "FICTimelineScrubber.h"
 
 void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context;
 
+	ActiveRangeStart = Context->Animation->AnimationStart;
+	ActiveRangeEnd = Context->Animation->AnimationEnd;
+	
 	AddSlot()[
-		SNew(SFICRangeSelector)
+		SAssignNew(VisibleRange, SFICRangeSelector)
+		.HighlightEnabled(true)
+		.Highlight_Lambda([this]() {
+			return Context->CurrentFrame;
+		})
+		.RangeStart_Lambda([this]() {
+			return Context->Animation->AnimationStart;
+		})
+		.RangeEnd_Lambda([this]() {
+			return Context->Animation->AnimationEnd;
+		})
+		.SelectStart_Lambda([this]() {
+			return ActiveRangeStart;
+		})
+		.SelectEnd_Lambda([this]() {
+			return ActiveRangeEnd;
+		})
+		.SelectStartChanged(this, &SFICTimelinePanel::ActiveRangeStartChanged)
+		.SelectEndChanged(this, &SFICTimelinePanel::ActiveRangeEndChanged)
 	];
+	AddSlot()[
+		SAssignNew(Scrubber, SFICTimelineScrubber)
+		.Frame_Lambda([this]() {
+			return Context->CurrentFrame;
+		})
+		.FrameChanged_Lambda([this](int64 Prev, int64 Cur) {
+			Context->CurrentFrame = Cur;
+		})
+		.RangeStart_Lambda([this]() {
+            return ActiveRangeStart;
+        })
+        .RangeEnd_Lambda([this]() {
+            return ActiveRangeEnd;
+        })
+	];
+}
+
+void SFICTimelinePanel::ActiveRangeStartChanged(int64 Prev, int64 Cur) {
+	ActiveRangeStart = Cur;
+}
+
+void SFICTimelinePanel::ActiveRangeEndChanged(int64 Prev, int64 Cur) {
+	ActiveRangeEnd = Cur;
 }

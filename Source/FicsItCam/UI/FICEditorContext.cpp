@@ -7,6 +7,7 @@ void UFICEditorContext::ShowEditor() {
 	GameViewport = FSlateApplication::Get().GetGameViewport();
 	GameViewportContainer = StaticCastSharedPtr<SHorizontalBox>(GameViewport->GetParentWidget());
 	TSharedPtr<SOverlay> GameOverlay = StaticCastSharedPtr<SOverlay>(GameViewportContainer->GetParentWidget());
+	GameOverlay->RemoveSlot(GameViewportContainer.ToSharedRef());
 
 	EditorWidget = SNew(SFICEditor)
         .Context(this)

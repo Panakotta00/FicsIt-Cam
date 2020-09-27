@@ -10,10 +10,10 @@ class UFICEditorContext : public UObject {
 
 public:
 	UPROPERTY()
-	UFICAnimation* Animation;
+	UFICAnimation* Animation = nullptr;
 
 	UPROPERTY()
-	int64 CurrentTime = 0;
+	int64 CurrentFrame = 0;
 
 	TSharedPtr<SFICEditor> EditorWidget;
 	TSharedPtr<SViewport> GameViewport;

@@ -116,6 +116,13 @@ public:
 	UPROPERTY()
 	FFICFloatAttribute FOV;
 
+	UPROPERTY()
+	int64 AnimationStart = 0;
+
+	UPROPERTY()
+	int64 AnimationEnd = 300;
+
+
 	UFICAnimation();
 	
 	void RecalculateAllKeyframes();
