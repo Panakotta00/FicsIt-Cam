@@ -20,17 +20,17 @@ private:
 	AFICCamera* Camera = nullptr;
 
 	UPROPERTY()
-	UFICAnimation* ActiveAnimation = nullptr;
+	AFICAnimation* ActiveAnimation = nullptr;
 
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
 	
 public:
-	UPROPERTY(BlueprintReadWrite, Category="FicsIt-Cam")
-	TMap<FString, UFICAnimation*> StoredAnimations;
+	UPROPERTY(BlueprintReadWrite, SaveGame, Category="FicsIt-Cam")
+	TMap<FString, AFICAnimation*> StoredAnimations;
 
 	UPROPERTY()
-	TSet<UFICAnimation*> VisibleAnimations;
+	TSet<AFICAnimation*> VisibleAnimations;
 
 	AFICSubsystem();
 	
@@ -48,16 +48,16 @@ public:
 	static AFICSubsystem* GetFICSubsystem(UObject* WorldContext);
 
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
-	void PlayAnimation(UFICAnimation* Path);
+	void PlayAnimation(AFICAnimation* Path);
 	
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
 	void StopAnimation();
 	
-	void AddVisibleAnimation(UFICAnimation* Path);
+	void AddVisibleAnimation(AFICAnimation* Path);
 
 	UFUNCTION()
 	void CreateKeypointPressed();
 
-	void SetActiveAnimation(UFICAnimation* ActiveAnimation);
-	UFICAnimation* GetActiveAnimation() const;
+	void SetActiveAnimation(AFICAnimation* ActiveAnimation);
+	UFICEditorContext* GetEditor() const;
 };

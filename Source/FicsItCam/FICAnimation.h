@@ -1,6 +1,11 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+
+
+#include "FGSaveInterface.h"
+#include "GameFramework/Actor.h"
+
 #include "FICAnimation.generated.h"
 
 UENUM()
@@ -26,21 +31,40 @@ public:
 	TEnumAsByte<EFICKeyframeType> KeyframeType = FIC_KF_EASE;
 };
 
+struct FFICKeyframeRef {
+private:
+	FFICKeyframe* Keyframe = nullptr;
+	bool bShouldDestroy = false;
+
+public:
+	FFICKeyframeRef(FFICKeyframe* Keyframe, bool bShouldDestroy = false) : Keyframe(Keyframe), bShouldDestroy(bShouldDestroy) {}
+	~FFICKeyframeRef();
+
+	const FFICKeyframe* operator->() const { return Keyframe; }
+	FFICKeyframe* operator->() { return Keyframe; }
+	const FFICKeyframe& operator*() const { return *Keyframe; }
+	FFICKeyframe& operator*() { return *Keyframe; }
+	operator bool() const { return Keyframe; }
+
+	const FFICKeyframe* Get() const { return Keyframe;}
+	FFICKeyframe* Get() { return Keyframe;}
+};
+
 USTRUCT(BlueprintType)
 struct FFICAttribute {
 	GENERATED_BODY()
 
 	virtual ~FFICAttribute() = default;
-	virtual TMap<int64, FFICKeyframe*> GetKeyframes() { return TMap<int64, FFICKeyframe*>(); }
+	virtual TMap<int64, TSharedPtr<FFICKeyframeRef>> GetKeyframes() { return TMap<int64, TSharedPtr<FFICKeyframeRef>>(); }
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const { return FIC_KF_NONE; }
-	virtual void AddKeyframe(int64 Time) {}
+	virtual TSharedPtr<FFICKeyframeRef> AddKeyframe(int64 Time) { return nullptr; }
 	virtual void RemoveKeyframe(int64 Time) {}
 	virtual void MoveKeyframe(int64 From, int64 To) {}
 	virtual void RecalculateKeyframe(int64 Time) {}
 
 	void RecalculateAllKeyframes();
-	bool GetNextKeyframe(int64 Time, int64& outTime, FFICKeyframe*& outKeyframe);
-	bool GetPrevKeyframe(int64 Time, int64& outTime, FFICKeyframe*& outKeyframe);
+	bool GetNextKeyframe(int64 Time, int64& outTime, TSharedPtr<FFICKeyframeRef>& outKeyframe);
+	bool GetPrevKeyframe(int64 Time, int64& outTime, TSharedPtr<FFICKeyframeRef>& outKeyframe);
 };
 
 float Interpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVector2D P3, float t);
@@ -48,6 +72,8 @@ float Interpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVector2D P3, float 
 USTRUCT(BlueprintType)
 struct FFICFloatKeyframe : public FFICKeyframe {
 	GENERATED_BODY()
+
+	typedef float ValueType;
 
 	UPROPERTY(SaveGame)
 	float Value = 0.0f;
@@ -61,7 +87,7 @@ struct FFICFloatKeyframe : public FFICKeyframe {
 	UPROPERTY(SaveGame)
 	float OutTanValue = 0.0f;
 
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	float OutTanTime = 0.0f;
 
 	FFICFloatKeyframe() = default;
@@ -71,6 +97,9 @@ struct FFICFloatKeyframe : public FFICKeyframe {
 USTRUCT(BlueprintType)
 struct FFICFloatAttribute : public FFICAttribute {
 	GENERATED_BODY()
+public:
+	typedef FFICFloatKeyframe KeyframeType;
+	typedef float ValueType;
 	
 private:
 	UPROPERTY(SaveGame)
@@ -81,21 +110,38 @@ public:
 	float FallBackValue = 0.0f;
 	
 	// Begin FFICAttribute
-	virtual TMap<int64, FFICKeyframe*> GetKeyframes() override;
+	virtual TMap<int64, TSharedPtr<FFICKeyframeRef>> GetKeyframes() override;
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const override;
-	virtual void AddKeyframe(int64 Time) override;
+	virtual TSharedPtr<FFICKeyframeRef> AddKeyframe(int64 Time) override;
 	virtual void RemoveKeyframe(int64 Time) override;
 	virtual void MoveKeyframe(int64 From, int64 To) override;
 	virtual void RecalculateKeyframe(int64 Time) override;
 	// End FFICAttribute
 	
-	void SetKeyframe(int64 Time, FFICFloatKeyframe Keyframe);
+	FFICFloatKeyframe* SetKeyframe(int64 Time, FFICFloatKeyframe Keyframe);
 	float GetValue(float Time);
-	
+	void SetDefaultValue(float Value) { FallBackValue = Value; }
+};
+
+USTRUCT(BlueprintType)
+struct FFICGroupAttribute : public FFICAttribute {
+	GENERATED_BODY()
+
+public:
+	TMap<FString, FFICAttribute*> Children;
+
+	// Begin FFICAttribute
+	virtual TMap<int64, TSharedPtr<FFICKeyframeRef>> GetKeyframes() override;
+	virtual EFICKeyframeType GetAllowedKeyframeTypes() const override;
+	virtual TSharedPtr<FFICKeyframeRef> AddKeyframe(int64 Time) override;
+	virtual void RemoveKeyframe(int64 Time) override;
+	virtual void MoveKeyframe(int64 From, int64 To) override;
+	virtual void RecalculateKeyframe(int64 Time) override;
+	// End FFICAttribute
 };
 
 UCLASS(BlueprintType)
-class UFICAnimation : public UObject {
+class AFICAnimation : public AActor, public IFGSaveInterface {
 	GENERATED_BODY()
 
 public:
@@ -113,7 +159,7 @@ public:
 	UPROPERTY(SaveGame)
 	FFICFloatAttribute RotRoll;
 
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	FFICFloatAttribute FOV;
 
 	UPROPERTY()
@@ -122,8 +168,14 @@ public:
 	UPROPERTY()
 	int64 AnimationEnd = 300;
 
+	UPROPERTY()
+	int64 FPS = 30;
 
-	UFICAnimation();
+	AFICAnimation();
+
+	// Begin IFGSaveInterface
+	virtual bool ShouldSave_Implementation() const override { return true; }
+	// End IFGSaveInterface
 	
 	void RecalculateAllKeyframes();
 

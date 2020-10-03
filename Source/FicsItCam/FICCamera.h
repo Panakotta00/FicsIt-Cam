@@ -13,7 +13,7 @@ class AFICCamera : public AActor {
 
 private:
 	UPROPERTY()
-	UFICAnimation* Animation = nullptr;
+	AFICAnimation* Animation = nullptr;
 
 	float Progress = 0.0f;
 
@@ -44,7 +44,7 @@ public:
 	// End AActor
 
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
-	void StartAnimation(UFICAnimation* inAnimation);
+	void StartAnimation(AFICAnimation* inAnimation);
 
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
 	void StopAnimation();

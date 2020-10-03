@@ -41,7 +41,7 @@ void AFICCamera::Tick(float DeltaSeconds) {
 	}
 }
 
-void AFICCamera::StartAnimation(UFICAnimation* inAnimation) {
+void AFICCamera::StartAnimation(AFICAnimation* inAnimation) {
 	StopAnimation();
 	Animation = inAnimation;
 	if (!Animation) return;

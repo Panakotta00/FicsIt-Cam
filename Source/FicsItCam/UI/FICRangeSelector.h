@@ -33,6 +33,7 @@ class SFICRangeSelector : public SLeafWidget {
 		SLATE_ATTRIBUTE(bool, HighlightEnabled)
 		SLATE_EVENT(FFICRangeChanged, SelectStartChanged)
 		SLATE_EVENT(FFICRangeChanged, SelectEndChanged)
+		SLATE_EVENT(FFICRangeChanged, HighlightChanged)
 		SLATE_ATTRIBUTE(const FSlateBrush*, BackgroundBrush)
 		SLATE_ATTRIBUTE(FLinearColor, RangeIncrementColor)
 		SLATE_ATTRIBUTE(const FSlateBrush*, SelectBrush)
@@ -48,10 +49,11 @@ private:
 	TAttribute<int64> RangeEnd;
 	TAttribute<int64> SelectStartAttr;
 	TAttribute<int64> SelectEndAttr;
-	TAttribute<int64> Highlight;
+	TAttribute<int64> HighlightAttr;
 	TAttribute<bool> HighlightEnabled;
 	FFICRangeChanged SelectStartChanged;
 	FFICRangeChanged SelectEndChanged;
+	FFICRangeChanged HighlightChanged;
 	TAttribute<const FSlateBrush*> BackgroundBrush;
 	TAttribute<FLinearColor> RangeIncrementColor;
 	TAttribute<const FSlateBrush*> SelectBrush;
@@ -62,13 +64,17 @@ private:
 	int64 SelectEnd = 0;
 	int64 PrevSelectStart = 0;
 	int64 PrevSelectEnd = 0;
+	int64 Highlight = 0;
 
 	bool bStartDrag = false;
 	bool bEndDrag = false;
 	bool bSelectDrag = false;
+	bool bHighlightDrag = false;
 	int64 SelectDragStart  = 0;
 	int64 SelectDragEnd = 0;
-	int64 SelectDragStartPos = 0;
+	int64 DragStartPos = 0;
+	int64 LastDragPos = 0;
+	int64 DragDelta = 0;
 
 public:
 	// Begin SWidget
@@ -87,9 +93,12 @@ public:
 
 	float RangePosToLocalPos(const FGeometry& MyGeometry, int64 RangePos) const;
 	int64 LocalPosToRangePos(const FGeometry& MyGeometry, float LocalPos) const;
-
+	bool IsLocalPosNearRangePos(const FGeometry& MyGeometry, float LocalPos, int64 RangePos) const;
+	
 	void SetSelectStart(int64 Start);
 	void SetSelectEnd(int64 End);
+	void SetHighlight(int64 Highlight);
 	int64 GetSelectStart() const;
 	int64 GetSelectEnd() const;
+	int64 GetHighlight() const;
 };

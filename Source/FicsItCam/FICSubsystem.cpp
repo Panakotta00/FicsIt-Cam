@@ -43,7 +43,7 @@ AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
 	return GetSubsystemHolder<UFICSubsystemHolder>(WorldContext)->Subsystem;
 }
 
-void AFICSubsystem::PlayAnimation(UFICAnimation* Path) {
+void AFICSubsystem::PlayAnimation(AFICAnimation* Path) {
 	if (!Camera || !Path) return;
 	Camera->StartAnimation(Path);
 }
@@ -53,7 +53,7 @@ void AFICSubsystem::StopAnimation() {
 	Camera->StopAnimation();
 }
 
-void AFICSubsystem::AddVisibleAnimation(UFICAnimation* Path) {
+void AFICSubsystem::AddVisibleAnimation(AFICAnimation* Path) {
 	if (Path) VisibleAnimations.Add(Path);
 }
 
@@ -61,7 +61,7 @@ void AFICSubsystem::CreateKeypointPressed() {
 	
 }
 
-void AFICSubsystem::SetActiveAnimation(UFICAnimation* inActiveAnimation) {
+void AFICSubsystem::SetActiveAnimation(AFICAnimation* inActiveAnimation) {
 	if (EditorContext) {
 		EditorContext->HideEditor();
 		EditorContext = nullptr;
@@ -69,11 +69,11 @@ void AFICSubsystem::SetActiveAnimation(UFICAnimation* inActiveAnimation) {
 	ActiveAnimation = inActiveAnimation;
 	if (ActiveAnimation) {
 		EditorContext = NewObject<UFICEditorContext>(this);
-		EditorContext->Animation = ActiveAnimation;
+		EditorContext->SetAnimation(ActiveAnimation);
 		EditorContext->ShowEditor();
 	}
 }
 
-UFICAnimation* AFICSubsystem::GetActiveAnimation() const {
-	return ActiveAnimation;
+UFICEditorContext* AFICSubsystem::GetEditor() const {
+	return EditorContext;
 }

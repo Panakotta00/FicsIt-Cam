@@ -4,9 +4,13 @@
 
 class UFICEditorContext;
 
-class SFICDetails : public SGridPanel {
-	SLATE_BEGIN_ARGS(SFICDetails) {}
+class SFICDetails : public SCompoundWidget {
+	static FSlateColorBrush DefaultBackgroundBrush;
+	
+	SLATE_BEGIN_ARGS(SFICDetails) :
+		_Background(&DefaultBackgroundBrush) {}
 		SLATE_ARGUMENT(UFICEditorContext*, Context)
+		SLATE_ATTRIBUTE(const FSlateBrush*, Background)
 	SLATE_END_ARGS()
 
 public:
@@ -14,4 +18,5 @@ public:
 
 private:
 	UFICEditorContext* Context = nullptr;
+	TAttribute<const FSlateBrush*> BackgroundBrush;
 };

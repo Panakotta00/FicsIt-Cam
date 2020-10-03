@@ -1,6 +1,5 @@
 ﻿#include "FICTimelineScrubber.h"
 
-
 FSlateColorBrush SFICTimelineScrubber::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 FLinearColor SFICTimelineScrubber::DefaultIncrementColor = FLinearColor(FColor::FromHex("404040"));
 FLinearColor SFICTimelineScrubber::DefaultFrameColor = FLinearColor(FColor::FromHex("FF8500"));
@@ -8,14 +7,13 @@ FLinearColor SFICTimelineScrubber::DefaultFrameColor = FLinearColor(FColor::From
 void SFICTimelineScrubber::Construct(const FArguments& InArgs) {
 	RangeStart = InArgs._RangeStart;
 	RangeEnd = InArgs._RangeEnd;
+	FrameAttr = InArgs._Frame;
 	BackgroundBrush = InArgs._BackgroundBrush;
 	IncrementColor = InArgs._IncrementColor;
 	FrameColor = InArgs._FrameColor;
 	FrameChanged = InArgs._FrameChanged;
 
 	Frame = FrameAttr.Get();
-
-	SetCursor(EMouseCursor::ResizeLeftRight);
 }
 
 void SFICTimelineScrubber::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
@@ -29,9 +27,11 @@ int32 SFICTimelineScrubber::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	// Draw Range Increments
 	int64 Start = RangeStart.Get();
 	int64 End = RangeEnd.Get();
-	Start += 10 - (Start % 10);
+	int64 Increment = 10;
+	while ((End - Start) / Increment > 30) Increment *= 10;
+	Start += Increment - (Start % Increment);
 	FLinearColor IncColor = IncrementColor.Get();
-	for (int64 i = Start; i <= End; i += 10) {
+	for (int64 i = Start; i <= End; i += Increment) {
 		float IX = RangePosToLocalPos(AllottedGeometry, i);
 		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(IX, 0), FVector2D(IX, AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None,  IncColor, true, 5);
 	}
@@ -45,12 +45,13 @@ int32 SFICTimelineScrubber::OnPaint(const FPaintArgs& Args, const FGeometry& All
 }
 
 FVector2D SFICTimelineScrubber::ComputeDesiredSize(float) const {
-	return FVector2D(200, 200);
+	return FVector2D(30, 30);
 }
 
 FReply SFICTimelineScrubber::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	SetFrame(LocalPosToRangePos(MyGeometry, MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).X));
 	bDrag = true;
+	SetCursor(EMouseCursor::ResizeLeftRight);
 	return FReply::Handled().CaptureMouse(SharedThis(this));
 }
 
@@ -63,15 +64,28 @@ FReply SFICTimelineScrubber::OnMouseButtonUp(const FGeometry& MyGeometry, const 
 }
 
 FReply SFICTimelineScrubber::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	int64 RangePos = LocalPosToRangePos(MyGeometry, MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).X);
 	if (bDrag) {
-		SetFrame(LocalPosToRangePos(MyGeometry, MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).X));
+		SetFrame(RangePos);
 		return FReply::Handled();
+	} else if (RangePos == Frame) {
+		SetCursor(EMouseCursor::ResizeLeftRight);
+	} else {
+		SetCursor(EMouseCursor::Default);
 	}
 	return FReply::Unhandled();
 }
 
 FReply SFICTimelineScrubber::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	SetFrame(GetFrame() + MouseEvent.GetWheelDelta());
+	float Delta = MouseEvent.GetWheelDelta();
+	if (!MouseEvent.GetModifierKeys().IsControlDown()) {
+		int64 Range = RangeEnd.Get() - RangeStart.Get();
+		while (Range > 300) {
+			Range /= 10;
+			Delta *= 10;
+		}
+	}
+	SetFrame(GetFrame() + Delta);
 	return FReply::Handled();
 }
 
@@ -88,11 +102,11 @@ void SFICTimelineScrubber::OnToolTipClosing() {
 }
 
 float SFICTimelineScrubber::RangePosToLocalPos(const FGeometry& MyGeometry, int64 RangePos) const {
-	return MyGeometry.GetLocalPositionAtCoordinates(FVector2D(FMath::GetRangePct(RangeStart.Get(), RangeEnd.Get(), RangePos), 0)).X;
+	return (MyGeometry.GetLocalSize() * FVector2D(FMath::GetRangePct(RangeStart.Get(), RangeEnd.Get(), RangePos), 0)).X;
 }
 
 int64 SFICTimelineScrubber::LocalPosToRangePos(const FGeometry& MyGeometry, float LocalPos) const {
-	return FMath::RoundToInt(FMath::Lerp((float)RangeStart.Get(), (float)RangeEnd.Get(), FMath::GetRangePct(0.0f, MyGeometry.GetLocalPositionAtCoordinates(FVector2D(1,1)).X, LocalPos)));
+	return FMath::RoundToFloat(FMath::Lerp((float)RangeStart.Get(), (float)RangeEnd.Get(), FMath::GetRangePct(0.0f, MyGeometry.GetLocalSize().X, LocalPos)));
 }
 
 void SFICTimelineScrubber::SetFrame(int64 inFrame) {

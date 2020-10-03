@@ -1,5 +1,10 @@
 ﻿#include "FICAnimation.h"
 
+FFICKeyframeRef::~FFICKeyframeRef() {
+	if (bShouldDestroy && Keyframe) delete Keyframe;
+	Keyframe = nullptr;
+}
+
 void FFICAttribute::RecalculateAllKeyframes() {
 	TArray<int64> Keys;
 	GetKeyframes().GetKeys(Keys);
@@ -8,28 +13,55 @@ void FFICAttribute::RecalculateAllKeyframes() {
 	}
 }
 
-bool FFICAttribute::GetPrevKeyframe(int64 Time, int64& outTime, FFICKeyframe*& outKeyframe) {
-	TMap<int64, FFICKeyframe*> Keyframes = GetKeyframes();
+#pragma optimize("", off)
+bool FFICAttribute::GetPrevKeyframe(int64 Time, int64& outTime, TSharedPtr<FFICKeyframeRef>& outKeyframe) {
+	TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = GetKeyframes();
 	TArray<int64> Keys;
 	Keyframes.GetKeys(Keys);
+	Keys.Sort();
+	if (Keys.Num() < 1) return false;
 	int32 Index = Keys.Find(Time);
-	if (Index < 0) return false;
-	if (Index > 0 && Keys.Num() > 1) {
-		outTime = Keys[Index-1];
+	if (Index < 0) {
+		for (int32 i = 0; i < Keys.Num(); ++i) {
+			if (Keys[i] > Time) {
+				Index = i-1;
+				break;
+			}
+		}
+		if (Index < 0) return false;
+	} else {
+		Index -= 1;
+	}
+	if (Index > 0 && Index < Keys.Num()) {
+		outTime = Keys[Index];
 		outKeyframe = Keyframes[outTime];
 		return true;
 	}
 	return false;
 }
+#pragma optimize("", on)
 
-bool FFICAttribute::GetNextKeyframe(int64 Time, int64& outTime, FFICKeyframe*& outKeyframe) {
-	TMap<int64, FFICKeyframe*> Keyframes = GetKeyframes();
+bool FFICAttribute::GetNextKeyframe(int64 Time, int64& outTime, TSharedPtr<FFICKeyframeRef>& outKeyframe) {
+	TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = GetKeyframes();
 	TArray<int64> Keys;
 	Keyframes.GetKeys(Keys);
+	Keys.Sort();
+	if (Keys.Num() < 1) return false;
 	int32 Index = Keys.Find(Time);
-	if (Index < 0) return false;
-	if (Index < Keys.Num()-1) {
-		outTime = Keys[Index+1];
+	if (Index < 0) {
+		int64 LastDiff = 0;
+		for (int32 i = Keys.Num()-1; i >= 0; --i) {
+			if (Keys[i] < Time) {
+				Index = i+1;
+				break;
+			}
+		}
+		if (Index < 0) return false;
+	} else {
+		Index = Index+1;
+	}
+	if (Index > 0 && Index < Keys.Num()) {
+		outTime = Keys[Index];
 		outKeyframe = Keyframes[outTime];
 		return true;
 	}
@@ -55,11 +87,11 @@ float Interpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVector2D P3, float 
 	return CurrentV;
 }
 
-TMap<int64, FFICKeyframe*> FFICFloatAttribute::GetKeyframes() {
-	TMap<int64, FFICKeyframe*> OutKeyframes;
+TMap<int64, TSharedPtr<FFICKeyframeRef>> FFICFloatAttribute::GetKeyframes() {
+	TMap<int64, TSharedPtr<FFICKeyframeRef>> OutKeyframes;
 	TArray<int64> Keys;
 	Keyframes.GetKeys(Keys);
-	for (int64 Key : Keys) OutKeyframes.Add(Key, &Keyframes[Key]);
+	for (int64 Key : Keys) OutKeyframes.Add(Key, MakeShared<FFICKeyframeRef>(Keyframes.Find(Key)));
 	return OutKeyframes;
 }
 
@@ -67,12 +99,12 @@ EFICKeyframeType FFICFloatAttribute::GetAllowedKeyframeTypes() const {
 	return FIC_KF_ALL;
 }
 
-void FFICFloatAttribute::AddKeyframe(int64 Time) {
-	if (Keyframes.Contains(Time)) return;
+TSharedPtr<FFICKeyframeRef> FFICFloatAttribute::AddKeyframe(int64 Time) {
+	if (Keyframes.Contains(Time)) return MakeShared<FFICKeyframeRef>(&Keyframes[Time]);
 	FFICFloatKeyframe Keyframe;
-	Keyframe.KeyframeType = FIC_KF_EASEINOUT;
+	Keyframe.KeyframeType = FIC_KF_EASE;
 	Keyframe.Value = GetValue(Time);
-	SetKeyframe(Time, Keyframe);
+	return MakeShared<FFICKeyframeRef>(SetKeyframe(Time, Keyframe));
 }
 
 void FFICFloatAttribute::RemoveKeyframe(int64 Time) {
@@ -155,8 +187,10 @@ void FFICFloatAttribute::RecalculateKeyframe(int64 Time) {
 	}
 }
 
-void FFICFloatAttribute::SetKeyframe(int64 Time, FFICFloatKeyframe Keyframe) {
-	Keyframes.FindOrAdd(Time) = Keyframe;
+FFICFloatKeyframe* FFICFloatAttribute::SetKeyframe(int64 Time, FFICFloatKeyframe Keyframe) {
+	FFICFloatKeyframe* KF = &Keyframes.FindOrAdd(Time);
+	*KF = Keyframe;
+	return KF;
 }
 
 float FFICFloatAttribute::GetValue(float Time) {
@@ -201,11 +235,54 @@ float FFICFloatAttribute::GetValue(float Time) {
 	return Interpolated;
 }
 
-UFICAnimation::UFICAnimation() {
+TMap<int64, TSharedPtr<FFICKeyframeRef>> FFICGroupAttribute::GetKeyframes() {
+	TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes;
+	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
+		for (const TPair<int64, TSharedPtr<FFICKeyframeRef>>& Keyframe : Attr.Value->GetKeyframes()) {
+			FFICKeyframe* KF = new FFICKeyframe();
+			KF->KeyframeType = FIC_KF_CUSTOM;
+			Keyframes.Add(Keyframe.Key, MakeShared<FFICKeyframeRef>(KF, true));
+		}
+	}
+	return Keyframes;
+}
+
+EFICKeyframeType FFICGroupAttribute::GetAllowedKeyframeTypes() const {
+	return FIC_KF_NONE;
+}
+
+TSharedPtr<FFICKeyframeRef> FFICGroupAttribute::AddKeyframe(int64 Time) {
+	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
+		Attr.Value->AddKeyframe(Time);
+	}
+	FFICKeyframe* KF = new FFICKeyframe();
+	KF->KeyframeType = FIC_KF_CUSTOM;
+	return MakeShared<FFICKeyframeRef>(KF, true);
+}
+
+void FFICGroupAttribute::RemoveKeyframe(int64 Time) {
+	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
+		Attr.Value->RemoveKeyframe(Time);
+	}
+}
+
+void FFICGroupAttribute::MoveKeyframe(int64 From, int64 To) {
+	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
+		Attr.Value->MoveKeyframe(From, To);
+	}
+}
+
+void FFICGroupAttribute::RecalculateKeyframe(int64 Time) {
+	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
+		Attr.Value->RecalculateKeyframe(Time);
+	}
+}
+
+AFICAnimation::AFICAnimation() {
 	FOV.FallBackValue = 90.0f;
 }
 
-void UFICAnimation::RecalculateAllKeyframes() {
+void AFICAnimation::RecalculateAllKeyframes() {
 	PosX.RecalculateAllKeyframes();
 	PosY.RecalculateAllKeyframes();
 	PosZ.RecalculateAllKeyframes();
@@ -215,7 +292,7 @@ void UFICAnimation::RecalculateAllKeyframes() {
 	FOV.RecalculateAllKeyframes();
 }
 
-int64 UFICAnimation::GetEndOfAnimation() {
+int64 AFICAnimation::GetEndOfAnimation() {
 	TArray<int64> Keyframes;
 	PosX.GetKeyframes().GetKeys(Keyframes);
 	PosY.GetKeyframes().GetKeys(Keyframes);
