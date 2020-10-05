@@ -17,7 +17,7 @@ AFICSubsystem::AFICSubsystem() {
 void AFICSubsystem::BeginPlay() {
 	Super::BeginPlay();
 
-	Camera = GetWorld()->SpawnActor<AFICCamera>();
+	Camera = GetWorld()->SpawnActor<AFICCameraCharacter>();
 
 	AChatCommandSubsystem::Get(this)->RegisterCommand(AFICCommand::StaticClass());
 }

@@ -95,48 +95,6 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 		}
 		return FReply::Handled();
-	} else if (InKeyEvent.GetModifierKeys().IsControlDown()) {
-		if (InKeyEvent.GetKey() == EKeys::I) {
-			int64 Time = Context->GetCurrentFrame();
-			if (Context->PosX.GetKeyframe(Time) && Context->PosY.GetKeyframe(Time) && Context->PosZ.GetKeyframe(Time) && Context->RotPitch.GetKeyframe(Time) && Context->RotYaw.GetKeyframe(Time) && Context->RotRoll.GetKeyframe(Time) && Context->FOV.GetKeyframe(Time)) {
-				Context->PosX.RemoveKeyframe(Time);
-				Context->PosY.RemoveKeyframe(Time);
-				Context->PosZ.RemoveKeyframe(Time);
-				Context->RotPitch.RemoveKeyframe(Time);
-				Context->RotYaw.RemoveKeyframe(Time);
-				Context->RotRoll.RemoveKeyframe(Time);
-				Context->FOV.RemoveKeyframe(Time);
-			} else {
-				Context->PosX.SetKeyframe(Context->GetCurrentFrame());
-				Context->PosY.SetKeyframe(Context->GetCurrentFrame());
-				Context->PosZ.SetKeyframe(Context->GetCurrentFrame());
-				Context->RotPitch.SetKeyframe(Context->GetCurrentFrame());
-				Context->RotYaw.SetKeyframe(Context->GetCurrentFrame());
-				Context->RotRoll.SetKeyframe(Context->GetCurrentFrame());
-				Context->FOV.SetKeyframe(Context->GetCurrentFrame());
-			}
-			return FReply::Handled();
-		} else if (InKeyEvent.GetKey() == EKeys::M) {
-			int64 Time;
-			TSharedPtr<FFICKeyframeRef> KF;
-			if (Context->All.GetNextKeyframe(Context->GetCurrentFrame(), Time, KF)) Context->SetCurrentFrame(Time);
-			return FReply::Handled();
-		} else if (InKeyEvent.GetKey() == EKeys::N) {
-			int64 Time;
-			TSharedPtr<FFICKeyframeRef> KF;
-			if (Context->All.GetPrevKeyframe(Context->GetCurrentFrame(), Time, KF)) Context->SetCurrentFrame(Time);
-			return FReply::Handled();
-		} else if (InKeyEvent.GetKey() == EKeys::Left) {
-			Context->SetCurrentFrame(Context->GetCurrentFrame()-1);
-			bIsLeft = true;
-			KeyPressTime = 0;
-			return FReply::Handled();
-		} else if (InKeyEvent.GetKey() == EKeys::Right) {
-			Context->SetCurrentFrame(Context->GetCurrentFrame()+1);
-			bIsRight = true;
-			KeyPressTime = 0;
-			return FReply::Handled();
-		}
 	}
 	return SPanel::OnKeyDown(MyGeometry, InKeyEvent);
 }

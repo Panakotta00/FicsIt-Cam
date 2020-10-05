@@ -1,31 +1,32 @@
 ﻿#pragma once
 
+#include "FICAnimation.h"
+#include "GameFramework/Actor.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 
+
 #include "FICCameraCharacter.generated.h"
 
-class UFICEditorContext;
 UCLASS()
 class AFICCameraCharacter : public ACharacter {
 	GENERATED_BODY()
 
 private:
 	UPROPERTY()
-	UCameraComponent* Camera;
+	AFICAnimation* Animation = nullptr;
 
-	bool bIsSprinting = false;
-	bool bIsJumping = false;
-	float FlyMultiplier = 10000;
+	float Progress = 0.0f;
 
-public:
-	float MaxFlySpeed = 1000;
-	
 	UPROPERTY()
-	UFICEditorContext* EditorContext = nullptr;
+	ACharacter* OriginalCharacter = nullptr;
+	
+public:
+	UPROPERTY()
+	UCameraComponent* Camera = nullptr;
 
 	AFICCameraCharacter();
-	
+
 	// Begin AActor
 	virtual void Tick( float DeltaSeconds ) override;
 	virtual void BeginPlay() override;
@@ -36,34 +37,10 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void UnPossessed() override;
 	// End ACharacter
-	
-	UFUNCTION()
-    void MoveForward(float Value);
-	UFUNCTION()
-    void MoveRight(float Value);
-	UFUNCTION()
-	void RotatePitch(float Value);
-	UFUNCTION()
-	void RotateYaw(float Value);
-	UFUNCTION()
-	void RotateRoll(float Value);
 
-	UFUNCTION()
-	void FlyUp(float Value);
+	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
+	void StartAnimation(AFICAnimation* inAnimation);
 
-	UFUNCTION()
-	void SprintPressed();
-	UFUNCTION()
-	void SprintReleased();
-
-	UFUNCTION()
-    void JumpPressed();
-	UFUNCTION()
-    void JumpReleased();
-
-	UFUNCTION()
-	void Zoom(float Value);
-
-	// Updates Camera Values based on the current value cache in the referenced editor context
-	void UpdateValues();
+	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
+	void StopAnimation();
 };

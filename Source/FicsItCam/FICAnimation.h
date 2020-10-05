@@ -128,7 +128,7 @@ struct FFICGroupAttribute : public FFICAttribute {
 	GENERATED_BODY()
 
 public:
-	TMap<FString, FFICAttribute*> Children;
+	TMap<FString, TAttribute<FFICAttribute*>> Children;
 
 	// Begin FFICAttribute
 	virtual TMap<int64, TSharedPtr<FFICKeyframeRef>> GetKeyframes() override;
@@ -162,13 +162,13 @@ public:
 	UPROPERTY(SaveGame)
 	FFICFloatAttribute FOV;
 
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	int64 AnimationStart = 0;
 
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	int64 AnimationEnd = 300;
 
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	int64 FPS = 30;
 
 	AFICAnimation();
@@ -179,5 +179,6 @@ public:
 	
 	void RecalculateAllKeyframes();
 
-	int64 GetEndOfAnimation();
+	float GetEndOfAnimation();
+	float GetStartOfAnimation();
 };

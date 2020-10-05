@@ -95,7 +95,7 @@ public:
 	virtual bool HasChanged(int64 Time) override {
 		if (!Attribute.Get()) return false;
 		typename AttribType::ValueType Value = Attribute.Get()->GetValue(Time);
-		return FMath::Abs(Value - CurrentValue) < 0.0001;
+		return FMath::Abs(Value - CurrentValue) > 0.0001;
 	}
 	
 	virtual FFICAttribute* GetAttribute() override {
@@ -108,6 +108,8 @@ public:
 	}
 	// End FFICEditorAttributeBase
 
+	TAttribute<FFICAttribute*> GetAttribAttrib() { return Attribute; }
+
 	void SetValue(typename AttribType::ValueType Value) {
 		if (CurrentValue == Value) return;
 		CurrentValue = Value;
@@ -119,4 +121,28 @@ public:
 	typename AttribType::ValueType GetValue() {
 		return CurrentValue;
 	}
+};
+
+class FFICEditorGroupAttribute : public FFICEditorAttributeBase {
+private:
+	TMap<FString, TAttribute<FFICEditorAttributeBase*>> Attributes;
+	FFICGroupAttribute All;
+
+public:
+	FFICEditorGroupAttribute(const TMap<FString, TAttribute<FFICEditorAttributeBase*>>& Attributes = TMap<FString, TAttribute<FFICEditorAttributeBase*>>(), FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged()) : FFICEditorAttributeBase(OnValueChanged), Attributes(Attributes) {
+		for (const TPair<FString, TAttribute<FFICEditorAttributeBase*>>& Attr : Attributes) {
+			All.Children.Add(Attr.Key, TAttribute<FFICAttribute*>::Create([Attr]() {
+				FFICEditorAttributeBase* Attrib = Attr.Value.Get();
+				if (Attrib) return Attrib->GetAttribute();
+				return (FFICAttribute*)nullptr;
+			}));
+		}
+	}
+	
+	// Begin FFICEditorAttributeBase
+	virtual void SetKeyframe(int64 Time) override;
+	virtual bool HasChanged(int64 Time) override;
+	virtual FFICAttribute* GetAttribute() override;
+	virtual void UpdateValue() override;
+	// End FFICEditorAttributeBase
 };

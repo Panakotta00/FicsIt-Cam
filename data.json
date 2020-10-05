@@ -1,5 +1,5 @@
 {
-	"mod_id": "AT6Zj38KmcKgZ6",
+	"mod_id": "123",
 	"mod_reference": "FicsItCam",
 	"name": "FicsIt-Cam",
 	"version": "0.0.1",
@@ -11,9 +11,6 @@
 	},
 	"objects": [
 	  {
-		"path": "FicsItCam.pak",
-		"type": "pak"
-	  },{
 		"path": "UE4-FicsItCam-Win64-Shipping.dll",
 		"type": "sml_mod"
 	  }

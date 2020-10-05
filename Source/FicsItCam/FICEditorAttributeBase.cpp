@@ -27,3 +27,29 @@ void FFICEditorAttributeBase::SetFrame(int64 inFrame) {
 	Frame = inFrame;
 	UpdateValue();
 }
+
+void FFICEditorGroupAttribute::SetKeyframe(int64 Time) {
+	for (const TPair<FString, TAttribute<FFICEditorAttributeBase*>>& Attrib : Attributes) {
+		FFICEditorAttributeBase* Base = Attrib.Value.Get();
+		if (Base) Base->SetKeyframe(Time);
+	}
+}
+
+bool FFICEditorGroupAttribute::HasChanged(int64 Time) {
+	for (const TPair<FString, TAttribute<FFICEditorAttributeBase*>>& Attrib : Attributes) {
+		FFICEditorAttributeBase* Base = Attrib.Value.Get();
+		if (Base && Base->HasChanged(Time)) return true;
+	}
+	return false;
+}
+
+FFICAttribute* FFICEditorGroupAttribute::GetAttribute() {
+	return &All;
+}
+
+void FFICEditorGroupAttribute::UpdateValue() {
+	for (const TPair<FString, TAttribute<FFICEditorAttributeBase*>>& Attrib : Attributes) {
+		FFICEditorAttributeBase* Base = Attrib.Value.Get();
+		if (Base) Base->UpdateValue();
+	}
+}

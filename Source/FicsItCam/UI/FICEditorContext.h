@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "FICAnimation.h"
-#include "FICCameraCharacter.h"
+#include "FICEditorCameraCharacter.h"
 #include "FICEditor.h"
 #include "FICEditorAttributeBase.h"
 
@@ -32,7 +32,7 @@ private:
 	ACharacter* OriginalCharacter = nullptr;
 
 	UPROPERTY()
-	AFICCameraCharacter* CameraCharacter = nullptr;
+	AFICEditorCameraCharacter* CameraCharacter = nullptr;
 
 	TSharedPtr<SFICEditor> EditorWidget;
 	TSharedPtr<SViewport> GameViewport;
@@ -47,7 +47,7 @@ public:
 	TFICEditorAttribute<FFICFloatAttribute> RotYaw;
 	TFICEditorAttribute<FFICFloatAttribute> RotRoll;
 	TFICEditorAttribute<FFICFloatAttribute> FOV;
-	FFICGroupAttribute All;
+	FFICEditorGroupAttribute All;
 
 	UFICEditorContext();
 	

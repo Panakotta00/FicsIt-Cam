@@ -3,7 +3,7 @@
 #include "FGSubsystem.h"
 #include "FICAnimation.h"
 #include "FGSaveInterface.h"
-#include "FICCamera.h"
+#include "FICCameraCharacter.h"
 #include "UI/FICEditorContext.h"
 
 
@@ -17,7 +17,7 @@ private:
 	UInputComponent* Input = nullptr;
 
 	UPROPERTY()
-	AFICCamera* Camera = nullptr;
+	AFICCameraCharacter* Camera = nullptr;
 
 	UPROPERTY()
 	AFICAnimation* ActiveAnimation = nullptr;

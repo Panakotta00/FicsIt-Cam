@@ -26,14 +26,27 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		if (SubSys->StoredAnimations.Contains(Arguments[1])) {
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' already exists.");
 		} else {
-			SubSys->StoredAnimations.Add(Arguments[1], GetWorld()->SpawnActor<AFICAnimation>());
+			FVector Pos = Sender->GetPlayer()->PlayerCameraManager->GetCameraLocation();
+			FRotator Rot = Sender->GetPlayer()->PlayerCameraManager->GetCameraRotation();
+			float FOV = Sender->GetPlayer()->PlayerCameraManager->GetFOVAngle();
+			AFICAnimation* Anim = GetWorld()->SpawnActor<AFICAnimation>();
+			Anim->PosX.SetDefaultValue(Pos.X);
+			Anim->PosY.SetDefaultValue(Pos.Y);
+			Anim->PosZ.SetDefaultValue(Pos.Z);
+			Anim->RotPitch.SetDefaultValue(Rot.Pitch);
+			Anim->RotYaw.SetDefaultValue(Rot.Yaw);
+			Anim->RotRoll.SetDefaultValue(Rot.Roll);
+			Anim->FOV.SetDefaultValue(FOV);
+			SubSys->StoredAnimations.Add(Arguments[1], Anim);
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' created.");
 		}
 		return EExecutionStatus::COMPLETED;
 	}
 	if (Arguments[0] == "delete") {
 		if (Arguments.Num() < 2) return EExecutionStatus::BAD_ARGUMENTS;
+		AFICAnimation** Anim = SubSys->StoredAnimations.Find(Arguments[1]);
 		if (SubSys->StoredAnimations.Remove(Arguments[1])) {
+			if (Anim) (*Anim)->Destroy();
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' deleted.");
 			return EExecutionStatus::COMPLETED;
 		} else {
