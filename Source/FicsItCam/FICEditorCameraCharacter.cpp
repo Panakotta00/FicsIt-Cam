@@ -1,4 +1,4 @@
-﻿#include "FICEditorCameraCharacter.h"
+#include "FICEditorCameraCharacter.h"
 
 #include "FICCameraCharacter.h"
 #include "Components/CapsuleComponent.h"
@@ -20,7 +20,7 @@ AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	
 	bUseControllerRotationPitch = true;
 	bUseControllerRotationYaw = true;
-	bUseControllerRotationRoll = true;
+	//bUseControllerRotationRoll = true;
 }
 
 void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {

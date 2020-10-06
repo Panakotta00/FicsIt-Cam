@@ -14,9 +14,6 @@ class AFICSubsystem : public AFGSubsystem, public IFGSaveInterface {
 	GENERATED_BODY()
 private:
 	UPROPERTY()
-	UInputComponent* Input = nullptr;
-
-	UPROPERTY()
 	AFICCameraCharacter* Camera = nullptr;
 
 	UPROPERTY()
@@ -55,9 +52,8 @@ public:
 	
 	void AddVisibleAnimation(AFICAnimation* Path);
 
-	UFUNCTION()
-	void CreateKeypointPressed();
-
 	void SetActiveAnimation(AFICAnimation* ActiveAnimation);
 	UFICEditorContext* GetEditor() const;
+
+	void CreateCamera();
 };

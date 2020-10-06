@@ -156,10 +156,11 @@ void FFICFloatAttribute::RecalculateKeyframe(int64 Time) {
 			float NKTimeDiff = NTime - Time;
 			float NKValueDiff = NK->Value - K->Value;
 			float KTimeDiff = (PKTimeDiff + NKTimeDiff) / 2.0;
+			KTimeDiff = FMath::Min(PKTimeDiff, NKTimeDiff);
 			float KValueDiff = (PKValueDiff + NKValueDiff) / 2.0;
 
-			K->OutTanTime = NKTimeDiff * Factor;
-			K->InTanTime = PKTimeDiff * Factor;
+			K->OutTanTime = KTimeDiff * Factor;
+			K->InTanTime = KTimeDiff * Factor;
 			if (K->KeyframeType == FIC_KF_EASE) {
 				K->InTanValue = K->OutTanValue = KValueDiff * Factor;
 			} else if (K->KeyframeType == FIC_KF_EASEINOUT) {

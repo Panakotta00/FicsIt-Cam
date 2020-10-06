@@ -65,7 +65,7 @@ void SFICEditor::Tick(const FGeometry& AllottedGeometry, const double InCurrentT
 	if (bIsLeft || bIsRight) {
 		KeyPressTime += InDeltaTime;
 		while (KeyPressTime > 0.5) {
-			Context->SetCurrentFrame(Context->GetCurrentFrame() + bIsLeft ? -1 : 1);
+			Context->SetCurrentFrame(Context->GetCurrentFrame() + (bIsLeft ? -1 : 1));
 			KeyPressTime -= 0.2;
 		}
 	}
@@ -95,6 +95,37 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 		}
 		return FReply::Handled();
+	} else if (!GameWidget->HasAnyUserFocusOrFocusedDescendants()) {
+		if (InKeyEvent.GetKey() == EKeys::I) {
+			int64 Time = Context->GetCurrentFrame();
+			if (Context->PosX.GetKeyframe(Time) && Context->PosY.GetKeyframe(Time) && Context->PosZ.GetKeyframe(Time) && Context->RotPitch.GetKeyframe(Time) && Context->RotYaw.GetKeyframe(Time) && Context->RotRoll.GetKeyframe(Time) && Context->FOV.GetKeyframe(Time) &&
+                !Context->PosX.HasChanged(Time) && !Context->PosY.HasChanged(Time) && !Context->PosZ.HasChanged(Time) && !Context->RotPitch.HasChanged(Time) && !Context->RotYaw.HasChanged(Time) && !Context->RotRoll.HasChanged(Time) && !Context->FOV.HasChanged(Time)) {
+				Context->All.RemoveKeyframe(Time);
+                } else {
+                	Context->All.SetKeyframe(Time);
+                }
+			return FReply::Handled();
+		} else if (InKeyEvent.GetKey() == EKeys::Left) {
+			Context->SetCurrentFrame(Context->GetCurrentFrame()-1);
+			bIsLeft = true;
+			KeyPressTime = 0;
+			return FReply::Handled();
+		} else if (InKeyEvent.GetKey() == EKeys::Right) {
+			Context->SetCurrentFrame(Context->GetCurrentFrame()+1);
+			bIsRight= true;
+			KeyPressTime = 0;
+			return FReply::Handled();
+		} else if (InKeyEvent.GetKey() == EKeys::N) {
+			int64 Time;
+			TSharedPtr<FFICKeyframeRef> KF;
+			if (Context->All.GetAttribute()->GetPrevKeyframe(Context->GetCurrentFrame(), Time, KF)) Context->SetCurrentFrame(Time);
+			return FReply::Handled();
+		} else if (InKeyEvent.GetKey() == EKeys::M) {
+			int64 Time;
+			TSharedPtr<FFICKeyframeRef> KF;
+			if (Context->All.GetAttribute()->GetNextKeyframe(Context->GetCurrentFrame(), Time, KF)) Context->SetCurrentFrame(Time);
+			return FReply::Handled();
+		}
 	}
 	return SPanel::OnKeyDown(MyGeometry, InKeyEvent);
 }

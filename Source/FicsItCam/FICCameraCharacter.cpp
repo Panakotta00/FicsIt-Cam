@@ -6,8 +6,7 @@
 
 AFICCameraCharacter::AFICCameraCharacter() {
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
-	Camera->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	Camera->SetAutoActivate(true);
+	Camera->SetupAttachment(GetCapsuleComponent());
 	
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorTickEnabled(true);
@@ -23,10 +22,12 @@ AFICCameraCharacter::AFICCameraCharacter() {
 
 void AFICCameraCharacter::BeginPlay() {
 	Super::BeginPlay();
+
+	Camera->SetActive(true);
 }
 
 void AFICCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
-	PlayerInputComponent->BindKey(EKeys::Escape, EInputEvent::IE_Pressed, this, &AFICCameraCharacter::StopAnimation);
+	PlayerInputComponent->BindKey(EKeys::C, EInputEvent::IE_Pressed, this, &AFICCameraCharacter::StopAnimation);
 }
 
 void AFICCameraCharacter::PossessedBy(AController* NewController) {}
@@ -69,6 +70,7 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation) {
 	Controller->Possess(this);
 	Cast<AFGHUD>(Controller->GetHUD())->SetHUDVisibility(false);
 	Cast<AFGHUD>(Controller->GetHUD())->SetShowCrossHair(false);
+	Controller->PlayerCameraManager->UnlockFOV();
 }
 
 void AFICCameraCharacter::StopAnimation() {
