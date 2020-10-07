@@ -13,6 +13,24 @@ void SFICKeyframeControl::Construct(FArguments InArgs) {
 	
 	ChildSlot[
 		SNew(SBox)
+		.ToolTipText_Lambda([this]() {
+			TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
+	        if (KF && *KF.Get()) {
+	            switch (KF.Get()->Get()->KeyframeType) {
+	            case FIC_KF_EASE:
+            		return FText::FromString("Ease");
+	            case FIC_KF_EASEINOUT:
+            		return FText::FromString("Ease-In/Out");
+	            case FIC_KF_LINEAR:
+            		return FText::FromString("Linear");
+	            case FIC_KF_STEP:
+            		return FText::FromString("Step");
+	            default:
+            		break;
+	            }
+	        }
+	        return FText();
+		})
 		.WidthOverride(10)
 		.HeightOverride(10)
 		.Content()[
@@ -57,6 +75,47 @@ FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton) {
 		if (Attribute.Get()->GetKeyframe(GetFrame()) && !Attribute.Get()->HasChanged(GetFrame())) Attribute.Get()->RemoveKeyframe(GetFrame());
 		else Attribute.Get()->SetKeyframe(GetFrame());
+		return FReply::Handled();
+	} else 	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
+        TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
+		if (KF) {
+			TSharedPtr<IMenu> MenuHandle;
+			FMenuBuilder MenuBuilder(true, NULL);
+			MenuBuilder.AddMenuEntry(
+                FText::FromString("Ease"),
+                FText(),
+                FSlateIcon(),
+                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
+                    KF->Get()->KeyframeType = FIC_KF_EASE;
+                	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+			MenuBuilder.AddMenuEntry(
+                FText::FromString("Ease-In/Out"),
+                FText(),
+                FSlateIcon(),
+                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
+                    KF->Get()->KeyframeType = FIC_KF_EASEINOUT;
+                	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+			MenuBuilder.AddMenuEntry(
+                FText::FromString("Linear"),
+                FText(),
+                FSlateIcon(),
+                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
+                    KF->Get()->KeyframeType = FIC_KF_LINEAR;
+                	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+			MenuBuilder.AddMenuEntry(
+                FText::FromString("Step"),
+                FText(),
+                FSlateIcon(),
+                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
+                    KF->Get()->KeyframeType = FIC_KF_STEP;
+                	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+		
+			FSlateApplication::Get().PushMenu(SharedThis(this), *Event.GetEventPath(), MenuBuilder.MakeWidget(), Event.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
+		}
 		return FReply::Handled();
 	}
 	return SCompoundWidget::OnMouseButtonDown(MyGeometry, Event);
