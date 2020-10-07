@@ -106,12 +106,16 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
                 }
 			return FReply::Handled();
 		} else if (InKeyEvent.GetKey() == EKeys::Left) {
-			Context->SetCurrentFrame(Context->GetCurrentFrame()-1);
+			int64 Rate = 1;
+			if (InKeyEvent.GetModifierKeys().IsControlDown()) Rate = 10;
+			Context->SetCurrentFrame(Context->GetCurrentFrame()-Rate);
 			bIsLeft = true;
 			KeyPressTime = 0;
 			return FReply::Handled();
 		} else if (InKeyEvent.GetKey() == EKeys::Right) {
-			Context->SetCurrentFrame(Context->GetCurrentFrame()+1);
+			int64 Rate = 1;
+			if (InKeyEvent.GetModifierKeys().IsControlDown()) Rate = 10;
+			Context->SetCurrentFrame(Context->GetCurrentFrame()+Rate);
 			bIsRight= true;
 			KeyPressTime = 0;
 			return FReply::Handled();
@@ -143,7 +147,7 @@ FReply SFICEditor::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& InKeyEv
 
 FReply SFICEditor::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	if (MouseEvent.GetModifierKeys().IsControlDown()) {
-		float Delta = MouseEvent.GetWheelDelta();
+		float Delta = MouseEvent.GetWheelDelta() * 3;
 		int64 Range = Context->GetAnimation()->AnimationEnd - Context->GetAnimation()->AnimationStart;
 		while (Range > 300) {
 			Range /= 10;

@@ -193,11 +193,15 @@ void AFICEditorCameraCharacter::PrevKeyframe() {
 }
 
 void AFICEditorCameraCharacter::NextFrame() {
-	EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame()+1);
+	int64 Rate = 1;
+	if (Cast<APlayerController>(GetController())->IsInputKeyDown(EKeys::LeftControl)) Rate = 10;
+	EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame()+Rate);
 }
 
 void AFICEditorCameraCharacter::PrevFrame() {
-	EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame()-1);
+	int64 Rate = 1;
+	if (Cast<APlayerController>(GetController())->IsInputKeyDown(EKeys::LeftControl)) Rate = 10;
+	EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame()-Rate);
 }
 
 void AFICEditorCameraCharacter::ChangedKeyframe() {
