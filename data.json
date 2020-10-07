@@ -1,5 +1,5 @@
 {
-	"mod_id": "123",
+	"mod_id": "55VxakJcJJHnNK",
 	"mod_reference": "FicsItCam",
 	"name": "FicsIt-Cam",
 	"version": "0.0.1",
@@ -18,4 +18,4 @@
 	"dependencies": {
 		"SML": "^2.2.0"
 	}
-  }
+}
