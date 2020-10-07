@@ -1,5 +1,6 @@
 # FicsItCam [![Build Status](https://jenkins.massivebytes.net/job/FicsIt-Cam/job/master/badge/icon)](https://jenkins.massivebytes.net/job/FicsIt-Cam/job/master/)
-"FicsIt-Cam" is a Satisfactory Mod which adds a camera system for creating easy cinematic camera flys ingame.
+
+This Satisfactory mod is mainly intended for Content Creators to allow the creation of beautiful camera animations.
 
 The mod introduces a couple of new chat commands:
 - `/fic create <animation>`
@@ -14,7 +15,7 @@ The mod introduces a couple of new chat commands:
 Animation Editor:
 - The animation editor allows for creating and editing animation.
 - On the bottom you can find the Timeline scrubber and range selector which allow you to view and change the currently active frame in the animation.
-- In the lower left corner you find the frame settings were you can change the the active frame, change the animation range (length) and the selected frame range.
+- In the lower-left corner you find the frame settings were you can change the the active frame, change the animation range (length) and the selected frame range.
 - On the left side you can find the details panel were you can view and change the current values of the properties (like location, rotation and FOV)
 - Every property has a keyframe control which allows to set the keyframe at the active frame to the current value when clicking on the control and there is no keyframe or the keyframe differs from the current value.
 - If at the current frame is a keyframe and the keyframe-value doesn't differ from the current value (has not changed) then a click removes the keyframe.
@@ -23,6 +24,7 @@ Animation Editor:
 - A double click on the keyframe control results in deletion of all keyframes of that property
 - When clicking on the viewport you change into movement mode.
 - When the active frame changes, all properties get updated to the value in the animation at that time. If no keyframe is set, is just stores that value.
+- R-Clicking on a keyframe control allows to changed the interpolation type of the keyframe
 
 You can also use following key inputs:
 - `Right Alt` -
@@ -47,4 +49,5 @@ You can also use following key inputs:
  If all properties have at the active frame unchanged keyframes, removes all keyframes at the current frame.
 
 ## Contributors
-- Panakotta00
+- Panakotta00 (Development)
+- Deantendo (Icon)
