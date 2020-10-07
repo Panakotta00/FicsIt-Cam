@@ -1,10 +1,53 @@
 ﻿#include "FICKeyframeControl.h"
 
-FSlateColorBrush FFICKeyframeControlStyle::DefaultKFBrush = FSlateColorBrush(FColor::White);
-FSlateColor FFICKeyframeControlStyle::DefaultUnsetColor = FSlateColor(FColor::FromHex("5A5A5A"));
-FSlateColor FFICKeyframeControlStyle::DefaultSetColor = FSlateColor(FColor::FromHex("FFAA00"));
-FSlateColor FFICKeyframeControlStyle::DefaultChangedColor = FSlateColor(FColor::FromHex("AAAAFF"));
-FSlateColor FFICKeyframeControlStyle::DefaultAnimatedColor = FSlateColor(FColor::FromHex("AA8800"));
+FFICKeyframeControlStyle::FFICKeyframeControlStyle() {
+	UnsetColor = FSlateColor(FColor::FromHex("5A5A5A"));
+	SetColor = FSlateColor(FColor::FromHex("FFAA00"));
+	ChangedColor = FSlateColor(FColor::FromHex("AAAAFF"));
+	AnimatedColor = FSlateColor(FColor::FromHex("AA8800"));
+
+	UTexture2D* Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Ease.Ease"));
+	if (Texture) {
+		DefaultBrush.DrawAs = ESlateBrushDrawType::Image;
+		DefaultBrush.ImageType = ESlateBrushImageType::FullColor;
+		DefaultBrush.SetResourceObject(Texture);
+		DefaultBrush.ImageSize.X = Texture->GetSizeX();
+		DefaultBrush.ImageSize.Y = Texture->GetSizeY();
+	} else {
+		DefaultBrush = static_cast<FSlateBrush>(FSlateColorBrush(FColor::White));
+	}
+	StepBrush = LinearBrush = EaseInOutBrush = MirrorBrush = CustomBrush = AutoBrush = DefaultBrush;
+
+	Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Ease_InOut.Ease_InOut"));
+	if (Texture) {
+		Texture->AddToRoot();
+		EaseInOutBrush.SetResourceObject(Texture);
+		EaseInOutBrush.ImageSize.X = Texture->GetSizeX();
+		EaseInOutBrush.ImageSize.Y = Texture->GetSizeY();
+	}
+
+	Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Linear.Linear"));
+	if (Texture) {
+		Texture->AddToRoot();
+		LinearBrush.SetResourceObject(Texture);
+		LinearBrush.ImageSize.X = Texture->GetSizeX();
+		LinearBrush.ImageSize.Y = Texture->GetSizeY();
+	}
+
+	Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Step.Step"));
+	if (Texture) {
+		Texture->AddToRoot();
+		StepBrush.SetResourceObject(Texture);
+		StepBrush.ImageSize.X = Texture->GetSizeX();
+		StepBrush.ImageSize.Y = Texture->GetSizeY();
+	}
+}
+
+FFICKeyframeControlStyle* SFICKeyframeControl::DefaultStyle() {
+	static FFICKeyframeControlStyle* Style = nullptr;
+	if (!Style) Style = new FFICKeyframeControlStyle();
+	return Style;
+}
 
 void SFICKeyframeControl::Construct(FArguments InArgs) {
 	Attribute = InArgs._Attribute;
@@ -12,7 +55,7 @@ void SFICKeyframeControl::Construct(FArguments InArgs) {
 	Frame = InArgs._Frame;
 	
 	ChildSlot[
-		SNew(SBox)
+		SNew(SScaleBox)
 		.ToolTipText_Lambda([this]() {
 			TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
 	        if (KF && *KF.Get()) {
@@ -31,42 +74,46 @@ void SFICKeyframeControl::Construct(FArguments InArgs) {
 	        }
 	        return FText();
 		})
-		.WidthOverride(10)
-		.HeightOverride(10)
 		.Content()[
-			SNew(SImage)
-			.ColorAndOpacity_Lambda([this]() {
-				FFICEditorAttributeBase* Attr = Attribute.Get();
-				if (!Attr) return Style.Get().UnsetColor;
-				TSharedPtr<FFICKeyframeRef> KF = Attr->GetKeyframe(GetFrame());
-				if (KF && *KF) {
-					if (Attr->HasChanged(GetFrame())) return Style.Get().ChangedColor;
-					else return Style.Get().SetColor;
-				} else if (Attr->IsAnimated()) return Style.Get().AnimatedColor;
-				else return Style.Get().UnsetColor;
-			})
-			.Image_Lambda([this]() {
-				TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
-				if (!KF || !*KF) {
-					return Style.Get().DefaultBrush;
-				}
-				switch ((*KF)->KeyframeType) {
-				case FIC_KF_EASE:
-					return Style.Get().AutoBrush;
-				case FIC_KF_EASEINOUT:
-					return Style.Get().EaseInOutBrush;
-				case FIC_KF_MIRROR:
-					return Style.Get().MirrorBrush;
-				case FIC_KF_CUSTOM:
-					return Style.Get().CustomBrush;
-				case FIC_KF_LINEAR:
-					return Style.Get().LinearBrush;
-				case FIC_KF_STEP:
-					return Style.Get().StepBrush;
-				default:
-					return Style.Get().DefaultBrush;
-				}
-			})
+			SNew(SBox)
+			.Padding(2)
+			.WidthOverride(20)
+			.HeightOverride(20)
+			.Content()[
+				SNew(SImage)
+				.ColorAndOpacity_Lambda([this]() {
+					FFICEditorAttributeBase* Attr = Attribute.Get();
+					if (!Attr) return Style.Get()->UnsetColor;
+					TSharedPtr<FFICKeyframeRef> KF = Attr->GetKeyframe(GetFrame());
+					if (KF && *KF) {
+						if (Attr->HasChanged(GetFrame())) return Style.Get()->ChangedColor;
+						else return Style.Get()->SetColor;
+					} else if (Attr->IsAnimated()) return Style.Get()->AnimatedColor;
+					else return Style.Get()->UnsetColor;
+				})
+				.Image_Lambda([this]() {
+					TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
+					if (!KF || !*KF) {
+						return &Style.Get()->DefaultBrush;
+					}
+					switch ((*KF)->KeyframeType) {
+					case FIC_KF_EASE:
+						return &Style.Get()->AutoBrush;
+					case FIC_KF_EASEINOUT:
+						return &Style.Get()->EaseInOutBrush;
+					case FIC_KF_MIRROR:
+						return &Style.Get()->MirrorBrush;
+					case FIC_KF_CUSTOM:
+						return &Style.Get()->CustomBrush;
+					case FIC_KF_LINEAR:
+						return &Style.Get()->LinearBrush;
+					case FIC_KF_STEP:
+						return &Style.Get()->StepBrush;
+					default:
+						return &Style.Get()->DefaultBrush;
+					}
+				})
+			]
 		]
 	];
 }

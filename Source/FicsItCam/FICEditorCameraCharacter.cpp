@@ -231,9 +231,11 @@ void AFICEditorCameraCharacter::UpdateValues() {
 		FVector Pos = FVector(EditorContext->PosX.GetValue(), EditorContext->PosY.GetValue(), EditorContext->PosZ.GetValue());
 		SetActorLocation(Pos);
 		FRotator Rot = FRotator(EditorContext->RotPitch.GetValue(), EditorContext->RotYaw.GetValue(), EditorContext->RotRoll.GetValue());
-		GetController()->SetControlRotation(Rot);
-		SetActorRotation(Rot);
-		Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
+		if (GetController()) {
+			SetActorRotation(Rot);
+			GetController()->SetControlRotation(Rot);
+			Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
+		}
 		Camera->SetFieldOfView(EditorContext->FOV.GetValue());
 	}
 }
