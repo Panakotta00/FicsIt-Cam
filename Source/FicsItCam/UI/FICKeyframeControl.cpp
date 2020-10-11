@@ -8,6 +8,7 @@ FFICKeyframeControlStyle::FFICKeyframeControlStyle() {
 
 	UTexture2D* Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Ease.Ease"));
 	if (Texture) {
+		Texture->AddToRoot();
 		DefaultBrush.DrawAs = ESlateBrushDrawType::Image;
 		DefaultBrush.ImageType = ESlateBrushImageType::FullColor;
 		DefaultBrush.SetResourceObject(Texture);
