@@ -21,6 +21,12 @@ private:
 	UPROPERTY()
 	ACharacter* OriginalCharacter = nullptr;
 	
+	UPROPERTY()
+	FTimerHandle WorldStreamTimer;
+	
+	UFUNCTION()
+    void OnTickWorldStreamTimer();
+	
 public:
 	UPROPERTY()
 	UCameraComponent* Camera = nullptr;

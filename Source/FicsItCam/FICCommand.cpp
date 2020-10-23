@@ -12,6 +12,10 @@ AFICCommand::AFICCommand() {
 
 #pragma optimize("", off)
 EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Sender, const TArray<FString>& Arguments, const FString& Label) {
+	if (!Sender->IsPlayerSender() || Sender->GetPlayer() != GetWorld()->GetFirstPlayerController()) {
+		Sender->SendChatMessage("Only Host is allowed to run this command.");
+		return EExecutionStatus::INSUFFICIENT_PERMISSIONS;
+	}
 	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(this);
 	UFICEditorContext* Context = SubSys->GetEditor();
 	

@@ -4,6 +4,15 @@
 #include "FGPlayerController.h"
 #include "util/Logging.h"
 
+void AFICCameraCharacter::OnTickWorldStreamTimer() {
+	UWorld* world = GetWorld();
+	world->UpdateLevelStreamingState(); 
+	if(world->IsLevelStreamingRequestPending(world->GetFirstPlayerController())) return;
+	AFGCharacterPlayer* Char = Cast<AFGCharacterPlayer>(OriginalCharacter);
+	if (Char) Char->CheatToggleGhostFly(false);
+	GetWorld()->GetTimerManager().ClearTimer(WorldStreamTimer);
+}
+
 AFICCameraCharacter::AFICCameraCharacter() {
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(GetCapsuleComponent());
@@ -37,6 +46,7 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
 	
 	if (Animation) {
+		//double Start = FPlatformTime::Seconds();
 		Progress += DeltaSeconds;
 		float Time = Progress * Animation->FPS;
 		FVector Pos;
@@ -56,6 +66,7 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 		if (Animation->GetEndOfAnimation() < Progress) {
 			StopAnimation();
 		}
+		//SML::Logging::error((FPlatformTime::Seconds() - Start) * 1000);
 	}
 }
 
@@ -68,17 +79,22 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation) {
 	AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
 	OriginalCharacter = Controller->GetCharacter();
 	Controller->Possess(this);
+	OriginalCharacter->SetActorHiddenInGame(true);
 	Cast<AFGHUD>(Controller->GetHUD())->SetHUDVisibility(false);
 	Cast<AFGHUD>(Controller->GetHUD())->SetShowCrossHair(false);
 	Controller->PlayerCameraManager->UnlockFOV();
 }
 
 void AFICCameraCharacter::StopAnimation() {
-	AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
-	Controller->GetCharacter()->SetActorHiddenInGame(false);
-	Controller->Possess(OriginalCharacter);
-	Cast<AFGHUD>(Controller->GetHUD())->SetHUDVisibility(true);
-	Cast<AFGHUD>(Controller->GetHUD())->SetShowCrossHair(true);
-	Animation = nullptr;
-	Progress = 0.0f;
+	if (Animation) {
+		AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
+		Controller->Possess(OriginalCharacter);
+		OriginalCharacter->SetActorHiddenInGame(false);
+		Cast<AFGHUD>(Controller->GetHUD())->SetHUDVisibility(true);
+		Cast<AFGHUD>(Controller->GetHUD())->SetShowCrossHair(true);
+		Animation = nullptr;
+		Progress = 0.0f;
+		Cast<AFGCharacterPlayer>(OriginalCharacter)->CheatToggleGhostFly(true);
+		GetWorld()->GetTimerManager().SetTimer(WorldStreamTimer, this, &AFICCameraCharacter::OnTickWorldStreamTimer, 0.1f, true);
+	}
 }

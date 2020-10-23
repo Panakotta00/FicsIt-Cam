@@ -12,8 +12,8 @@ AFICSubsystem::AFICSubsystem() {
 
 void AFICSubsystem::BeginPlay() {
 	Super::BeginPlay();
-
-	AChatCommandSubsystem::Get(this)->RegisterCommand(AFICCommand::StaticClass());
+	
+	if (HasAuthority()) AChatCommandSubsystem::Get(this)->RegisterCommand(AFICCommand::StaticClass());
 }
 
 void AFICSubsystem::Tick(float DeltaSeconds) {
