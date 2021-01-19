@@ -4,7 +4,7 @@
 	"name": "FicsIt-Cam",
 	"version": "0.0.3",
 	"sml_version": "2.2.0",
-	remote_version: "*",
+	"remote_version": "*",
 	"description": "Adds a animation system to the game.",
 	"authors": ["Panakotta00"],
 	"resources": {
