@@ -5,7 +5,6 @@
 #include "FICRangeSelector.h"
 #include "FICTimelineScrubber.h"
 #include "SNumericEntryBox.h"
-#include "util/Logging.h"
 
 FSlateColorBrush SFICTimelinePanel::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 

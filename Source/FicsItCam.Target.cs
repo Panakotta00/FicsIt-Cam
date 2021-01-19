@@ -13,5 +13,8 @@ public class FicsItCamTarget : TargetRules
 		LinkType = TargetLinkType.Modular;
 
 		ExtraModuleNames.AddRange( new string[] { "FactoryGame", "SML", "FicsItCam" } );
+		
+		bUseChecksInShipping = true;
+		bUseLoggingInShipping = true;
 	}
 }

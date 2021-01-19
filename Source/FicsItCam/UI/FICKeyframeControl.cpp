@@ -1,5 +1,7 @@
 ﻿#include "FICKeyframeControl.h"
 
+#include "Engine/Texture2D.h"
+
 FFICKeyframeControlStyle::FFICKeyframeControlStyle() {
 	UnsetColor = FSlateColor(FColor::FromHex("5A5A5A"));
 	SetColor = FSlateColor(FColor::FromHex("FFAA00"));
@@ -56,7 +58,7 @@ void SFICKeyframeControl::Construct(FArguments InArgs) {
 	Frame = InArgs._Frame;
 	
 	ChildSlot[
-		SNew(SScaleBox)
+		SNew(SBox)
 		.ToolTipText_Lambda([this]() {
 			TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
 	        if (KF && *KF.Get()) {

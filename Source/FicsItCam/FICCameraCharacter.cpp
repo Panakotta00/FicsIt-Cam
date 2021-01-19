@@ -2,7 +2,6 @@
 
 #include "Engine/World.h"
 #include "FGPlayerController.h"
-#include "util/Logging.h"
 
 void AFICCameraCharacter::OnTickWorldStreamTimer() {
 	UWorld* world = GetWorld();

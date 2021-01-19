@@ -1,7 +1,7 @@
 ﻿#pragma once
 
+#include "ModSubsystemHolder.h"
 #include "FICSubsystem.h"
-#include "mod/ModSubsystems.h"
 #include "FICSubsystemHolder.generated.h"
 
 UCLASS()

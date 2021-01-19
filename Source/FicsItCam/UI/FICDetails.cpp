@@ -5,7 +5,6 @@
 #include "FICVectorEditor.h"
 #include "SNumericEntryBox.h"
 #include "FICKeyframeControl.h"
-#include "util/Logging.h"
 
 FSlateColorBrush SFICDetails::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 

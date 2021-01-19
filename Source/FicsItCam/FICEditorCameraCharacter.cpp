@@ -5,6 +5,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerController.h"
 #include "UI/FICEditorContext.h"
 
@@ -73,7 +74,7 @@ void AFICEditorCameraCharacter::BeginPlay() {
 void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	
-	UInputSettings *Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
+	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 	Settings->AddAxisMapping(FInputAxisKeyMapping("FlyUp", EKeys::SpaceBar));
 	Settings->AddAxisMapping(FInputAxisKeyMapping("FlyUp", EKeys::LeftAlt, -1));
 	Settings->AddAxisMapping(FInputAxisKeyMapping("Roll", EKeys::E));
