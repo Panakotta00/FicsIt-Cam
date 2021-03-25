@@ -98,13 +98,13 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 
 	PlayerInputComponent->BindAxis("Zoom", this, &AFICEditorCameraCharacter::Zoom);
 
-	PlayerInputComponent->BindKey(EKeys::M, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::NextKeyframe);
-	PlayerInputComponent->BindKey(EKeys::N, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::PrevKeyframe);
-	PlayerInputComponent->BindKey(EKeys::Left, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::PrevFrame);
-	PlayerInputComponent->BindKey(EKeys::Left, EInputEvent::IE_Repeat, this, &AFICEditorCameraCharacter::PrevFrame);
-	PlayerInputComponent->BindKey(EKeys::Right, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::NextFrame);
-	PlayerInputComponent->BindKey(EKeys::Right, EInputEvent::IE_Repeat, this, &AFICEditorCameraCharacter::NextFrame);
-	PlayerInputComponent->BindKey(EKeys::I, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ChangedKeyframe);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.NextKeyframe"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::NextKeyframe);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.PrevKeyframe"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::PrevKeyframe);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.PrevFrame"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::PrevFrame);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.PrevFrame"), EInputEvent::IE_Repeat, this, &AFICEditorCameraCharacter::PrevFrame);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.NextFrame"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::NextFrame);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.NextFrame"), EInputEvent::IE_Repeat, this, &AFICEditorCameraCharacter::NextFrame);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleAllKeyframes"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ChangedKeyframe);
 }
 
 void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {

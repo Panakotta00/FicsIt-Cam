@@ -6,6 +6,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "Slate/SceneViewport.h"
+#include "FicsItCam/FicsItCamModule.h"
 
 #pragma optimize("", off)
 void UFICEditorContext::ShowEditor() {
@@ -15,14 +16,15 @@ void UFICEditorContext::ShowEditor() {
 	if (!CameraCharacter) CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(FVector(PosX.GetValue(), PosY.GetValue(), PosZ.GetValue()), FRotator(RotPitch.GetValue(), RotYaw.GetValue(), RotRoll.GetValue()));
 	CameraCharacter->EditorContext = this;
 	GetWorld()->GetFirstPlayerController()->Possess(CameraCharacter);
-	
+
 	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
+	GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
+	Cast<UGameEngine>(GEngine)->CleanupGameViewport();
 	Cast<UGameEngine>(GEngine)->CreateGameViewport(GEngine->GameViewport);
 	
 	GameViewport = FSlateApplication::Get().GetGameViewport();
 	GameViewportContainer = StaticCastSharedPtr<SVerticalBox>(GameViewport->GetParentWidget());
 	GameOverlay = StaticCastSharedPtr<SOverlay>(GameViewportContainer->GetParentWidget());
-	TSharedPtr<SWindow, ESPMode::Fast> GameWindow = StaticCastSharedPtr<SWindow>(GameOverlay->GetParentWidget());
 
 	check(GameOverlay->RemoveSlot(GameViewportContainer.ToSharedRef()) == true);
 	
@@ -44,6 +46,10 @@ void UFICEditorContext::HideEditor() {
 		GameOverlay->AddSlot()[
 			GameViewportContainer.ToSharedRef()
 		];
+		GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(true);
+		GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
+		Cast<UGameEngine>(GEngine)->CleanupGameViewport();
+		Cast<UGameEngine>(GEngine)->CreateGameViewport(GEngine->GameViewport);
 		EditorWidget = nullptr;
 		APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 		UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);

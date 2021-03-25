@@ -1,10 +1,38 @@
 ﻿#include "InitGameInstance.h"
 
 #include "FICSubsystemHolder.h"
-#include "FicsItCamModule.h"
-#include "Registry/SubsystemHolderRegistry.h"
 
 UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	bRootModule = true;
 	ModSubsystems.Add(UFICSubsystemHolder::StaticClass());
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.ToggleAllKeyframes"),
+		FInputActionKeyMapping(TEXT("FicsItCam.ToggleAllKeyframes"), EKeys::I),
+		FText::FromString(TEXT("Toggle all keyframes"))
+	});
+	ModKeyBindings.Add({
+        TEXT("FicsItCam.NextKeyframe"),
+        FInputActionKeyMapping(TEXT("FicsItCam.NextKeyframe"), EKeys::M),
+        FText::FromString(TEXT("Goto next keyframe"))
+    });
+	ModKeyBindings.Add({
+        TEXT("FicsItCam.PrevKeyframe"),
+        FInputActionKeyMapping(TEXT("FicsItCam.PrevKeyframe"), EKeys::N),
+        FText::FromString(TEXT("Goto previous keyframe"))
+	});
+	ModKeyBindings.Add({
+        TEXT("FicsItCam.NextFrame"),
+        FInputActionKeyMapping(TEXT("FicsItCam.NextFrame"), EKeys::Right),
+        FText::FromString(TEXT("Goto next frame"))
+	});
+	ModKeyBindings.Add({
+        TEXT("FicsItCam.PrevFrame"),
+        FInputActionKeyMapping(TEXT("FicsItCam.PrevFrame"), EKeys::Left),
+        FText::FromString(TEXT("Goto previous frame"))
+	});
+	ModKeyBindings.Add({
+        TEXT("FicsItCam.ToggleCursor"),
+        FInputActionKeyMapping(TEXT("FicsItCam.ToggleCursor"), EKeys::RightAlt, false, true, true),
+        FText::FromString(TEXT("Toggles the mouse cursor"))
+    });
 }
