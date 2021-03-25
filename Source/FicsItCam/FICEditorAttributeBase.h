@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Attribute.h"
+
 #include "FICAnimation.h"
 
 DECLARE_DELEGATE(FFICAttributeValueChanged)

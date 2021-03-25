@@ -2,7 +2,7 @@
 
 #include "FICKeyframeControl.h"
 #include "FICNumericType.h"
-#include "SNumericEntryBox.h"
+#include "Widgets/Input/SNumericEntryBox.h"
 
 void SFICVectorEditor::Construct(FArguments InArgs) {
 	X = InArgs._X;
@@ -54,7 +54,7 @@ void SFICVectorEditor::Construct(FArguments InArgs) {
 			.Value(X)
 			.OnValueChanged(OnXChanged)
 			.OnValueCommitted(OnXCommitted)
-			.TypeInterface(MakeShared<TFICNumericTypeInterface<float>>())
+			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 		]
 	];
 	if (InArgs._ShowKeyframeControls) {
@@ -75,7 +75,7 @@ void SFICVectorEditor::Construct(FArguments InArgs) {
 	        .Value(Y)
 			.OnValueChanged(OnYChanged)
 	        .OnValueCommitted(OnYCommitted)
-			.TypeInterface(MakeShared<TFICNumericTypeInterface<float>>())
+			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 	    ]
 	];
 	if (InArgs._ShowKeyframeControls) {
@@ -96,7 +96,7 @@ void SFICVectorEditor::Construct(FArguments InArgs) {
 	        .Value(Z)
 			.OnValueChanged(OnZChanged)
 	        .OnValueCommitted(OnZCommitted)
-			.TypeInterface(MakeShared<TFICNumericTypeInterface<float>>())
+			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 	    ]
     ];
 	if (InArgs._ShowKeyframeControls) {

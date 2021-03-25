@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "GameWorldModule.h"
+#include "Module/GameWorldModule.h"
 #include "InitGameWorld.generated.h"
 
 UCLASS()

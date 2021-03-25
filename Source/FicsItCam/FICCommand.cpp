@@ -1,10 +1,9 @@
 ﻿#include "FICCommand.h"
 
-
-#include "CommandSender.h"
 #include "FICSubsystem.h"
 #include "Engine/World.h"
 #include "FGPlayerController.h"
+#include "Command/CommandSender.h"
 
 AFICCommand::AFICCommand() {
 	bOnlyUsableByPlayer = true;

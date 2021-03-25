@@ -1,9 +1,11 @@
 ﻿#include "FICEditorContext.h"
 
-
-#include "WidgetBlueprintLibrary.h"
+#include "StereoRenderTargetManager.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Engine/GameEngine.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "Slate/SceneViewport.h"
 
 #pragma optimize("", off)
 void UFICEditorContext::ShowEditor() {
@@ -14,14 +16,19 @@ void UFICEditorContext::ShowEditor() {
 	CameraCharacter->EditorContext = this;
 	GetWorld()->GetFirstPlayerController()->Possess(CameraCharacter);
 	
+	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
+	Cast<UGameEngine>(GEngine)->CreateGameViewport(GEngine->GameViewport);
+	
 	GameViewport = FSlateApplication::Get().GetGameViewport();
-	GameViewportContainer = StaticCastSharedPtr<SHorizontalBox>(GameViewport->GetParentWidget());
+	GameViewportContainer = StaticCastSharedPtr<SVerticalBox>(GameViewport->GetParentWidget());
 	GameOverlay = StaticCastSharedPtr<SOverlay>(GameViewportContainer->GetParentWidget());
-	GameOverlay->RemoveSlot(GameViewportContainer.ToSharedRef());
+	TSharedPtr<SWindow, ESPMode::Fast> GameWindow = StaticCastSharedPtr<SWindow>(GameOverlay->GetParentWidget());
 
+	check(GameOverlay->RemoveSlot(GameViewportContainer.ToSharedRef()) == true);
+	
 	EditorWidget = SNew(SFICEditor)
         .Context(this)
-        .GameWidget(GameViewport);
+        .GameWidget(GameViewportContainer);
 	
 	GameOverlay->AddSlot()[
 		EditorWidget.ToSharedRef()

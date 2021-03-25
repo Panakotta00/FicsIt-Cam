@@ -3,8 +3,8 @@
 #include "FICEditorContext.h"
 #include "FICNumericType.h"
 #include "FICVectorEditor.h"
-#include "SNumericEntryBox.h"
 #include "FICKeyframeControl.h"
+#include "Widgets/Input/SNumericEntryBox.h"
 
 FSlateColorBrush SFICDetails::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 
@@ -81,7 +81,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
                     .OnValueCommitted_Lambda([this](float Val, auto) {
 	                    Context->FOV.SetValue(Val);
                     })
-                    .TypeInterface(MakeShared<TFICNumericTypeInterface<float>>())
+                    .TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
                 ]
                 +SHorizontalBox::Slot().Padding(5).AutoWidth()[
 	                SNew(SFICKeyframeControl)

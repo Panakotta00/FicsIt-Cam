@@ -4,7 +4,7 @@
 #include "FICNumericType.h"
 #include "FICRangeSelector.h"
 #include "FICTimelineScrubber.h"
-#include "SNumericEntryBox.h"
+#include "Widgets/Input/SNumericEntryBox.h"
 
 FSlateColorBrush SFICTimelinePanel::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 
@@ -15,7 +15,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	ActiveRangeStart = Context->GetAnimation()->AnimationStart;
 	ActiveRangeEnd = Context->GetAnimation()->AnimationEnd;
 
-	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TFICNumericTypeInterface<int64>>();
+	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TDefaultNumericTypeInterface<int64>>();
 
 	ChildSlot[SNew(SOverlay)
 		+SOverlay::Slot()[

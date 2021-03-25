@@ -1,10 +1,9 @@
 ﻿#pragma once
 
-#include "FICAnimation.h"
-#include "FICEditorCameraCharacter.h"
+#include "FicsItCam/FICAnimation.h"
+#include "FicsItCam/FICEditorCameraCharacter.h"
 #include "FICEditor.h"
-#include "FICEditorAttributeBase.h"
-
+#include "FicsItCam/FICEditorAttributeBase.h"
 #include "FICEditorContext.generated.h"
 
 #define FICAttributeCacheFuncs(Name) \
@@ -36,7 +35,7 @@ private:
 
 	TSharedPtr<SFICEditor> EditorWidget;
 	TSharedPtr<SViewport> GameViewport;
-	TSharedPtr<SHorizontalBox> GameViewportContainer;
+	TSharedPtr<SVerticalBox> GameViewportContainer;
 	TSharedPtr<SOverlay> GameOverlay;
 
 public:

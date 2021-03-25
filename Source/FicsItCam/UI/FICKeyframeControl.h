@@ -1,8 +1,6 @@
 ﻿#pragma once
 
-#include "FICAnimation.h"
-#include "FICEditorAttributeBase.h"
-#include "SlateBasics.h"
+#include "FicsItCam/FICEditorAttributeBase.h"
 
 struct FFICKeyframeControlStyle {
 	FSlateBrush AutoBrush;

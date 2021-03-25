@@ -1,11 +1,8 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-
-
 #include "FGSaveInterface.h"
 #include "GameFramework/Actor.h"
-
 #include "FICAnimation.generated.h"
 
 UENUM()
@@ -44,7 +41,7 @@ public:
 	FFICKeyframe* operator->() { return Keyframe; }
 	const FFICKeyframe& operator*() const { return *Keyframe; }
 	FFICKeyframe& operator*() { return *Keyframe; }
-	operator bool() const { return Keyframe; }
+	operator bool() const { return static_cast<bool>(Keyframe); }
 
 	const FFICKeyframe* Get() const { return Keyframe;}
 	FFICKeyframe* Get() { return Keyframe;}

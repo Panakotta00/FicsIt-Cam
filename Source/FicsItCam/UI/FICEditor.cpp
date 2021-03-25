@@ -4,43 +4,43 @@
 #include "FICEditorContext.h"
 #include "FICTimeline.h"
 #include "FICDetails.h"
-#include "FICSubsystem.h"
-#include "WidgetBlueprintLibrary.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "FicsItCam/FicsItCamModule.h"
+#include "FicsItCam/FICSubsystem.h"
 
 FSlateColorBrush SFICEditor::Background = FSlateColorBrush(FColor::FromHex("030303"));
 
 void SFICEditor::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context.Get();
 	GameWidget = InArgs._GameWidget.Get();
-
-	TSharedPtr<SHorizontalBox> GameViewportContainer = StaticCastSharedPtr<SHorizontalBox>(GameWidget->GetParentWidget());
-
-	Children.Add(SNew(SGridPanel)
-		.FillColumn(1, 1)
-		.FillRow(1, 1)
-		+SGridPanel::Slot(0,0).ColumnSpan(2)[
-			SNew(SOverlay)
-			+SOverlay::Slot()[
-				SNew(SImage)
-				.Image(&Background)
-			]
-			+SOverlay::Slot()[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot().AutoWidth()[
-					SNew(SButton)
-					.Text(FText::FromString("Exit"))
-					.OnClicked_Lambda([this]() {
-						AFICSubsystem::GetFICSubsystem(Context->GetWorld())->SetActiveAnimation(nullptr);
-						return FReply::Handled();
-					})
-				]
-				+SHorizontalBox::Slot().FillWidth(1)[
-					SNew(SSpacer)
-				]
-			]
-		]
-		+SGridPanel::Slot(1,1)[
-			GameViewportContainer.ToSharedRef()
+    
+	ChildSlot[
+        SNew(SGridPanel)
+        .FillColumn(1, 1)
+        .FillRow(1, 1)
+        +SGridPanel::Slot(0,0).ColumnSpan(2)[
+            SNew(SOverlay)
+            +SOverlay::Slot()[
+                SNew(SImage)
+                .Image(&Background)
+            ]
+            +SOverlay::Slot()[
+                SNew(SHorizontalBox)
+                +SHorizontalBox::Slot().AutoWidth()[
+                    SNew(SButton)
+                    .Text(FText::FromString("Exit"))
+                    .OnClicked_Lambda([this]() {
+                        AFICSubsystem::GetFICSubsystem(Context->GetWorld())->SetActiveAnimation(nullptr);
+                        return FReply::Handled();
+                    })
+                ]
+                +SHorizontalBox::Slot().FillWidth(1)[
+                    SNew(SSpacer)
+                ]
+            ]
+        ]
+        +SGridPanel::Slot(1,1)[
+			GameWidget.ToSharedRef()
 		]
 		+SGridPanel::Slot(0, 1)[
 			SNew(SBox)
@@ -54,13 +54,32 @@ void SFICEditor::Construct(const FArguments& InArgs) {
 			SNew(SFICTimelinePanel)
 			.Context(Context)
 		]
-	);
+	];
 }
 
-SFICEditor::SFICEditor() : Children(this) {}
+void Dump(int Ident, TSharedPtr<SWidget> Widget) {
+	FString IdentStr = FString::ChrN(Ident, ' ');
+	if (!Widget.IsValid()) {
+		UE_LOG(LogFicsItCam, Warning, TEXT("%sNull"), *IdentStr);
+		return;
+	}
+	FVector2D Size = Widget->GetDesiredSize();
+	FGeometry Geo = Widget->GetCachedGeometry();
+	UE_LOG(LogFicsItCam, Warning, TEXT("%sWidget: %s %fx%f %f %f"), *IdentStr, *Widget->GetTypeAsString(), Size.X, Size.Y, Geo.AbsolutePosition.X, Geo.AbsolutePosition.Y);
+	FChildren* Children = Widget->GetAllChildren();
+	if (Children) for (int i = 0; i < Children->Num(); ++i) {
+		Dump(Ident+1, Children->GetChildAt(i));
+	}
+}
 
 void SFICEditor::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
-	SPanel::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+	SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+
+	static bool firstTick = true;
+	if (firstTick) {
+		Dump(0, FSlateApplication::Get().GetActiveTopLevelWindow());
+		firstTick = false;
+	}
 
 	if (bIsLeft || bIsRight) {
 		KeyPressTime += InDeltaTime;
@@ -69,18 +88,6 @@ void SFICEditor::Tick(const FGeometry& AllottedGeometry, const double InCurrentT
 			KeyPressTime -= 0.2;
 		}
 	}
-}
-
-void SFICEditor::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const {
-	ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(Children[0], FVector2D(0, 0), AllottedGeometry.GetLocalSize()));
-}
-
-FVector2D SFICEditor::ComputeDesiredSize(float) const {
-	return Children[0]->GetDesiredSize();
-}
-
-FChildren* SFICEditor::GetChildren() {
-	return &Children;
 }
 
 FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) {
@@ -131,7 +138,7 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			return FReply::Handled();
 		}
 	}
-	return SPanel::OnKeyDown(MyGeometry, InKeyEvent);
+	return SCompoundWidget::OnKeyDown(MyGeometry, InKeyEvent);
 }
 
 FReply SFICEditor::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) {
@@ -142,7 +149,7 @@ FReply SFICEditor::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& InKeyEv
 		bIsRight = false;
 		return FReply::Handled();
 	}
-	return SPanel::OnKeyUp(MyGeometry, InKeyEvent);
+	return SCompoundWidget::OnKeyUp(MyGeometry, InKeyEvent);
 }
 
 FReply SFICEditor::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
@@ -168,7 +175,7 @@ bool SFICEditor::SupportsKeyboardFocus() const {
 }
 
 void SFICEditor::OnFocusChanging(const FWeakWidgetPath& PreviousFocusPath, const FWidgetPath& NewWidgetPath, const FFocusEvent& InFocusEvent) {
-	SPanel::OnFocusChanging(PreviousFocusPath, NewWidgetPath, InFocusEvent);
+	SCompoundWidget::OnFocusChanging(PreviousFocusPath, NewWidgetPath, InFocusEvent);
 	if (!PreviousFocusPath.ContainsWidget(GameWidget.ToSharedRef()) && NewWidgetPath.ContainsWidget(GameWidget.ToSharedRef())) {
 		APlayerController* Controller = Context->GetWorld()->GetFirstPlayerController();
 		UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);

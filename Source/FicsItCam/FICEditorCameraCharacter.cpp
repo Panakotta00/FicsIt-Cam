@@ -216,8 +216,8 @@ void AFICEditorCameraCharacter::ChangedKeyframe() {
 }
 
 void AFICEditorCameraCharacter::Zoom(float Value) {
-	APlayerController* Controller = Cast<APlayerController>(GetController());
-	if (Controller->IsInputKeyDown(EKeys::LeftControl)) {
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController->IsInputKeyDown(EKeys::LeftControl)) {
 		float Delta = Value;
 		int64 Range = EditorContext->GetAnimation()->AnimationEnd - EditorContext->GetAnimation()->AnimationStart;
 		while (Range > 300) {
@@ -225,7 +225,7 @@ void AFICEditorCameraCharacter::Zoom(float Value) {
 			Delta *= 10;
 		}
 		if (Delta) EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame() + Delta);
-	} else if (Controller->IsInputKeyDown(EKeys::LeftShift)) {
+	} else if (PlayerController->IsInputKeyDown(EKeys::LeftShift)) {
 		float Delta = Value * 10;
 		if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
 	}

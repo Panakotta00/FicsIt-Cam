@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include "FICEditorAttributeBase.h"
 #include "SlateBasics.h"
 
 class FFICEditorAttributeBase;

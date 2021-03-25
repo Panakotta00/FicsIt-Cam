@@ -75,22 +75,22 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation) {
 	if (!Animation) return;
 	Progress = Animation->GetStartOfAnimation();
 	
-	AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
-	OriginalCharacter = Controller->GetCharacter();
-	Controller->Possess(this);
+	AFGPlayerController* NewController = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
+	OriginalCharacter = NewController->GetCharacter();
+	NewController->Possess(this);
 	OriginalCharacter->SetActorHiddenInGame(true);
-	Cast<AFGHUD>(Controller->GetHUD())->SetHUDVisibility(false);
-	Cast<AFGHUD>(Controller->GetHUD())->SetShowCrossHair(false);
-	Controller->PlayerCameraManager->UnlockFOV();
+	Cast<AFGHUD>(NewController->GetHUD())->SetHUDVisibility(false);
+	Cast<AFGHUD>(NewController->GetHUD())->SetShowCrossHair(false);
+	NewController->PlayerCameraManager->UnlockFOV();
 }
 
 void AFICCameraCharacter::StopAnimation() {
 	if (Animation) {
-		AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
-		Controller->Possess(OriginalCharacter);
+		AFGPlayerController* NewController = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
+		NewController->Possess(OriginalCharacter);
 		OriginalCharacter->SetActorHiddenInGame(false);
-		Cast<AFGHUD>(Controller->GetHUD())->SetHUDVisibility(true);
-		Cast<AFGHUD>(Controller->GetHUD())->SetShowCrossHair(true);
+		Cast<AFGHUD>(NewController->GetHUD())->SetHUDVisibility(true);
+		Cast<AFGHUD>(NewController->GetHUD())->SetShowCrossHair(true);
 		Animation = nullptr;
 		Progress = 0.0f;
 		Cast<AFGCharacterPlayer>(OriginalCharacter)->CheatToggleGhostFly(true);

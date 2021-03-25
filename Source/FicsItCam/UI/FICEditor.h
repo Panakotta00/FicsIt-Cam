@@ -4,7 +4,7 @@
 
 class UFICEditorContext;
 
-class SFICEditor : public SPanel {
+class SFICEditor : public SCompoundWidget {
 	SLATE_BEGIN_ARGS(SFICEditor) {}
 		SLATE_ATTRIBUTE(UFICEditorContext*, Context);
 		SLATE_ATTRIBUTE(TSharedPtr<SWidget>, GameWidget);
@@ -16,8 +16,6 @@ public:
 private:
 	static FSlateColorBrush Background;
 	
-	TSlotlessChildren<SGridPanel> Children;
-
 	UFICEditorContext* Context = nullptr;
 	TSharedPtr<SWidget> GameWidget;
 	TSharedPtr<SWidget> GameSpacer;
@@ -28,13 +26,8 @@ private:
 	float KeyPressTime = 0;
 
 public:
-	SFICEditor();
-
 	// Begin SWidget
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
-	virtual void OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const override;
-	virtual FVector2D ComputeDesiredSize(float) const override;
-	virtual FChildren* GetChildren() override;
 	virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) override;
 	virtual FReply OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) override;
 	virtual FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
