@@ -1,16 +1,16 @@
 {
 	"FileVersion": 3,
-	"Version": 2,
-	"VersionName": "0.2",
-	"SemVersion": "0.0.2",
+	"Version": 0,
+	"VersionName": "0.1.1",
+	"SemVersion": "0.1.1",
 	"FriendlyName": "FicsIt-Cam",
-	"Description": "",
+	"Description": "This mod allows you to create beautiful camera animations in-game.",
 	"Category": "Modding",
-	"CreatedBy": "",
-	"CreatedByURL": "",
-	"DocsURL": "",
+	"CreatedBy": "Panakotta00, Deantendo",
+	"CreatedByURL": "https://twitch.tv/panakotta00",
+	"DocsURL": "https://github.com/CoderDE/FicsIt-Cam",
 	"MarketplaceURL": "",
-	"SupportURL": "",
+	"SupportURL": "https://patreon.com/panakotta00",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
@@ -23,9 +23,10 @@
 		}
 	],
 	"Plugins": [
-		{
-			"Name": "SML",
-			"Enabled": true
-		}
-	]
+        {
+            "Name": "SML",
+            "SemVersion": "^3.1.0",
+            "Enabled": true
+        }
+    ]
 }
