@@ -1,4 +1,4 @@
-#include "InitGameInstance.h"
+﻿#include "InitGameInstance.h"
 
 UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	bRootModule = true;
@@ -29,7 +29,12 @@ UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	});
 	ModKeyBindings.Add({
         TEXT("FicsItCam.ToggleCursor"),
-        FInputActionKeyMapping(TEXT("FicsItCam.ToggleCursor"), EKeys::RightAlt, false, true, true),
+        FInputActionKeyMapping(TEXT("FicsItCam.ToggleCursor"), EKeys::G),
         FText::FromString(TEXT("Toggles the mouse cursor"))
     });
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.StopAnimation"),
+		FInputActionKeyMapping(TEXT("FicsItCam.StopAnimation"), EKeys::C),
+		FText::FromString(TEXT("Stops the currently running animation"))
+	});
 }

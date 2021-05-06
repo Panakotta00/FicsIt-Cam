@@ -1,4 +1,4 @@
-﻿#include "FICCameraCharacter.h"
+#include "FICCameraCharacter.h"
 
 #include "Engine/World.h"
 #include "FGPlayerController.h"
@@ -35,7 +35,7 @@ void AFICCameraCharacter::BeginPlay() {
 }
 
 void AFICCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
-	PlayerInputComponent->BindKey(EKeys::C, EInputEvent::IE_Pressed, this, &AFICCameraCharacter::StopAnimation);
+	PlayerInputComponent->BindAction("FicsItCam.StopAnimation", EInputEvent::IE_Pressed, this, &AFICCameraCharacter::StopAnimation);
 }
 
 void AFICCameraCharacter::PossessedBy(AController* NewController) {}
@@ -79,8 +79,7 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation) {
 	OriginalCharacter = NewController->GetCharacter();
 	NewController->Possess(this);
 	OriginalCharacter->SetActorHiddenInGame(true);
-	Cast<AFGHUD>(NewController->GetHUD())->SetHUDVisibility(false);
-	Cast<AFGHUD>(NewController->GetHUD())->SetShowCrossHair(false);
+	Cast<AFGHUD>(NewController->GetHUD())->SetPumpiMode(true);
 	NewController->PlayerCameraManager->UnlockFOV();
 }
 
@@ -89,8 +88,7 @@ void AFICCameraCharacter::StopAnimation() {
 		AFGPlayerController* NewController = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
 		NewController->Possess(OriginalCharacter);
 		OriginalCharacter->SetActorHiddenInGame(false);
-		Cast<AFGHUD>(NewController->GetHUD())->SetHUDVisibility(true);
-		Cast<AFGHUD>(NewController->GetHUD())->SetShowCrossHair(true);
+		Cast<AFGHUD>(NewController->GetHUD())->SetPumpiMode(false);
 		Animation = nullptr;
 		Progress = 0.0f;
 		Cast<AFGCharacterPlayer>(OriginalCharacter)->CheatToggleGhostFly(true);
