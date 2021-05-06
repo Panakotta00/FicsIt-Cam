@@ -1,8 +1,6 @@
 #include "FicsItCamModule.h"
 
-#include "FICSubsystemHolder.h"
 #include "Patching/NativeHookManager.h"
-#include "Slate/SceneViewport.h"
 
 DEFINE_LOG_CATEGORY(LogFicsItCam);
 

@@ -1,10 +1,7 @@
-﻿#include "InitGameInstance.h"
-
-#include "FICSubsystemHolder.h"
+#include "InitGameInstance.h"
 
 UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	bRootModule = true;
-	ModSubsystems.Add(UFICSubsystemHolder::StaticClass());
 	ModKeyBindings.Add({
 		TEXT("FicsItCam.ToggleAllKeyframes"),
 		FInputActionKeyMapping(TEXT("FicsItCam.ToggleAllKeyframes"), EKeys::I),
