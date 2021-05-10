@@ -1,7 +1,52 @@
 ﻿#include "InitGameInstance.h"
 
+#define LOCTEXT_NAMESPACE "FicsItCam"
+
 UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	bRootModule = true;
+	ModAxisBindings.Add(FModAxisBindingInfo{
+		TEXT("FicsItCam.MoveForward"),
+		FInputAxisKeyMapping("FicsItCam.MoveForward", EKeys::W, 1),
+		FInputAxisKeyMapping("FicsItCam.MoveForward", EKeys::S, -1),
+		LOCTEXT("MoveForward", "Move Forward in Editor"),
+		LOCTEXT("MoveBackward", "Move Backward in Editor"),
+	});
+	ModAxisBindings.Add(FModAxisBindingInfo{
+		TEXT("FicsItCam.MoveRight"),
+		FInputAxisKeyMapping("FicsItCam.MoveRight", EKeys::D, 1),
+		FInputAxisKeyMapping("FicsItCam.MoveRight", EKeys::A, -1),
+		LOCTEXT("MoveRight", "Move Right in Editor"),
+		LOCTEXT("MoveLeft", "Move Left in Editor"),
+	});
+	ModAxisBindings.Add(FModAxisBindingInfo{
+		TEXT("FicsItCam.MoveRoll"),
+		FInputAxisKeyMapping("FicsItCam.MoveRoll", EKeys::Q, 1),
+		FInputAxisKeyMapping("FicsItCam.MoveRoll", EKeys::E, -1),
+		LOCTEXT("MoveForward", "Rolls the camera in Editor clockwise"),
+		LOCTEXT("MoveBackward", "Rolls the camera in Editor counterclockwise"),
+	});
+	ModAxisBindings.Add(FModAxisBindingInfo{
+		TEXT("FicsItCam.MoveUp"),
+		FInputAxisKeyMapping("FicsItCam.MoveUp", EKeys::SpaceBar, 1),
+		FInputAxisKeyMapping("FicsItCam.MoveUp", EKeys::LeftAlt, -1),
+		LOCTEXT("MoveUp", "Move Up in Editor"),
+		LOCTEXT("MoveDown", "Move Down in Editor"),
+	});
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.ChangeFOV"),
+		FInputActionKeyMapping(TEXT("FicsItCam.ChangeFOV"), EKeys::LeftControl),
+		FText::FromString(TEXT("Mousewheel -> Change FOV"))
+	});
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.ChangeSpeed"),
+		FInputActionKeyMapping(TEXT("FicsItCam.ChangeSpeed"), EKeys::LeftControl, true),
+		FText::FromString(TEXT("Mousewheel -> Change Speed"))
+	});
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.Sprint"),
+		FInputActionKeyMapping(TEXT("FicsItCam.Sprint"), EKeys::LeftShift),
+		FText::FromString(TEXT("Fast Movement & Scrubbing"))
+	});
 	ModKeyBindings.Add({
 		TEXT("FicsItCam.ToggleAllKeyframes"),
 		FInputActionKeyMapping(TEXT("FicsItCam.ToggleAllKeyframes"), EKeys::I),
@@ -36,5 +81,20 @@ UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 		TEXT("FicsItCam.StopAnimation"),
 		FInputActionKeyMapping(TEXT("FicsItCam.StopAnimation"), EKeys::C),
 		FText::FromString(TEXT("Stops the currently running animation"))
+	});
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.ToggleAutoKeyframe"),
+		FInputActionKeyMapping(TEXT("FicsItCam.ToggleAutoKeyframe"), EKeys::K),
+		FText::FromString(TEXT("Toggles if keyframes should automatically get created when the camera moves in editor"))
+	});
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.ToggleShowPath"),
+		FInputActionKeyMapping(TEXT("FicsItCam.ToggleShowPath"), EKeys::L),
+		FText::FromString(TEXT("Shows/Hides the 3D representation of the path and camera"))
+	});
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.ToggleLockCamera"),
+		FInputActionKeyMapping(TEXT("FicsItCam.ToggleLockCamera"), EKeys::J),
+		FText::FromString(TEXT("Enables/Disables if the viewport camera is locked to the animation camera (when the current keyframe changes, the view shows the view of the camera at that moment)"))
 	});
 }

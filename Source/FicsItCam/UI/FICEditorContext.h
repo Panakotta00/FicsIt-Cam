@@ -47,6 +47,10 @@ public:
 	TFICEditorAttribute<FFICFloatAttribute> RotRoll;
 	TFICEditorAttribute<FFICFloatAttribute> FOV;
 	FFICEditorGroupAttribute All;
+	FFICEditorGroupAttribute Pos;
+	bool bMoveCamera = true;
+	bool bShowPath = true;
+	bool bAutoKeyframe = false;
 
 	UFICEditorContext();
 	

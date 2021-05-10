@@ -1,6 +1,8 @@
 #include "FICEditorCameraCharacter.h"
 
+#include "FGPlayerController.h"
 #include "FICCameraCharacter.h"
+#include "FICEditorCameraActor.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -21,7 +23,7 @@ AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	
 	bUseControllerRotationPitch = true;
 	bUseControllerRotationYaw = true;
-	//bUseControllerRotationRoll = true;
+	bUseControllerRotationRoll = true;
 }
 
 void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
@@ -30,33 +32,58 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->MaxFlySpeed = bIsSprinting ? MaxFlySpeed * 10 : MaxFlySpeed;
 	GetCharacterMovement()->MaxAcceleration = 1000000;
+
+	FRotator RotatorFix = GetController()->GetControlRotation();
+	RotatorFix.Roll = RollRotationFixValue;
+	GetController()->SetControlRotation(RotatorFix);
 	
 	if (EditorContext) {
-		FVector Pos = GetActorLocation();
-		FRotator RotNew = GetActorRotation();
-		FRotator RotOld = FRotator(EditorContext->RotPitch.GetValue(), EditorContext->RotYaw.GetValue(), EditorContext->RotRoll.GetValue());
-		FRotator RotOldN = RotOld;
-		while (RotOldN.Pitch < -180.0) RotOldN.Pitch += 360.0;
-		while (RotOldN.Pitch > 180.0) RotOldN.Pitch -= 360.0;
-		while (RotOldN.Yaw < -180.0) RotOldN.Yaw += 360.0;
-		while (RotOldN.Yaw > 180.0) RotOldN.Yaw -= 360.0;
-		while (RotOldN.Roll < -180.0) RotOldN.Roll += 360.0;
-		while (RotOldN.Roll > 180.0) RotOldN.Roll -= 360.0;
-		FRotator RotDiff = RotNew - RotOldN;
-		while (RotDiff.Pitch < -180.0) RotDiff.Pitch += 360.0;
-		while (RotDiff.Pitch > 180.0) RotDiff.Pitch -= 360.0;
-		while (RotDiff.Yaw < -180.0) RotDiff.Yaw += 360.0;
-		while (RotDiff.Yaw > 180.0) RotDiff.Yaw -= 360.0;
-		while (RotDiff.Roll < -180.0) RotDiff.Roll += 360.0;
-		while (RotDiff.Roll > 180.0) RotDiff.Roll -= 360.0;
-		RotNew = RotOld + RotDiff;
-		
-		EditorContext->PosX.SetValue(Pos.X);
-		EditorContext->PosY.SetValue(Pos.Y);
-		EditorContext->PosZ.SetValue(Pos.Z);
-		EditorContext->RotPitch.SetValue(RotNew.Pitch);
-		EditorContext->RotYaw.SetValue(RotNew.Yaw);
-		EditorContext->RotRoll.SetValue(RotNew.Roll);
+		if (EditorContext->bMoveCamera) {
+			CameraActor->SetActorTransform(GetActorTransform());
+		}
+
+		if (CameraActor) {
+			FVector Pos = CameraActor->GetActorLocation();
+			FRotator RotNew = CameraActor->GetActorRotation();
+			FRotator RotOld = FRotator(EditorContext->RotPitch.GetValue(), EditorContext->RotYaw.GetValue(), EditorContext->RotRoll.GetValue());
+			FRotator RotOldN = RotOld;
+			while (RotOldN.Pitch < -180.0) RotOldN.Pitch += 360.0;
+			while (RotOldN.Pitch > 180.0) RotOldN.Pitch -= 360.0;
+			while (RotOldN.Yaw < -180.0) RotOldN.Yaw += 360.0;
+			while (RotOldN.Yaw > 180.0) RotOldN.Yaw -= 360.0;
+			while (RotOldN.Roll < -180.0) RotOldN.Roll += 360.0;
+			while (RotOldN.Roll > 180.0) RotOldN.Roll -= 360.0;
+			FRotator RotDiff = RotNew - RotOldN;
+			while (RotDiff.Pitch < -180.0) RotDiff.Pitch += 360.0;
+			while (RotDiff.Pitch > 180.0) RotDiff.Pitch -= 360.0;
+			while (RotDiff.Yaw < -180.0) RotDiff.Yaw += 360.0;
+			while (RotDiff.Yaw > 180.0) RotDiff.Yaw -= 360.0;
+			while (RotDiff.Roll < -180.0) RotDiff.Roll += 360.0;
+			while (RotDiff.Roll > 180.0) RotDiff.Roll -= 360.0;
+			RotNew = RotOld + RotDiff;
+			
+			EditorContext->PosX.SetValue(Pos.X);
+			EditorContext->PosY.SetValue(Pos.Y);
+			EditorContext->PosZ.SetValue(Pos.Z);
+			EditorContext->RotPitch.SetValue(RotNew.Pitch);
+			EditorContext->RotYaw.SetValue(RotNew.Yaw);
+			EditorContext->RotRoll.SetValue(RotNew.Roll);
+		}
+
+		// Draw Path
+		if (EditorContext->bShowPath) {
+			FVector PrevLoc = FVector::ZeroVector;
+			FRotator PrevRot = FRotator::ZeroRotator;
+			for (int64 Time = EditorContext->GetAnimation()->AnimationStart; Time <= EditorContext->GetAnimation()->AnimationEnd; ++Time) {
+				bool bIsKeyframe = EditorContext->Pos.GetKeyframe(Time).IsValid();
+				FVector Loc = FVector(EditorContext->PosX.GetValue(Time), EditorContext->PosY.GetValue(Time), EditorContext->PosZ.GetValue(Time));
+				if (bIsKeyframe || Loc != PrevLoc) GetWorld()->LineBatcher->DrawLine(Loc, Loc, bIsKeyframe ? FColor::Yellow : FColor::Blue, SDPG_World, 20);
+				if (PrevLoc != FVector::ZeroVector) {
+					GetWorld()->LineBatcher->DrawLine(PrevLoc, Loc, FColor::Red, SDPG_World, 5);
+				}
+				PrevLoc = Loc;
+			}
+		}
 	}
 }
 
@@ -69,34 +96,38 @@ void AFICEditorCameraCharacter::BeginPlay() {
 	Mov->GravityScale = 0;
 	Mov->bUseSeparateBrakingFriction = true;
 	Mov->BrakingFriction = 10;
+
+	CameraActor = GetWorld()->SpawnActor<AFICEditorCameraActor>();
+	CameraActor->SetActorTransform(GetActorTransform());
+	CameraActor->EditorContext = EditorContext;
+}
+
+void AFICEditorCameraCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason) {
+	Super::EndPlay(EndPlayReason);
+	if (CameraActor) CameraActor->Destroy();
 }
 
 void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	
 	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-	Settings->AddAxisMapping(FInputAxisKeyMapping("FlyUp", EKeys::SpaceBar));
-	Settings->AddAxisMapping(FInputAxisKeyMapping("FlyUp", EKeys::LeftAlt, -1));
-	Settings->AddAxisMapping(FInputAxisKeyMapping("Roll", EKeys::E));
-	Settings->AddAxisMapping(FInputAxisKeyMapping("Roll", EKeys::Q, -1));
-	Settings->AddAxisMapping(FInputAxisKeyMapping("Zoom", EKeys::MouseWheelAxis));
+	Settings->AddAxisMapping(FInputAxisKeyMapping("FicsItCam.Zoom", EKeys::MouseWheelAxis));
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &AFICEditorCameraCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AFICEditorCameraCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("FicsItCam.MoveForward", this, &AFICEditorCameraCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("FicsItCam.MoveRight", this, &AFICEditorCameraCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("FicsItCam.MoveUp", this, &AFICEditorCameraCharacter::FlyUp);
+	PlayerInputComponent->BindAxis("FicsItCam.MoveRoll", this, &AFICEditorCameraCharacter::RotateRoll);
+	PlayerInputComponent->BindAxis("FicsItCam.Zoom", this, &AFICEditorCameraCharacter::Zoom);
 
 	PlayerInputComponent->BindAxis("Turn", this, &AFICEditorCameraCharacter::RotateYaw);
 	PlayerInputComponent->BindAxis("LookUp", this, &AFICEditorCameraCharacter::RotatePitch);
-	PlayerInputComponent->BindAxis("Roll", this, &AFICEditorCameraCharacter::RotateRoll);
-	
-	PlayerInputComponent->BindAxis("FlyUp", this, &AFICEditorCameraCharacter::FlyUp);
-	
-	PlayerInputComponent->BindAction("ToggleSprint", EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::SprintPressed);
-	PlayerInputComponent->BindAction("ToggleSprint", EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::SprintReleased);
 
-	PlayerInputComponent->BindAction("Jump_Drift", EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::JumpPressed);
-	PlayerInputComponent->BindAction("Jump_Drift", EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::JumpReleased);
-
-	PlayerInputComponent->BindAxis("Zoom", this, &AFICEditorCameraCharacter::Zoom);
+	PlayerInputComponent->BindAction("FicsItCam.ChangeFOV", IE_Pressed, this, &AFICEditorCameraCharacter::EnterChangeFOV);
+	PlayerInputComponent->BindAction("FicsItCam.ChangeFOV", IE_Pressed, this, &AFICEditorCameraCharacter::LeaveChangeFOV);
+	PlayerInputComponent->BindAction("FicsItCam.Sprint", EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::EnterSprint);
+	PlayerInputComponent->BindAction("FicsItCam.Sprint", EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::LeaveSprint);
+	PlayerInputComponent->BindAction("FicsItCam.ChangeSpeed", EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::EnterChangeSpeed);
+	PlayerInputComponent->BindAction("FicsItCam.ChangeSpeed", EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::LeaveChangeSpeed);
 
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.NextKeyframe"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::NextKeyframe);
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.PrevKeyframe"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::PrevKeyframe);
@@ -105,6 +136,9 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.NextFrame"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::NextFrame);
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.NextFrame"), EInputEvent::IE_Repeat, this, &AFICEditorCameraCharacter::NextFrame);
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleAllKeyframes"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ChangedKeyframe);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleAutoKeyframe"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleAutoKeyframe);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleShowPath"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleShowPath);
+	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleLockCamera"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleLockCamera);
 }
 
 void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
@@ -118,67 +152,35 @@ void AFICEditorCameraCharacter::UnPossessed() {
 void AFICEditorCameraCharacter::MoveForward(float Value) {
 	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
 	float Multi = FlyMultiplier;
-	if (bIsSprinting) Multi *= 5;
+	if (bIsSprinting) Multi *= 3;
 	AddMovementInput(Direction, Value * Multi);
 }
 
 void AFICEditorCameraCharacter::MoveRight(float Value) {
 	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
 	float Multi = FlyMultiplier;
-	if (bIsSprinting) Multi *= 5;
+	if (bIsSprinting) Multi *= 3;
 	AddMovementInput(Direction, Value * Multi);
 }
 void AFICEditorCameraCharacter::RotatePitch(float Value) {
-	/*FRotator ActorRot = GetActorRotation();
-	FVector NewRot = ActorRot.RotateVector(FRotator(Value, 0, 0).Vector());
-	FRotator Rot = FQuat::FindBetween(ActorRot.Vector(), NewRot).Rotator();
-	AddControllerPitchInput(Rot.Pitch);
-	AddControllerYawInput(Rot.Yaw);
-	AddControllerRollInput(Rot.Roll);*/
 	AddControllerPitchInput(Value);
 }
 
 void AFICEditorCameraCharacter::RotateYaw(float Value) {
-	/*FRotator ActorRot = GetActorRotation();
-	FVector NewRot = ActorRot.RotateVector(FRotator(0, Value, 0).Vector());
-	FRotator Rot = FQuat::FindBetween(ActorRot.Vector(), NewRot).Rotator();
-	AddControllerPitchInput(Rot.Pitch);
-	AddControllerYawInput(Rot.Yaw);
-	AddControllerRollInput(Rot.Roll);*/
 	AddControllerYawInput(Value);
 }
 
 void AFICEditorCameraCharacter::RotateRoll(float Value) {
-	/*FRotator ActorRot = GetActorRotation();
-	FVector NewRot = ActorRot.RotateVector(FRotator(0, 0, Value).Vector());
-	FRotator Rot = FQuat::FindBetween(ActorRot.Vector(), NewRot).Rotator();
-	AddControllerPitchInput(Rot.Pitch);
-	AddControllerYawInput(Rot.Yaw);
-	AddControllerRollInput(Rot.Roll);*/
 	AddControllerRollInput(Value);
+	RollRotationFixValue += Value;
 }
 
 void AFICEditorCameraCharacter::FlyUp(float Value) {
 	FVector Direction = GetActorUpVector();
 	float Multi = FlyMultiplier;
-	if (bIsSprinting) Multi *= 5;
+	if (bIsSprinting) Multi *= 3;
 	AddMovementInput(Direction, Value * Multi);
-}
-
-void AFICEditorCameraCharacter::SprintPressed() {
-	bIsSprinting = true;
-}
-
-void AFICEditorCameraCharacter::SprintReleased() {
-	bIsSprinting = false;
-}
-
-void AFICEditorCameraCharacter::JumpPressed() {
-	bIsJumping = true;
-}
-
-void AFICEditorCameraCharacter::JumpReleased() {
-	bIsJumping = false;
+	AddActorLocalRotation(FRotator(0, 0, Value));
 }
 
 void AFICEditorCameraCharacter::NextKeyframe() {
@@ -195,14 +197,31 @@ void AFICEditorCameraCharacter::PrevKeyframe() {
 
 void AFICEditorCameraCharacter::NextFrame() {
 	int64 Rate = 1;
-	if (Cast<APlayerController>(GetController())->IsInputKeyDown(EKeys::LeftControl)) Rate = 10;
+	if (bIsSprinting) Rate = 10;
 	EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame()+Rate);
 }
 
 void AFICEditorCameraCharacter::PrevFrame() {
 	int64 Rate = 1;
-	if (Cast<APlayerController>(GetController())->IsInputKeyDown(EKeys::LeftControl)) Rate = 10;
+	if (bIsSprinting) Rate = 10;
 	EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame()-Rate);
+}
+
+void AFICEditorCameraCharacter::ToggleAutoKeyframe() {
+	EditorContext->bAutoKeyframe = !EditorContext->bAutoKeyframe;
+}
+
+void AFICEditorCameraCharacter::ToggleShowPath() {
+	EditorContext->bShowPath = !EditorContext->bShowPath;
+}
+
+void AFICEditorCameraCharacter::ToggleLockCamera() {
+	EditorContext->bMoveCamera = !EditorContext->bMoveCamera;
+}
+
+void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorContext) {
+	EditorContext = InEditorContext;
+	if (CameraActor) CameraActor->EditorContext = EditorContext;
 }
 
 void AFICEditorCameraCharacter::ChangedKeyframe() {
@@ -217,31 +236,41 @@ void AFICEditorCameraCharacter::ChangedKeyframe() {
 
 void AFICEditorCameraCharacter::Zoom(float Value) {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController->IsInputKeyDown(EKeys::LeftControl)) {
+	if (bChangeSpeed) {
+		float Delta = Value * 10;
+		if (bIsSprinting) Delta *= 2;
+		if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
+	} else if (bChangeFOV) {
+		float Delta = Value;
+		if (bIsSprinting) Delta *= 2;
+		EditorContext->FOV.SetValue(EditorContext->FOV.GetValue() + Delta);
+	} else {
 		float Delta = Value;
 		int64 Range = EditorContext->GetAnimation()->AnimationEnd - EditorContext->GetAnimation()->AnimationStart;
 		while (Range > 300) {
 			Range /= 10;
 			Delta *= 10;
 		}
+		if (bIsSprinting) Delta *= 2;
 		if (Delta) EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame() + Delta);
-	} else if (PlayerController->IsInputKeyDown(EKeys::LeftShift)) {
-		float Delta = Value * 10;
-		if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
 	}
 }
 
 void AFICEditorCameraCharacter::UpdateValues() {
 	if (EditorContext) {
 		FVector Pos = FVector(EditorContext->PosX.GetValue(), EditorContext->PosY.GetValue(), EditorContext->PosZ.GetValue());
-		SetActorLocation(Pos);
 		FRotator Rot = FRotator(EditorContext->RotPitch.GetValue(), EditorContext->RotYaw.GetValue(), EditorContext->RotRoll.GetValue());
-		if (GetController()) {
+		if (EditorContext->bMoveCamera) {
+			SetActorLocation(Pos);
 			SetActorRotation(Rot);
-			GetController()->SetControlRotation(Rot);
-			Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
+			if (GetController()) {
+				GetController()->SetControlRotation(Rot);
+				Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
+			}
+			Camera->SetFieldOfView(EditorContext->FOV.GetValue());
 		}
-		Camera->SetFieldOfView(EditorContext->FOV.GetValue());
+		CameraActor->SetActorTransform(FTransform(Rot, Pos));
+		CameraActor->UpdateGizmo();
 	}
 }
 #pragma optimize("", on)

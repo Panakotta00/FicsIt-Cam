@@ -14,7 +14,7 @@ void UFICEditorContext::ShowEditor() {
 
 	OriginalCharacter = GetWorld()->GetFirstPlayerController()->GetCharacter();
 	if (!CameraCharacter) CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(FVector(PosX.GetValue(), PosY.GetValue(), PosZ.GetValue()), FRotator(RotPitch.GetValue(), RotYaw.GetValue(), RotRoll.GetValue()));
-	CameraCharacter->EditorContext = this;
+	CameraCharacter->SetEditorContext(this);
 	GetWorld()->GetFirstPlayerController()->Possess(CameraCharacter);
 
 	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
@@ -64,7 +64,8 @@ UFICEditorContext::UFICEditorContext() :
 	RotYaw(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotYaw : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
 	RotRoll(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotRoll : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
 	FOV(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->FOV : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	All({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}, {"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}, {"FOV", &FOV}}) {}
+	All({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}, {"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}, {"FOV", &FOV}}),
+	Pos({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}}) {}
 
 void UFICEditorContext::SetAnimation(AFICAnimation* Anim) {
 	Animation = Anim;

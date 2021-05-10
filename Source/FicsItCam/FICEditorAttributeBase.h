@@ -120,6 +120,10 @@ public:
 	typename AttribType::ValueType GetValue() {
 		return CurrentValue;
 	}
+
+	typename AttribType::ValueType GetValue(int64 Time) {
+		return Attribute.Get()->GetValue(Time);
+	}
 };
 
 class FFICEditorGroupAttribute : public FFICEditorAttributeBase {

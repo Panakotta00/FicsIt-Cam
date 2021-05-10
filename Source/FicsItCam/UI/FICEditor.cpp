@@ -129,6 +129,15 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			TSharedPtr<FFICKeyframeRef> KF;
 			if (Context->All.GetAttribute()->GetNextKeyframe(Context->GetCurrentFrame(), Time, KF)) Context->SetCurrentFrame(Time);
 			return FReply::Handled();
+		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleAutoKeyframe"))) {
+			Context->bAutoKeyframe = !Context->bAutoKeyframe;
+			return FReply::Handled();
+		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleShowPath"))) {
+			Context->bShowPath = !Context->bShowPath;
+			return FReply::Handled();
+		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleLockCamera"))) {
+			Context->bMoveCamera = !Context->bMoveCamera;
+			return FReply::Handled();
 		}
 	}
 	return SCompoundWidget::OnKeyDown(MyGeometry, InKeyEvent);

@@ -17,6 +17,7 @@ class SFICVectorEditor : public SCompoundWidget {
 		SLATE_ATTRIBUTE(FFICEditorAttributeBase*, YAttr)
 		SLATE_ATTRIBUTE(FFICEditorAttributeBase*, ZAttr)
 		SLATE_ATTRIBUTE(TOptional<int64>, Frame)
+		SLATE_ATTRIBUTE(bool, AutoKeyframe)
 		SLATE_EVENT(FFICVectorValueCommitted, OnXCommitted)
 		SLATE_EVENT(FFICVectorValueCommitted, OnYCommitted)
 		SLATE_EVENT(FFICVectorValueCommitted, OnZCommitted)
@@ -26,6 +27,8 @@ class SFICVectorEditor : public SCompoundWidget {
 	SLATE_END_ARGS()
 	
 public:
+	SFICVectorEditor();
+	
 	void Construct(FArguments InArgs);
 
 private:
@@ -36,6 +39,7 @@ private:
 	TAttribute<FFICEditorAttributeBase*> YAttr;
 	TAttribute<FFICEditorAttributeBase*> ZAttr;
 	TAttribute<TOptional<int64>> Frame;
+	TAttribute<bool> AutoKeyframe;
 	FFICVectorValueCommitted OnXCommitted;
 	FFICVectorValueCommitted OnYCommitted;
 	FFICVectorValueCommitted OnZCommitted;
@@ -45,4 +49,5 @@ private:
 	FSlateColorBrush XBrush = FSlateColorBrush(FLinearColor::Red);
 	FSlateColorBrush YBrush = FSlateColorBrush(FLinearColor::Green);
 	FSlateColorBrush ZBrush = FSlateColorBrush(FLinearColor::Blue);
+	FSpinBoxStyle SpinBoxStyle;
 };
