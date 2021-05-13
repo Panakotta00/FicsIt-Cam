@@ -103,13 +103,4 @@ pipeline {
 			}
 		}
 	}
-
-	post {
-		always {
-			cleanWs()
-			withCredentials([string(credentialsId: 'FINDiscordToken', variable: 'WEBHOOKURL')]) {
-				discordSend description: "FIN Build", link: env.BUILD_URL, result: currentBuild.currentResult, title: JOB_NAME, webhookURL: "$WEBHOOKURL"
-			}
-		}
-	}
 }
