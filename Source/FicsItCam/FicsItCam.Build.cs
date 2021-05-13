@@ -25,7 +25,9 @@ public class FicsItCam : ModuleRules
             "AssetRegistry",
             "GameplayTasks",
             "AnimGraphRuntime",
-            "Slate", "SlateCore"});
+            "Slate", "SlateCore",
+            "InteractiveToolsFramework"
+		});
 			
 		if (Target.Type == TargetRules.TargetType.Editor) {
 			PublicDependencyModuleNames.AddRange(new string[] {"OnlineBlueprintSupport", "AnimGraph"});

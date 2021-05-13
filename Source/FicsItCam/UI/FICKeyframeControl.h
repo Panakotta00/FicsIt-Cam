@@ -1,8 +1,6 @@
 ﻿#pragma once
 
-#include "FICAnimation.h"
-#include "FICEditorAttributeBase.h"
-#include "SlateBasics.h"
+#include "FicsItCam/FICEditorAttributeBase.h"
 
 struct FFICKeyframeControlStyle {
 	FSlateBrush AutoBrush;
@@ -41,9 +39,10 @@ private:
 
 public:
 	// Begin SWidget
-	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& Event) override;
+	virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) override;
 	virtual FReply OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& Event) override;
 	// End SWidget
 
 	int64 GetFrame();
+	FFICEditorAttributeBase* GetAttribute();
 };

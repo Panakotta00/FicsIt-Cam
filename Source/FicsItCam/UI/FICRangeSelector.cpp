@@ -205,7 +205,7 @@ void SFICRangeSelector::OnToolTipClosing() {
 }
 
 float SFICRangeSelector::RangePosToLocalPos(const FGeometry& MyGeometry, int64 RangePos) const {
-	return (MyGeometry.GetLocalSize() * FVector2D(FMath::GetRangePct(RangeStart.Get(), RangeEnd.Get(), RangePos), 0)).X;
+	return (MyGeometry.GetLocalSize() * FVector2D(FMath::GetRangePct<float>((float)RangeStart.Get(), (float)RangeEnd.Get(), RangePos), 0)).X;
 }
 
 int64 SFICRangeSelector::LocalPosToRangePos(const FGeometry& MyGeometry, float LocalPos) const {

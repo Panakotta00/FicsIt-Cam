@@ -1,9 +1,12 @@
 ﻿#include "FICEditorContext.h"
 
-
-#include "WidgetBlueprintLibrary.h"
+#include "StereoRenderTargetManager.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Engine/GameEngine.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "Slate/SceneViewport.h"
+#include "FicsItCam/FicsItCamModule.h"
 
 #pragma optimize("", off)
 void UFICEditorContext::ShowEditor() {
@@ -11,17 +14,23 @@ void UFICEditorContext::ShowEditor() {
 
 	OriginalCharacter = GetWorld()->GetFirstPlayerController()->GetCharacter();
 	if (!CameraCharacter) CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(FVector(PosX.GetValue(), PosY.GetValue(), PosZ.GetValue()), FRotator(RotPitch.GetValue(), RotYaw.GetValue(), RotRoll.GetValue()));
-	CameraCharacter->EditorContext = this;
+	CameraCharacter->SetEditorContext(this);
 	GetWorld()->GetFirstPlayerController()->Possess(CameraCharacter);
+
+	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
+	GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
+	Cast<UGameEngine>(GEngine)->CleanupGameViewport();
+	Cast<UGameEngine>(GEngine)->CreateGameViewport(GEngine->GameViewport);
 	
 	GameViewport = FSlateApplication::Get().GetGameViewport();
-	GameViewportContainer = StaticCastSharedPtr<SHorizontalBox>(GameViewport->GetParentWidget());
+	GameViewportContainer = StaticCastSharedPtr<SVerticalBox>(GameViewport->GetParentWidget());
 	GameOverlay = StaticCastSharedPtr<SOverlay>(GameViewportContainer->GetParentWidget());
-	GameOverlay->RemoveSlot(GameViewportContainer.ToSharedRef());
 
+	check(GameOverlay->RemoveSlot(GameViewportContainer.ToSharedRef()) == true);
+	
 	EditorWidget = SNew(SFICEditor)
         .Context(this)
-        .GameWidget(GameViewport);
+        .GameWidget(GameViewportContainer);
 	
 	GameOverlay->AddSlot()[
 		EditorWidget.ToSharedRef()
@@ -31,12 +40,17 @@ void UFICEditorContext::ShowEditor() {
 void UFICEditorContext::HideEditor() {
 	if (CameraCharacter) {
 		GetWorld()->GetFirstPlayerController()->Possess(OriginalCharacter);
+		CameraCharacter->Destroy();
 	}
 	if (EditorWidget) {
 		GameOverlay->RemoveSlot(EditorWidget.ToSharedRef());
 		GameOverlay->AddSlot()[
 			GameViewportContainer.ToSharedRef()
 		];
+		GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(true);
+		GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
+		Cast<UGameEngine>(GEngine)->CleanupGameViewport();
+		Cast<UGameEngine>(GEngine)->CreateGameViewport(GEngine->GameViewport);
 		EditorWidget = nullptr;
 		APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 		UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
@@ -51,7 +65,8 @@ UFICEditorContext::UFICEditorContext() :
 	RotYaw(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotYaw : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
 	RotRoll(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotRoll : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
 	FOV(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->FOV : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	All({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}, {"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}, {"FOV", &FOV}}) {}
+	All({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}, {"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}, {"FOV", &FOV}}),
+	Pos({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}}) {}
 
 void UFICEditorContext::SetAnimation(AFICAnimation* Anim) {
 	Animation = Anim;

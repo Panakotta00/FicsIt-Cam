@@ -7,7 +7,7 @@ void FFICEditorAttributeBase::RemoveKeyframe(int64 Time) {
 }
 
 TSharedPtr<FFICKeyframeRef> FFICEditorAttributeBase::GetKeyframe(int64 Time) {
-	if (!GetAttribute()) return nullptr;
+	if (!GetAttributeConst()) return nullptr;
 	TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = GetAttribute()->GetKeyframes();
 	TSharedPtr<FFICKeyframeRef>* KF = Keyframes.Find(Time);
 	if (KF) return *KF;
@@ -15,11 +15,11 @@ TSharedPtr<FFICKeyframeRef> FFICEditorAttributeBase::GetKeyframe(int64 Time) {
 }
 
 bool FFICEditorAttributeBase::IsAnimated() {
-	if (!GetAttribute()) return nullptr;
+	if (!GetAttributeConst()) return nullptr;
 	return GetAttribute()->GetKeyframes().Num() > 0;
 }
 
-int64 FFICEditorAttributeBase::GetFrame() {
+int64 FFICEditorAttributeBase::GetFrame() const {
 	return Frame;
 }
 
@@ -35,7 +35,7 @@ void FFICEditorGroupAttribute::SetKeyframe(int64 Time) {
 	}
 }
 
-bool FFICEditorGroupAttribute::HasChanged(int64 Time) {
+bool FFICEditorGroupAttribute::HasChanged(int64 Time) const {
 	for (const TPair<FString, TAttribute<FFICEditorAttributeBase*>>& Attrib : Attributes) {
 		FFICEditorAttributeBase* Base = Attrib.Value.Get();
 		if (Base && Base->HasChanged(Time)) return true;
@@ -43,7 +43,7 @@ bool FFICEditorGroupAttribute::HasChanged(int64 Time) {
 	return false;
 }
 
-FFICAttribute* FFICEditorGroupAttribute::GetAttribute() {
+const FFICAttribute* FFICEditorGroupAttribute::GetAttributeConst() const {
 	return &All;
 }
 
@@ -52,4 +52,22 @@ void FFICEditorGroupAttribute::UpdateValue() {
 		FFICEditorAttributeBase* Base = Attrib.Value.Get();
 		if (Base) Base->UpdateValue();
 	}
+}
+
+float FFICEditorGroupAttribute::GetValueAsFloat(int64 InFrame) const {
+	float Sum = 0.0f;
+	for (const TTuple<FString, TAttribute<FFICEditorAttributeBase*>>& Attribute : Attributes) {
+		Sum += Attribute.Value.Get()->GetValueAsFloat(InFrame);
+	}
+	return Sum / Attributes.Num();
+}
+
+void FFICEditorGroupAttribute::SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType) {
+	for (const TTuple<FString, TAttribute<FFICEditorAttributeBase*>>& Attribute : Attributes) {
+		Attribute.Value.Get()->SetKeyframeFromFloat(InFrame, InValue, InType);
+	}
+}
+
+TMap<FString, TAttribute<FFICEditorAttributeBase*>> FFICEditorGroupAttribute::GetAttributes() {
+	return Attributes;
 }

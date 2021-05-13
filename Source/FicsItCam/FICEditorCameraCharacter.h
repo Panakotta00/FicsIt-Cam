@@ -2,8 +2,11 @@
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
-
 #include "FICEditorCameraCharacter.generated.h"
+
+class AFICEditorCameraActor;
+class UTransformProxy;
+class ATransformGizmoActor;
 
 class UFICEditorContext;
 UCLASS()
@@ -14,21 +17,28 @@ private:
 	UPROPERTY()
 	UCameraComponent* Camera;
 
+	UPROPERTY()
+	AFICEditorCameraActor* CameraActor = nullptr;
+
 	bool bIsSprinting = false;
-	bool bIsJumping = false;
+	bool bChangeFOV = false;
+	bool bChangeSpeed = false;
 	float FlyMultiplier = 10000;
 
-public:
-	float MaxFlySpeed = 1000;
+	float RollRotationFixValue = 0.0f;
 	
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
+
+public:
+	float MaxFlySpeed = 1000;
 
 	AFICEditorCameraCharacter();
 	
 	// Begin AActor
 	virtual void Tick( float DeltaSeconds ) override;
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	// End AActor
 
 	// Begin ACharacter
@@ -52,14 +62,27 @@ public:
 	void FlyUp(float Value);
 
 	UFUNCTION()
-	void SprintPressed();
+	void EnterChangeFOV() {
+		bChangeFOV = true;
+		bChangeSpeed = false;
+	}
 	UFUNCTION()
-	void SprintReleased();
+	void LeaveChangeFOV() { bChangeSpeed = bChangeFOV = false; }
 
 	UFUNCTION()
-    void JumpPressed();
+	void EnterSprint() { bIsSprinting = true; }
 	UFUNCTION()
-    void JumpReleased();
+	void LeaveSprint() { bIsSprinting = false; }
+
+	UFUNCTION()
+	void EnterChangeSpeed() {
+		bChangeSpeed = true;
+		bChangeFOV = false;
+	}
+	UFUNCTION()
+	void LeaveChangeSpeed() {
+		bChangeFOV = bChangeSpeed = false;
+	}
 
 	UFUNCTION()
 	void NextKeyframe();
@@ -70,6 +93,16 @@ public:
 	void NextFrame();
 	UFUNCTION()
 	void PrevFrame();
+
+	UFUNCTION()
+	void ToggleAutoKeyframe();
+	UFUNCTION()
+	void ToggleShowPath();
+	UFUNCTION()
+	void ToggleLockCamera();
+
+	UFUNCTION()
+	void SetEditorContext(UFICEditorContext* InEditorContext);
 
 	UFUNCTION()
 	void ChangedKeyframe();

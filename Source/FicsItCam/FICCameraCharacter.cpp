@@ -1,8 +1,7 @@
-﻿#include "FICCameraCharacter.h"
+#include "FICCameraCharacter.h"
 
 #include "Engine/World.h"
 #include "FGPlayerController.h"
-#include "util/Logging.h"
 
 void AFICCameraCharacter::OnTickWorldStreamTimer() {
 	UWorld* world = GetWorld();
@@ -36,7 +35,7 @@ void AFICCameraCharacter::BeginPlay() {
 }
 
 void AFICCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
-	PlayerInputComponent->BindKey(EKeys::C, EInputEvent::IE_Pressed, this, &AFICCameraCharacter::StopAnimation);
+	PlayerInputComponent->BindAction("FicsItCam.StopAnimation", EInputEvent::IE_Pressed, this, &AFICCameraCharacter::StopAnimation);
 }
 
 void AFICCameraCharacter::PossessedBy(AController* NewController) {}
@@ -76,22 +75,20 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation) {
 	if (!Animation) return;
 	Progress = Animation->GetStartOfAnimation();
 	
-	AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
-	OriginalCharacter = Controller->GetCharacter();
-	Controller->Possess(this);
+	AFGPlayerController* NewController = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
+	OriginalCharacter = NewController->GetCharacter();
+	NewController->Possess(this);
 	OriginalCharacter->SetActorHiddenInGame(true);
-	Cast<AFGHUD>(Controller->GetHUD())->SetHUDVisibility(false);
-	Cast<AFGHUD>(Controller->GetHUD())->SetShowCrossHair(false);
-	Controller->PlayerCameraManager->UnlockFOV();
+	Cast<AFGHUD>(NewController->GetHUD())->SetPumpiMode(true);
+	NewController->PlayerCameraManager->UnlockFOV();
 }
 
 void AFICCameraCharacter::StopAnimation() {
 	if (Animation) {
-		AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
-		Controller->Possess(OriginalCharacter);
+		AFGPlayerController* NewController = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
+		NewController->Possess(OriginalCharacter);
 		OriginalCharacter->SetActorHiddenInGame(false);
-		Cast<AFGHUD>(Controller->GetHUD())->SetHUDVisibility(true);
-		Cast<AFGHUD>(Controller->GetHUD())->SetShowCrossHair(true);
+		Cast<AFGHUD>(NewController->GetHUD())->SetPumpiMode(false);
 		Animation = nullptr;
 		Progress = 0.0f;
 		Cast<AFGCharacterPlayer>(OriginalCharacter)->CheatToggleGhostFly(true);

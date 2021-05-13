@@ -1,18 +1,19 @@
 ﻿#include "FICCommand.h"
 
 #include "FICSubsystem.h"
-#include "FICUtils.h"
+#include "Engine/World.h"
+#include "FGPlayerController.h"
+#include "Command/CommandSender.h"
 
 AFICCommand::AFICCommand() {
 	bOnlyUsableByPlayer = true;
 	MinNumberOfArguments = 1;
-	ModId = "FicsItCam";
 	CommandName = "fic";
 }
 
 #pragma optimize("", off)
 EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Sender, const TArray<FString>& Arguments, const FString& Label) {
-	if (!Sender->IsPlayerSender() || Sender->GetPlayer() != GetWorld()->GetFirstPlayerController()) {
+	if (!Sender->IsPlayerSender() || (Sender->GetPlayer() != GetWorld()->GetFirstPlayerController())) {
 		Sender->SendChatMessage("Only Host is allowed to run this command.");
 		return EExecutionStatus::INSUFFICIENT_PERMISSIONS;
 	}

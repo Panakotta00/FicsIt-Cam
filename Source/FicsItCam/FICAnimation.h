@@ -1,11 +1,8 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-
-
 #include "FGSaveInterface.h"
 #include "GameFramework/Actor.h"
-
 #include "FICAnimation.generated.h"
 
 UENUM()
@@ -25,7 +22,17 @@ struct FFICKeyframe {
 	GENERATED_BODY()
 
 public:
+	FFICKeyframe(EFICKeyframeType Type = FIC_KF_EASE) : KeyframeType(Type) {}
 	virtual ~FFICKeyframe() = default;
+
+	/**
+	 * Returns the value of the keyframe as float.
+	 * Intended to be used for attibute viewers like graph view.
+	 */
+	virtual float GetValueAsFloat() const { return 0.0f; }
+	virtual void GetInControlAsFloat(float& OutFrame, float& OutValue) {}
+	virtual void GetOutControlAsFloat(float& OutFrame, float& OutValue) {}
+	virtual void SetValueFromFloat(float InValue) {}
 
 	UPROPERTY(SaveGame)
 	TEnumAsByte<EFICKeyframeType> KeyframeType = FIC_KF_EASE;
@@ -44,7 +51,7 @@ public:
 	FFICKeyframe* operator->() { return Keyframe; }
 	const FFICKeyframe& operator*() const { return *Keyframe; }
 	FFICKeyframe& operator*() { return *Keyframe; }
-	operator bool() const { return Keyframe; }
+	operator bool() const { return static_cast<bool>(Keyframe); }
 
 	const FFICKeyframe* Get() const { return Keyframe;}
 	FFICKeyframe* Get() { return Keyframe;}
@@ -91,7 +98,12 @@ struct FFICFloatKeyframe : public FFICKeyframe {
 	float OutTanTime = 0.0f;
 
 	FFICFloatKeyframe() = default;
-	FFICFloatKeyframe(float Value) : Value(Value) {}
+	FFICFloatKeyframe(float Value, EFICKeyframeType Type = FIC_KF_EASE) : FFICKeyframe(Type), Value(Value) {}
+
+	virtual float GetValueAsFloat() const { return Value; }
+	virtual void SetValueFromFloat(float InValue) { Value = InValue; }
+	virtual void GetInControlAsFloat(float& OutFrame, float& OutValue) { OutFrame = InTanTime; OutValue = InTanValue; }
+	virtual void GetOutControlAsFloat(float& OutFrame, float& OutValue) { OutFrame = OutTanTime; OutValue = OutTanValue; }
 };
 
 USTRUCT(BlueprintType)

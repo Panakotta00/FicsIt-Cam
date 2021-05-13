@@ -1,7 +1,6 @@
 ﻿#pragma once
-#include "Attribute.h"
+
 #include "FICAnimation.h"
-#include "util/Logging.h"
 
 DECLARE_DELEGATE(FFICAttributeValueChanged)
 
@@ -48,17 +47,18 @@ public:
 	/**
 	 * Returns true if the value of the attribute differs from the current value.
 	 */
-	virtual bool HasChanged(int64 Time) = 0;
+	virtual bool HasChanged(int64 Time) const = 0;
 
 	/**
 	 * Returns the attribute.
 	 */
-	virtual FFICAttribute* GetAttribute() = 0;
-
+	virtual const FFICAttribute* GetAttributeConst() const = 0;
+	virtual FFICAttribute* GetAttribute() { return const_cast<FFICAttribute*>(GetAttributeConst()); }
+	
 	/**
 	 * Returns the current Frame
 	 */
-	virtual int64 GetFrame();
+	virtual int64 GetFrame() const;
 
 	/**
 	 * Sets the current Frame
@@ -69,6 +69,18 @@ public:
 	 * Sets the current value to the value in the attribute at the current frame
 	 */
 	virtual void UpdateValue() = 0;
+
+	/**
+	 * Returns the value at a given frame as float,
+	 * intended to be used for unified attribute views, like graph view.
+	 */
+	virtual float GetValueAsFloat(int64 InFrame) const = 0;
+
+	/**
+	 * Set a keyframe at the given frame from the given float value,
+	 * intended to be used for unified attribute views that can edit the attribute, like graph view.
+	 */
+	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE) = 0;
 };
 
 template<typename AttribType>
@@ -92,19 +104,27 @@ public:
 		UpdateValue();
 	}
 	
-	virtual bool HasChanged(int64 Time) override {
+	virtual bool HasChanged(int64 Time) const override {
 		if (!Attribute.Get()) return false;
 		typename AttribType::ValueType Value = Attribute.Get()->GetValue(Time);
 		return FMath::Abs(Value - CurrentValue) > 0.0001;
 	}
 	
-	virtual FFICAttribute* GetAttribute() override {
+	virtual const FFICAttribute* GetAttributeConst() const override {
 		return Attribute.Get();
 	}
 
 	virtual void UpdateValue() override {
 		if (!Attribute.Get()) return;
 		SetValue(Attribute.Get()->GetValue(GetFrame()));
+	}
+
+	virtual float GetValueAsFloat(int64 InFrame) const override {
+		return Attribute.Get()->GetValue(InFrame);
+	}
+
+	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE) override {
+		Attribute.Get()->SetKeyframe(InFrame, AttribType::KeyframeType(InValue, InType));
 	}
 	// End FFICEditorAttributeBase
 
@@ -120,6 +140,10 @@ public:
 
 	typename AttribType::ValueType GetValue() {
 		return CurrentValue;
+	}
+
+	typename AttribType::ValueType GetValue(int64 Time) {
+		return Attribute.Get()->GetValue(Time);
 	}
 };
 
@@ -141,8 +165,12 @@ public:
 	
 	// Begin FFICEditorAttributeBase
 	virtual void SetKeyframe(int64 Time) override;
-	virtual bool HasChanged(int64 Time) override;
-	virtual FFICAttribute* GetAttribute() override;
+	virtual bool HasChanged(int64 Time) const override;
+	virtual const FFICAttribute* GetAttributeConst() const override;
 	virtual void UpdateValue() override;
+	virtual float GetValueAsFloat(int64 InFrame) const override;
+	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE) override;
 	// End FFICEditorAttributeBase
+
+	TMap<FString, TAttribute<FFICEditorAttributeBase*>> GetAttributes();
 };

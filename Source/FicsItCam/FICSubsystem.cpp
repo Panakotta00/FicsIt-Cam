@@ -1,9 +1,9 @@
 ﻿#include "FICSubsystem.h"
 
+#include <Subsystem/SubsystemActorManager.h>
 
 #include "FICCommand.h"
-#include "FICSubsystemHolder.h"
-#include "mod/ModSubsystems.h"
+#include "Engine/World.h"
 
 AFICSubsystem::AFICSubsystem() {
 	PrimaryActorTick.bCanEverTick = true;
@@ -12,8 +12,6 @@ AFICSubsystem::AFICSubsystem() {
 
 void AFICSubsystem::BeginPlay() {
 	Super::BeginPlay();
-	
-	if (HasAuthority()) AChatCommandSubsystem::Get(this)->RegisterCommand(AFICCommand::StaticClass());
 }
 
 void AFICSubsystem::Tick(float DeltaSeconds) {
@@ -32,7 +30,10 @@ bool AFICSubsystem::ShouldSave_Implementation() const {
 }
 
 AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
-	return GetSubsystemHolder<UFICSubsystemHolder>(WorldContext)->Subsystem;
+	UWorld* WorldObject = GEngine->GetWorldFromContextObjectChecked(WorldContext);
+	USubsystemActorManager* SubsystemActorManager = WorldObject->GetSubsystem<USubsystemActorManager>();
+	check(SubsystemActorManager);
+	return SubsystemActorManager->GetSubsystemActor<AFICSubsystem>();
 }
 
 void AFICSubsystem::PlayAnimation(AFICAnimation* Path) {

@@ -1,6 +1,5 @@
 ﻿#pragma once
-
-#include "NumericTypeInterface.h"
+#include "Widgets/Input/NumericTypeInterface.h"
 
 template<typename NumericType>
 struct TFICNumericTypeInterface : INumericTypeInterface<NumericType> {

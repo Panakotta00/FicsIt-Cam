@@ -148,7 +148,8 @@ void FFICFloatAttribute::RecalculateKeyframe(int64 Time) {
 
 	if (!K) return;
 	if (K->KeyframeType & (FIC_KF_CUSTOM | FIC_KF_LINEAR | FIC_KF_MIRROR | FIC_KF_STEP)) return;
-	float Factor = 2.0/3.0;
+	float Factor = 1.0/3.0;
+	//Factor = 0.5;
 	if (PK) {
 		float PKTimeDiff = Time - PTime;
 		float PKValueDiff = K->Value - PK->Value;

@@ -1,16 +1,15 @@
 ﻿#pragma once
 
-#include "FGSubsystem.h"
+
+#include "Subsystem/ModSubsystem.h"
 #include "FICAnimation.h"
 #include "FGSaveInterface.h"
 #include "FICCameraCharacter.h"
 #include "UI/FICEditorContext.h"
-
-
 #include "FICSubsystem.generated.h"
 
 UCLASS()
-class AFICSubsystem : public AFGSubsystem, public IFGSaveInterface {
+class AFICSubsystem : public AModSubsystem, public IFGSaveInterface {
 	GENERATED_BODY()
 private:
 	UPROPERTY()

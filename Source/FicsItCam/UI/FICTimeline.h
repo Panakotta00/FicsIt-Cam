@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "FICGraphView.h"
 #include "FICRangeSelector.h"
 #include "FICTimelineScrubber.h"
 #include "SlateBasics.h"
@@ -24,6 +25,7 @@ private:
 
 	TSharedPtr<SFICRangeSelector> VisibleRange;
 	TSharedPtr<SFICTimelineScrubber> Scrubber;
+	TSharedPtr<SFICGraphView> Graph;
 
 	int64 ActiveRangeStart = 0;
 	int64 ActiveRangeEnd = 0;
