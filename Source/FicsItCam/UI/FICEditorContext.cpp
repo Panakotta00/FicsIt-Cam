@@ -40,6 +40,7 @@ void UFICEditorContext::ShowEditor() {
 void UFICEditorContext::HideEditor() {
 	if (CameraCharacter) {
 		GetWorld()->GetFirstPlayerController()->Possess(OriginalCharacter);
+		CameraCharacter->Destroy();
 	}
 	if (EditorWidget) {
 		GameOverlay->RemoveSlot(EditorWidget.ToSharedRef());

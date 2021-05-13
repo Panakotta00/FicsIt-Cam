@@ -33,9 +33,12 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 	GetCharacterMovement()->MaxFlySpeed = bIsSprinting ? MaxFlySpeed * 10 : MaxFlySpeed;
 	GetCharacterMovement()->MaxAcceleration = 1000000;
 
-	FRotator RotatorFix = GetController()->GetControlRotation();
-	RotatorFix.Roll = RollRotationFixValue;
-	GetController()->SetControlRotation(RotatorFix);
+	FRotator RotatorFix;
+	AController* MyController = GetController();
+	if (MyController) {
+		RotatorFix = MyController->GetControlRotation();
+		RotatorFix.Roll = RollRotationFixValue;
+	}
 	
 	if (EditorContext) {
 		if (EditorContext->bMoveCamera) {
@@ -70,6 +73,8 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			EditorContext->RotRoll.SetValue(RotNew.Roll);
 		}
 
+		if (EditorContext->bMoveCamera) RotatorFix.Roll = EditorContext->RotRoll.GetValue();
+
 		// Draw Path
 		if (EditorContext->bShowPath) {
 			FVector PrevLoc = FVector::ZeroVector;
@@ -85,6 +90,8 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			}
 		}
 	}
+	
+	if (MyController) GetController()->SetControlRotation(RotatorFix);
 }
 
 void AFICEditorCameraCharacter::BeginPlay() {
