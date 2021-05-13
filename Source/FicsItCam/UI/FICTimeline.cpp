@@ -213,8 +213,36 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 		            return ActiveRangeEnd;
 		        })
 			]
+			/*+SGridPanel::Slot(1, 2)[
+				SNew(SBox)
+				.MaxDesiredHeight(200)
+				.MaxDesiredWidth(200)
+				.Clipping(EWidgetClipping::ClipToBoundsAlways)
+				.Content()[
+					SAssignNew(Graph, SFICGraphView)
+					.AutoFit(true)
+					.Clipping(EWidgetClipping::ClipToBoundsAlways)
+					.Frame_Lambda([this]() {
+						return Context->GetCurrentFrame();
+					})
+					.TimelineRangeBegin_Lambda([this]() {
+						return ActiveRangeStart;
+					})
+					.TimelineRangeEnd_Lambda([this]() {
+						return ActiveRangeEnd;
+					})
+					.OnTimelineRangedChanged_Lambda([this](int64 Begin, int64 End) {
+						ActiveRangeStartChanged(ActiveRangeStart, Begin);
+						ActiveRangeEndChanged(ActiveRangeEnd, End);
+					})
+				]
+			]*/
 		]
 	];
+
+	// TArray<FFICEditorAttributeBase*> Attributes;
+	// Attributes.Add(Context->All.GetAttributes()["X"].Get());
+	// Graph->SetAttributes(Attributes);
 }
 
 void SFICTimelinePanel::ActiveRangeStartChanged(int64 Prev, int64 Cur) {

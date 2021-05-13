@@ -1,6 +1,8 @@
 ﻿#include "FICKeyframeControl.h"
 
+#include "Brushes/SlateColorBrush.h"
 #include "Engine/Texture2D.h"
+#include "Widgets/Images/SImage.h"
 
 FFICKeyframeControlStyle::FFICKeyframeControlStyle() {
 	UnsetColor = FSlateColor(FColor::FromHex("5A5A5A"));
@@ -121,7 +123,7 @@ void SFICKeyframeControl::Construct(FArguments InArgs) {
 	];
 }
 
-FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& Event) {
+FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton) {
 		if (Attribute.Get()->GetKeyframe(GetFrame()) && !Attribute.Get()->HasChanged(GetFrame())) Attribute.Get()->RemoveKeyframe(GetFrame());
 		else Attribute.Get()->SetKeyframe(GetFrame());
@@ -168,7 +170,7 @@ FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const
 		}
 		return FReply::Handled();
 	}
-	return SCompoundWidget::OnMouseButtonDown(MyGeometry, Event);
+	return SCompoundWidget::OnMouseButtonUp(MyGeometry, Event);
 }
 
 FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& Event) {
@@ -185,4 +187,8 @@ int64 SFICKeyframeControl::GetFrame() {
 	TOptional<int64> F = Frame.Get();
 	if (F.IsSet()) return F.GetValue();
 	return Attribute.Get()->GetFrame();
+}
+
+FFICEditorAttributeBase* SFICKeyframeControl::GetAttribute() {
+	return Attribute.Get();
 }

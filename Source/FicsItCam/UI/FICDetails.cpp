@@ -84,6 +84,19 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					.Value_Lambda([this]() {
 						return Context->FOV.GetValue();
 					})
+					.SupportDynamicSliderMaxValue(true)
+					.SupportDynamicSliderMinValue(true)
+					.SliderExponent(1)
+					.Delta(1)
+					.MinValue(TOptional<float>())
+					.MaxValue(TOptional<float>())
+					.MinSliderValue(TOptional<float>())
+					.MaxSliderValue(TOptional<float>())
+					.LinearDeltaSensitivity(10)
+					.AllowSpin(true)
+					.OnValueChanged_Lambda([this](float Val) {
+						Context->FOV.SetValue(Val);
+					})
 					.OnValueCommitted_Lambda([this](float Val, auto) {
 						Context->FOV.SetValue(Val);
 					})

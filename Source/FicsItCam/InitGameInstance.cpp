@@ -34,12 +34,12 @@ UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	});
 	ModKeyBindings.Add({
 		TEXT("FicsItCam.ChangeFOV"),
-		FInputActionKeyMapping(TEXT("FicsItCam.ChangeFOV"), EKeys::LeftControl),
+		FInputActionKeyMapping(TEXT("FicsItCam.ChangeFOV"), EKeys::LeftShift, false, true),
 		FText::FromString(TEXT("Mousewheel -> Change FOV"))
 	});
 	ModKeyBindings.Add({
 		TEXT("FicsItCam.ChangeSpeed"),
-		FInputActionKeyMapping(TEXT("FicsItCam.ChangeSpeed"), EKeys::LeftControl, true),
+		FInputActionKeyMapping(TEXT("FicsItCam.ChangeSpeed"), EKeys::LeftControl),
 		FText::FromString(TEXT("Mousewheel -> Change Speed"))
 	});
 	ModKeyBindings.Add({
@@ -85,16 +85,16 @@ UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	ModKeyBindings.Add({
 		TEXT("FicsItCam.ToggleAutoKeyframe"),
 		FInputActionKeyMapping(TEXT("FicsItCam.ToggleAutoKeyframe"), EKeys::K),
-		FText::FromString(TEXT("Toggles if keyframes should automatically get created when the camera moves in editor"))
+		FText::FromString(TEXT("Toggles all keyframes"))
 	});
 	ModKeyBindings.Add({
 		TEXT("FicsItCam.ToggleShowPath"),
 		FInputActionKeyMapping(TEXT("FicsItCam.ToggleShowPath"), EKeys::L),
-		FText::FromString(TEXT("Shows/Hides the 3D representation of the path and camera"))
+		FText::FromString(TEXT("Shows/Hides the 3D camnera path"))
 	});
 	ModKeyBindings.Add({
 		TEXT("FicsItCam.ToggleLockCamera"),
 		FInputActionKeyMapping(TEXT("FicsItCam.ToggleLockCamera"), EKeys::J),
-		FText::FromString(TEXT("Enables/Disables if the viewport camera is locked to the animation camera (when the current keyframe changes, the view shows the view of the camera at that moment)"))
+		FText::FromString(TEXT("Enables/Disables view lock to path camera"))
 	});
 }

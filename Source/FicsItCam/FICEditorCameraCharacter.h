@@ -62,9 +62,12 @@ public:
 	void FlyUp(float Value);
 
 	UFUNCTION()
-	void EnterChangeFOV() { bChangeFOV = true; }
+	void EnterChangeFOV() {
+		bChangeFOV = true;
+		bChangeSpeed = false;
+	}
 	UFUNCTION()
-	void LeaveChangeFOV() { bChangeFOV = false; }
+	void LeaveChangeFOV() { bChangeSpeed = bChangeFOV = false; }
 
 	UFUNCTION()
 	void EnterSprint() { bIsSprinting = true; }
@@ -72,9 +75,14 @@ public:
 	void LeaveSprint() { bIsSprinting = false; }
 
 	UFUNCTION()
-	void EnterChangeSpeed() { bChangeSpeed = true; }
+	void EnterChangeSpeed() {
+		bChangeSpeed = true;
+		bChangeFOV = false;
+	}
 	UFUNCTION()
-	void LeaveChangeSpeed() { bChangeSpeed = false; }
+	void LeaveChangeSpeed() {
+		bChangeFOV = bChangeSpeed = false;
+	}
 
 	UFUNCTION()
 	void NextKeyframe();

@@ -123,7 +123,7 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 	PlayerInputComponent->BindAxis("LookUp", this, &AFICEditorCameraCharacter::RotatePitch);
 
 	PlayerInputComponent->BindAction("FicsItCam.ChangeFOV", IE_Pressed, this, &AFICEditorCameraCharacter::EnterChangeFOV);
-	PlayerInputComponent->BindAction("FicsItCam.ChangeFOV", IE_Pressed, this, &AFICEditorCameraCharacter::LeaveChangeFOV);
+	PlayerInputComponent->BindAction("FicsItCam.ChangeFOV", IE_Released, this, &AFICEditorCameraCharacter::LeaveChangeFOV);
 	PlayerInputComponent->BindAction("FicsItCam.Sprint", EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::EnterSprint);
 	PlayerInputComponent->BindAction("FicsItCam.Sprint", EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::LeaveSprint);
 	PlayerInputComponent->BindAction("FicsItCam.ChangeSpeed", EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::EnterChangeSpeed);
@@ -236,14 +236,14 @@ void AFICEditorCameraCharacter::ChangedKeyframe() {
 
 void AFICEditorCameraCharacter::Zoom(float Value) {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (bChangeSpeed) {
-		float Delta = Value * 10;
-		if (bIsSprinting) Delta *= 2;
-		if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
-	} else if (bChangeFOV) {
+	if (bChangeFOV) {
 		float Delta = Value;
 		if (bIsSprinting) Delta *= 2;
 		EditorContext->FOV.SetValue(EditorContext->FOV.GetValue() + Delta);
+	} else if (bChangeSpeed) {
+		float Delta = Value * 100;
+		if (bIsSprinting) Delta *= 2;
+		if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
 	} else {
 		float Delta = Value;
 		int64 Range = EditorContext->GetAnimation()->AnimationEnd - EditorContext->GetAnimation()->AnimationStart;
