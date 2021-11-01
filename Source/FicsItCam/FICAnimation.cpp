@@ -13,7 +13,6 @@ void FFICAttribute::RecalculateAllKeyframes() {
 	}
 }
 
-#pragma optimize("", off)
 bool FFICAttribute::GetPrevKeyframe(int64 Time, int64& outTime, TSharedPtr<FFICKeyframeRef>& outKeyframe) {
 	TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = GetKeyframes();
 	TArray<int64> Keys;
@@ -69,7 +68,6 @@ bool FFICAttribute::GetNextKeyframe(int64 Time, int64& outTime, TSharedPtr<FFICK
 	}
 	return false;
 }
-#pragma optimize("", on)
 
 float Interpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVector2D P3, float t) {
 	float Lower = 0.0;

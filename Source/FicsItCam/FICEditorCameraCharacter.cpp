@@ -11,7 +11,6 @@
 #include "GameFramework/PlayerController.h"
 #include "UI/FICEditorContext.h"
 
-#pragma optimize("", off)
 AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	PrimaryActorTick.bCanEverTick = true;
 	bSimGravityDisabled = true;
@@ -280,4 +279,3 @@ void AFICEditorCameraCharacter::UpdateValues() {
 		CameraActor->UpdateGizmo();
 	}
 }
-#pragma optimize("", on)

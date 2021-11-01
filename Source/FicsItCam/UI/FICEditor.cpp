@@ -200,4 +200,3 @@ FReply SFICEditor::OnPreviewKeyDown(const FGeometry& MyGeometry, const FKeyEvent
 	return SCompoundWidget::OnPreviewKeyDown(MyGeometry, InKeyEvent);
 }
 
-#pragma optimize("", on)

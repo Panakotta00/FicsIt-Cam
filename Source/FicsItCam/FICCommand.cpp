@@ -11,7 +11,6 @@ AFICCommand::AFICCommand() {
 	CommandName = "fic";
 }
 
-#pragma optimize("", off)
 EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Sender, const TArray<FString>& Arguments, const FString& Label) {
 	if (!Sender->IsPlayerSender() || (Sender->GetPlayer() != GetWorld()->GetFirstPlayerController())) {
 		Sender->SendChatMessage("Only Host is allowed to run this command.");
@@ -82,4 +81,3 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 	}
 	return EExecutionStatus::BAD_ARGUMENTS;
 }
-#pragma optimize("", on)

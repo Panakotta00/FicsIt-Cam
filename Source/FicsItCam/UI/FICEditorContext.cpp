@@ -8,7 +8,6 @@
 #include "Slate/SceneViewport.h"
 #include "FicsItCam/FicsItCamModule.h"
 
-#pragma optimize("", off)
 void UFICEditorContext::ShowEditor() {
 	HideEditor();
 
@@ -109,4 +108,3 @@ void UFICEditorContext::UpdateCharacterValues() {
 	}
 }
 
-#pragma optimize("", on)
