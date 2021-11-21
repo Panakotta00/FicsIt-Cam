@@ -19,7 +19,7 @@ pipeline {
 				checkout scm: [
 	                $class: 'GitSCM',
 	                branches: [[
-	                    name: "master"
+	                    name: "sml-dev"
 	                ]],
 	                extensions: [[
 	                    $class: 'RelativeTargetDirectory',
@@ -53,7 +53,8 @@ pipeline {
 		stage('Apply Patches') {
 			steps {
 				dir("SatisfactoryModLoader") {
-					bat label: 'Apply Asset Patch', script: 'git apply %ASSETS% -v'
+					//bat label: 'Apply Source Patch', script: 'git apply Plugins\\%MOD_NAME%\\SML_Patch.patch -v'
+					//bat label: 'Apply Asset Patch', script: 'git apply %ASSETS% -v'
 					bat label: 'Add WWise', script: '7z x %WWISE_PLUGIN% -oPlugins\\'
 				}
 			}
@@ -62,30 +63,39 @@ pipeline {
 		stage('Setup UE4') {
 			steps {
 				dir('ue4') {
-					withCredentials([string(credentialsId: 'GitHub-API', variable: 'GITHUB_TOKEN')]) {
-						retry(3) {
-							bat label: 'Download UE', script: 'aria2c -x 8 -s 8 https://ci.ficsit.app/job/UE-4.25.3-CSS/lastSuccessfulBuild/artifact/UnrealEngine-CSS-Editor-Win64.zip'
+					/*withCredentials([string(credentialsId: 'SMR', variable: 'SMR_TOKEN')]) {
+						retry(5) {
+							bat label: 'Download UE', script: 'aria2c -x 8 -s 8 -c https://%SMR_TOKEN%@ci.ficsit.app/job/UE-4.25.3-CSS/lastSuccessfulBuild/artifact/UnrealEngine-CSS-Editor-Win64.zip'
 						}
-						bat label: 'Extract UE', script: '7z x UnrealEngine-CSS-Editor-Win64.zip'
 					}
-					bat label: 'Register UE', script: 'SetupScripts\\Register.bat'
+					bat label: 'Copy UE', script: 'copy C:\\Jenkins\\UnrealEngine-CSS-Editor-Win64.zip .'
+					bat label: 'Extract UE', script: '7z x UnrealEngine-CSS-Editor-Win64.zip'
+					bat label: 'Register UE', script: 'SetupScripts\\Register.bat'*/
+					withCredentials([string(credentialsId: 'GitHub-API', variable: 'GITHUB_TOKEN')]) {
+                        retry(3) {
+                            bat label: 'Download UE - Part 1', script: 'github-release download --user SatisfactoryModdingUE --repo UnrealEngine -l -n "UnrealEngine-CSS-Editor-Win64.7z.001" > UnrealEngine-CSS-Editor-Win64.7z.001'
+                            bat label: 'Download UE - Part 2', script: 'github-release download --user SatisfactoryModdingUE --repo UnrealEngine -l -n "UnrealEngine-CSS-Editor-Win64.7z.002" > UnrealEngine-CSS-Editor-Win64.7z.002'
+                        }
+                        bat label: '', script: '7z x UnrealEngine-CSS-Editor-Win64.7z.001'
+                    }
+                    bat label: '', script: 'SetupScripts\\Register.bat'
 				}
 			}
 		}
 		
 
-		stage('Build FicsIt-Networks') {
+		stage('Build FicsIt-Cam') {
 			steps {
-				bat label: 'Create project files', script: '.\\ue4\\Engine\\Binaries\\DotNET\\UnrealBuildTool.exe -projectfiles -project="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" -game -rocket -progress'
-				bat label: 'Build for Shipping', script: 'MSBuild.exe .\\SatisfactoryModLoader\\FactoryGame.sln /p:Configuration="Shipping" /p:Platform="Win64" /t:"Games\\FactoryGame"'
-				bat label: 'Build for Editor', script: 'MSBuild.exe .\\SatisfactoryModLoader\\FactoryGame.sln /p:Configuration="Development Editor" /p:Platform="Win64" /t:"Games\\FactoryGame"'
+				bat label: 'Create project files', script: '.\\ue4\\lb\\win\\Engine\\Binaries\\DotNET\\UnrealBuildTool.exe -projectfiles -project="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" -game -rocket -progress'
+				bat label: 'Build for Shipping', script: 'MSBuild.exe /p:CL_MPCount=5 .\\SatisfactoryModLoader\\FactoryGame.sln /p:Configuration="Shipping" /p:Platform="Win64" /t:"Games\\FactoryGame"'
+				bat label: 'Build for Editor', script: 'MSBuild.exe /p:CL_MPCount=5 .\\SatisfactoryModLoader\\FactoryGame.sln /p:Configuration="Development Editor" /p:Platform="Win64" /t:"Games\\FactoryGame"'
 			}
 		}
 
-		stage('Package FicsIt-Networks') {
+		stage('Package FicsIt-Cam') {
 			steps {
 				retry(3) {
-					bat label: 'Alpakit!', script: '.\\ue4\\Engine\\Build\\BatchFiles\\RunUAT.bat -ScriptsForProject="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" PackagePlugin -Project="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" -PluginName="%MOD_NAME%"'
+					bat label: 'Alpakit!', script: '.\\ue4\\lb\\win\\Engine\\Build\\BatchFiles\\RunUAT.bat -ScriptsForProject="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" PackagePlugin -Project="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" -PluginName="%MOD_NAME%"'
 				}
 			}
 		}
@@ -100,6 +110,15 @@ pipeline {
 			steps {
 				bat script: "rename .\\SatisfactoryModLoader\\Saved\\ArchivedPlugins\\WindowsNoEditor\\${MOD_NAME}.zip ${MOD_NAME}_${BRANCH_NAME}_${BUILD_NUMBER}.zip"
 				archiveArtifacts artifacts: "SatisfactoryModLoader\\Saved\\ArchivedPlugins\\WindowsNoEditor\\${MOD_NAME}_${BRANCH_NAME}_${BUILD_NUMBER}.zip", fingerprint: true, onlyIfSuccessful: true
+			}
+		}
+	}
+
+	post {
+		always {
+			cleanWs()
+			withCredentials([string(credentialsId: 'FINDiscordToken_FicsItCam', variable: 'WEBHOOKURL')]) {
+				discordSend description: "FIN Build", link: env.BUILD_URL, result: currentBuild.currentResult, title: JOB_NAME, webhookURL: "$WEBHOOKURL"
 			}
 		}
 	}
