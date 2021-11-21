@@ -20,10 +20,10 @@ UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	});
 	ModAxisBindings.Add(FModAxisBindingInfo{
 		TEXT("FicsItCam.MoveRoll"),
-		FInputAxisKeyMapping("FicsItCam.MoveRoll", EKeys::Q, 1),
-		FInputAxisKeyMapping("FicsItCam.MoveRoll", EKeys::E, -1),
-		LOCTEXT("MoveForward", "Rolls the camera in Editor clockwise"),
-		LOCTEXT("MoveBackward", "Rolls the camera in Editor counterclockwise"),
+		FInputAxisKeyMapping("FicsItCam.MoveRoll", EKeys::E, 1),
+		FInputAxisKeyMapping("FicsItCam.MoveRoll", EKeys::Q, -1),
+		LOCTEXT("RollClockwise", "Rolls the camera in Editor clockwise"),
+		LOCTEXT("RollCounterclockwise", "Rolls the camera in Editor counterclockwise"),
 	});
 	ModAxisBindings.Add(FModAxisBindingInfo{
 		TEXT("FicsItCam.MoveUp"),

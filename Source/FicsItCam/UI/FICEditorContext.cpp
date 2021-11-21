@@ -1,5 +1,6 @@
 ﻿#include "FICEditorContext.h"
 
+#include "FGInputLibrary.h"
 #include "StereoRenderTargetManager.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Engine/GameEngine.h"
@@ -15,6 +16,7 @@ void UFICEditorContext::ShowEditor() {
 	if (!CameraCharacter) CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(FVector(PosX.GetValue(), PosY.GetValue(), PosZ.GetValue()), FRotator(RotPitch.GetValue(), RotYaw.GetValue(), RotRoll.GetValue()));
 	CameraCharacter->SetEditorContext(this);
 	GetWorld()->GetFirstPlayerController()->Possess(CameraCharacter);
+	UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
 
 	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
 	GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
@@ -39,6 +41,7 @@ void UFICEditorContext::ShowEditor() {
 void UFICEditorContext::HideEditor() {
 	if (CameraCharacter) {
 		GetWorld()->GetFirstPlayerController()->Possess(OriginalCharacter);
+		UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
 		CameraCharacter->Destroy();
 	}
 	if (EditorWidget) {
