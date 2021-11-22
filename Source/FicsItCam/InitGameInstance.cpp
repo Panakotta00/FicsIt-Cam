@@ -5,20 +5,6 @@
 UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	bRootModule = true;
 	ModAxisBindings.Add(FModAxisBindingInfo{
-		TEXT("FicsItCam.MoveForward"),
-		FInputAxisKeyMapping("FicsItCam.MoveForward", EKeys::W, 1),
-		FInputAxisKeyMapping("FicsItCam.MoveForward", EKeys::S, -1),
-		LOCTEXT("MoveForward", "Move Forward in Editor"),
-		LOCTEXT("MoveBackward", "Move Backward in Editor"),
-	});
-	ModAxisBindings.Add(FModAxisBindingInfo{
-		TEXT("FicsItCam.MoveRight"),
-		FInputAxisKeyMapping("FicsItCam.MoveRight", EKeys::D, 1),
-		FInputAxisKeyMapping("FicsItCam.MoveRight", EKeys::A, -1),
-		LOCTEXT("MoveRight", "Move Right in Editor"),
-		LOCTEXT("MoveLeft", "Move Left in Editor"),
-	});
-	ModAxisBindings.Add(FModAxisBindingInfo{
 		TEXT("FicsItCam.MoveRoll"),
 		FInputAxisKeyMapping("FicsItCam.MoveRoll", EKeys::E, 1),
 		FInputAxisKeyMapping("FicsItCam.MoveRoll", EKeys::Q, -1),
