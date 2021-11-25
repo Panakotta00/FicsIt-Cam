@@ -1,7 +1,10 @@
 #include "FICCameraCharacter.h"
 
+#include "CineCameraComponent.h"
 #include "Engine/World.h"
 #include "FGPlayerController.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
 
 void AFICCameraCharacter::OnTickWorldStreamTimer() {
 	UWorld* world = GetWorld();
@@ -13,8 +16,22 @@ void AFICCameraCharacter::OnTickWorldStreamTimer() {
 }
 
 AFICCameraCharacter::AFICCameraCharacter() {
-	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
+	Camera = CreateDefaultSubobject<UCineCameraComponent>("Camera");
 	Camera->SetupAttachment(GetCapsuleComponent());
+	Camera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
+	Camera->bConstrainAspectRatio = false;
+
+	CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>("CaptureComponent");
+	CaptureComponent->SetupAttachment(GetCapsuleComponent());
+	CaptureComponent->bCaptureEveryFrame = false;
+	CaptureComponent->bCaptureOnMovement = false;
+	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorHDR;
+	CaptureComponent->bUseRayTracingIfEnabled = true;
+	CaptureComponent->ShowFlags.SetTemporalAA(true);
+
+	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>("RenderTarget");
+	RenderTarget->InitCustomFormat(4096, 2304, EPixelFormat::PF_R8G8B8A8, false);
+	CaptureComponent->TextureTarget = RenderTarget;
 	
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorTickEnabled(true);
@@ -43,11 +60,19 @@ void AFICCameraCharacter::UnPossessed() {}
 
 void AFICCameraCharacter::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
-	
+
 	if (Animation) {
 		//double Start = FPlatformTime::Seconds();
-		Progress += DeltaSeconds;
-		float Time = Progress * Animation->FPS;
+		float Time;
+		if (bDoRender) {
+			if(GetWorld()->IsLevelStreamingRequestPending(GetWorld()->GetFirstPlayerController())) return;
+			
+			Time = Progress;
+			Progress += 1;
+		} else {
+			Time = Progress * Animation->FPS;
+			Progress += DeltaSeconds;
+		}
 		FVector Pos;
 		Pos.X = Animation->PosX.GetValue(Time);
 		Pos.Y = Animation->PosY.GetValue(Time);
@@ -57,21 +82,71 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 		Rot.Yaw = Animation->RotYaw.GetValue(Time);
 		Rot.Roll = Animation->RotRoll.GetValue(Time);
 		float FOV = Animation->FOV.GetValue(Time);
+		float Aperture = Animation->Aperture.GetValue(Time);
+		float FocusDistance = Animation->FocusDistance.GetValue(Time);
+		
 		SetActorLocation(Pos);
 		SetActorRotation(Rot);
 		GetController()->SetControlRotation(Rot);
 		Camera->SetFieldOfView(FOV);
+		Camera->CurrentAperture = Aperture;
+		Camera->FocusSettings.ManualFocusDistance = FocusDistance;
 
-		if (Animation->GetEndOfAnimation() < Progress) {
-			StopAnimation();
+		if (bDoRender) {
+			FMinimalViewInfo ViewInfo;
+			Camera->GetCameraView(0, ViewInfo);
+			CaptureComponent->SetCameraView(ViewInfo);
+			CaptureComponent->FOVAngle = Camera->FieldOfView;
+			FWeightedBlendables Blendables = CaptureComponent->PostProcessSettings.WeightedBlendables;
+			CaptureComponent->PostProcessSettings = ViewInfo.PostProcessSettings;
+			CaptureComponent->PostProcessSettings.WeightedBlendables = Blendables;
+			CaptureComponent->PostProcessBlendWeight = Camera->PostProcessBlendWeight;
+			
+			CaptureComponent->CaptureScene();
+			
+			FString FSP;
+			// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
+			if (FSP.IsEmpty()) {
+				FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/") TEXT("FicsItCam/"), Animation->GetName());
+			}
+
+			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+			if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
+
+			FSP = FPaths::Combine(FSP, FString::FromInt((int)Progress) + TEXT(".jpg"));
+
+			IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+			TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
+
+			FRenderTarget* RenderTargetResource = RenderTarget->GameThread_GetRenderTargetResource();
+			if (RenderTargetResource && ImageWrapper.IsValid()) {
+				TArray<FColor> RawData;
+				bool bReadPixels = RenderTargetResource->ReadPixels(RawData);
+				if (bReadPixels) {
+					bool bRaw = ImageWrapper->SetRaw(RawData.GetData(), RawData.GetTypeSize() * RawData.Num(), RenderTarget->SizeX, RenderTarget->SizeY, ERGBFormat::BGRA, 8);
+					if (bRaw) {
+						TArray64<uint8> CompressedData = ImageWrapper->GetCompressed();
+						FFileHelper::SaveArrayToFile(CompressedData, *FSP);
+
+						if (Animation->GetEndOfAnimation() < Progress / Animation->FPS) {
+							StopAnimation();
+						}
+					}
+				}
+			}
+		} else {
+			if (Animation->GetEndOfAnimation() < Progress) {
+				StopAnimation();
+			}
 		}
 		//SML::Logging::error((FPlatformTime::Seconds() - Start) * 1000);
 	}
 }
 
-void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation) {
+void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation, bool bInDoRender) {
 	StopAnimation();
 	Animation = inAnimation;
+	bDoRender = bInDoRender;
 	if (!Animation) return;
 	Progress = Animation->GetStartOfAnimation();
 	

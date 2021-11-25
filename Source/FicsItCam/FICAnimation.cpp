@@ -288,6 +288,8 @@ void FFICGroupAttribute::RecalculateKeyframe(int64 Time) {
 
 AFICAnimation::AFICAnimation() {
 	FOV.FallBackValue = 90.0f;
+	Aperture.FallBackValue = 100;
+	FocusDistance.FallBackValue = 10000;
 }
 
 void AFICAnimation::RecalculateAllKeyframes() {
@@ -298,6 +300,8 @@ void AFICAnimation::RecalculateAllKeyframes() {
 	RotPitch.RecalculateAllKeyframes();
 	RotRoll.RecalculateAllKeyframes();
 	FOV.RecalculateAllKeyframes();
+	Aperture.RecalculateAllKeyframes();
+	FocusDistance.RecalculateAllKeyframes();
 }
 
 float AFICAnimation::GetEndOfAnimation() {

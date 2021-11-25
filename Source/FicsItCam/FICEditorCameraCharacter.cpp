@@ -1,5 +1,6 @@
 #include "FICEditorCameraCharacter.h"
 
+#include "CineCameraComponent.h"
 #include "FGPlayerController.h"
 #include "FICCameraCharacter.h"
 #include "FICEditorCameraActor.h"
@@ -15,7 +16,10 @@ AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	PrimaryActorTick.bCanEverTick = true;
 	bSimGravityDisabled = true;
 
-	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
+	Camera = CreateDefaultSubobject<UCineCameraComponent>("Camera");
+	Camera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
+	Camera->bConstrainAspectRatio = false;
+
 	Camera->SetupAttachment(GetCapsuleComponent());
 
 	SetActorEnableCollision(false);
@@ -274,6 +278,8 @@ void AFICEditorCameraCharacter::UpdateValues() {
 				Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
 			}
 			Camera->SetFieldOfView(EditorContext->FOV.GetValue());
+			Camera->CurrentAperture = EditorContext->Aperture.GetValue();
+			Camera->FocusSettings.ManualFocusDistance = EditorContext->FocusDistance.GetValue();
 		}
 		CameraActor->SetActorTransform(FTransform(Rot, Pos));
 		CameraActor->UpdateGizmo();

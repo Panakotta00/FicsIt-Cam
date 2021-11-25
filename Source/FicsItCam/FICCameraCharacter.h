@@ -8,6 +8,7 @@
 
 #include "FICCameraCharacter.generated.h"
 
+class UCineCameraComponent;
 UCLASS()
 class AFICCameraCharacter : public ACharacter {
 	GENERATED_BODY()
@@ -29,7 +30,15 @@ private:
 	
 public:
 	UPROPERTY()
-	UCameraComponent* Camera = nullptr;
+	UCineCameraComponent* Camera = nullptr;
+
+	UPROPERTY()
+	USceneCaptureComponent2D* CaptureComponent = nullptr;
+
+	UPROPERTY()
+	UTextureRenderTarget2D* RenderTarget = nullptr;
+
+	bool bDoRender = false;
 
 	AFICCameraCharacter();
 
@@ -45,7 +54,7 @@ public:
 	// End ACharacter
 
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
-	void StartAnimation(AFICAnimation* inAnimation);
+	void StartAnimation(AFICAnimation* inAnimation, bool bDoRender);
 
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
 	void StopAnimation();

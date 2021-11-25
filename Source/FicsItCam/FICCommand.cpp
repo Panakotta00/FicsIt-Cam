@@ -33,7 +33,9 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			FVector Pos = Sender->GetPlayer()->PlayerCameraManager->GetCameraLocation();
 			FRotator Rot = Sender->GetPlayer()->PlayerCameraManager->GetCameraRotation();
 			float FOV = Sender->GetPlayer()->PlayerCameraManager->GetFOVAngle();
-			AFICAnimation* Anim = GetWorld()->SpawnActor<AFICAnimation>();
+			FActorSpawnParameters Params;
+			Params.Name = FName(Arguments[1]);
+			AFICAnimation* Anim = GetWorld()->SpawnActor<AFICAnimation>(Params);
 			Anim->PosX.SetDefaultValue(Pos.X);
 			Anim->PosY.SetDefaultValue(Pos.Y);
 			Anim->PosZ.SetDefaultValue(Pos.Z);
@@ -78,6 +80,16 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		}
 		SubSys->PlayAnimation(*FoundAnimation);
 		Sender->SendChatMessage("Playing Animation '" + Arguments[1] + "'.");
+	}
+	if (Arguments[0] == "render") {
+		if (Arguments.Num() < 2) return EExecutionStatus::BAD_ARGUMENTS;
+		AFICAnimation** FoundAnimation = SubSys->StoredAnimations.Find(Arguments[1]);
+		if (!FoundAnimation) {
+			Sender->SendChatMessage("Animation '" + Arguments[1] + "' not found.");
+			return EExecutionStatus::BAD_ARGUMENTS;
+		}
+		SubSys->PlayAnimation(*FoundAnimation, true);
+		Sender->SendChatMessage("Rendering Animation '" + Arguments[1] + "'.");
 	}
 	return EExecutionStatus::BAD_ARGUMENTS;
 }

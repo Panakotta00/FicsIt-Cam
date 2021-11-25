@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "FICEditorCameraCharacter.generated.h"
 
+class UCineCameraComponent;
 class AFICEditorCameraActor;
 class UTransformProxy;
 class ATransformGizmoActor;
@@ -15,7 +16,7 @@ class AFICEditorCameraCharacter : public ACharacter {
 
 private:
 	UPROPERTY()
-	UCameraComponent* Camera;
+	UCineCameraComponent* Camera;
 
 	UPROPERTY()
 	AFICEditorCameraActor* CameraActor = nullptr;

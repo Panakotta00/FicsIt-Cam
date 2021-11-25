@@ -36,10 +36,10 @@ AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
 	return SubsystemActorManager->GetSubsystemActor<AFICSubsystem>();
 }
 
-void AFICSubsystem::PlayAnimation(AFICAnimation* Path) {
+void AFICSubsystem::PlayAnimation(AFICAnimation* Path, bool bDoRender) {
 	CreateCamera();
 	if (!Camera || !Path) return;
-	Camera->StartAnimation(Path);
+	Camera->StartAnimation(Path, bDoRender);
 }
 
 void AFICSubsystem::StopAnimation() {

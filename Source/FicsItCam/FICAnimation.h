@@ -173,6 +173,10 @@ public:
 
 	UPROPERTY(SaveGame)
 	FFICFloatAttribute FOV;
+	UPROPERTY(SaveGame)
+	FFICFloatAttribute Aperture;
+	UPROPERTY(SaveGame)
+	FFICFloatAttribute FocusDistance;
 
 	UPROPERTY(SaveGame)
 	int64 AnimationStart = 0;
