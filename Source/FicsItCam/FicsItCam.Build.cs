@@ -26,7 +26,8 @@ public class FicsItCam : ModuleRules
             "GameplayTasks",
             "AnimGraphRuntime",
             "Slate", "SlateCore",
-            "InteractiveToolsFramework"
+            "InteractiveToolsFramework",
+            "CinematicCamera"
 		});
 			
 		if (Target.Type == TargetRules.TargetType.Editor) {

@@ -46,6 +46,8 @@ public:
 	TFICEditorAttribute<FFICFloatAttribute> RotYaw;
 	TFICEditorAttribute<FFICFloatAttribute> RotRoll;
 	TFICEditorAttribute<FFICFloatAttribute> FOV;
+	TFICEditorAttribute<FFICFloatAttribute> Aperture;
+	TFICEditorAttribute<FFICFloatAttribute> FocusDistance;
 	FFICEditorGroupAttribute All;
 	FFICEditorGroupAttribute Pos;
 	bool bMoveCamera = true;

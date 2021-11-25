@@ -8,6 +8,47 @@
 
 FSlateColorBrush SFICDetails::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 
+TSharedRef<SWidget> ScalarAttribute(UFICEditorContext* Context, TFICEditorAttribute<FFICFloatAttribute>& Attr, const FString& Label) {
+	return
+	SNew(SHorizontalBox)
+	+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+		SNew(STextBlock)
+		.Text(FText::FromString(Label))
+	]
+	+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
+		SNew(SNumericEntryBox<float>)
+		.Value_Lambda([&Attr]() -> TOptional<float> {
+			return Attr.GetValue();
+		})
+		.SupportDynamicSliderMaxValue(true)
+		.SupportDynamicSliderMinValue(true)
+		.SliderExponent(1)
+		.Delta(1)
+		.MinValue(TOptional<float>())
+		.MaxValue(TOptional<float>())
+		.MinSliderValue(TOptional<float>())
+		.MaxSliderValue(TOptional<float>())
+		.LinearDeltaSensitivity(10)
+		.AllowSpin(true)
+		.OnValueChanged_Lambda([&Attr](float Val) {
+			Attr.SetValue(Val);
+		})
+		.OnValueCommitted_Lambda([&Attr](float Val, auto) {
+			Attr.SetValue(Val);
+		})
+		.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
+	]
+	+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+		SNew(SFICKeyframeControl)
+		.Attribute_Lambda([&Attr]() -> FFICEditorAttributeBase* {
+			return &Attr;
+		})
+		.Frame_Lambda([Context]() {
+			return Context->GetCurrentFrame();
+		})
+	];
+}
+
 void SFICDetails::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context;
 	BackgroundBrush = InArgs._Background;
@@ -111,6 +152,12 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						return Context->GetCurrentFrame();
 					})
 				]
+			]
+			+SVerticalBox::Slot().Padding(5).AutoHeight()[
+				ScalarAttribute(Context, Context->Aperture, TEXT("Aperture:"))
+			]
+			+SVerticalBox::Slot().Padding(5).AutoHeight()[
+				ScalarAttribute(Context, Context->FocusDistance, TEXT("Focus Distance:"))
 			]
 			+SVerticalBox::Slot().Padding(5).AutoHeight()[
 			SNew(SHorizontalBox)

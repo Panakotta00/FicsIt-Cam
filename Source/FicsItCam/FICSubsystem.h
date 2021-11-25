@@ -44,7 +44,7 @@ public:
 	static AFICSubsystem* GetFICSubsystem(UObject* WorldContext);
 
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
-	void PlayAnimation(AFICAnimation* Path);
+	void PlayAnimation(AFICAnimation* Path, bool bDoRendering = false);
 	
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
 	void StopAnimation();
