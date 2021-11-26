@@ -3,7 +3,9 @@
 #include "FICSubsystem.h"
 #include "Engine/World.h"
 #include "FGPlayerController.h"
+#include "FICTimelapseCamera.h"
 #include "Command/CommandSender.h"
+#include "Misc/DefaultValueHelper.h"
 
 AFICCommand::AFICCommand() {
 	bOnlyUsableByPlayer = true;
@@ -80,6 +82,7 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		}
 		SubSys->PlayAnimation(*FoundAnimation);
 		Sender->SendChatMessage("Playing Animation '" + Arguments[1] + "'.");
+		return EExecutionStatus::COMPLETED;
 	}
 	if (Arguments[0] == "render") {
 		if (Arguments.Num() < 2) return EExecutionStatus::BAD_ARGUMENTS;
@@ -90,6 +93,68 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		}
 		SubSys->PlayAnimation(*FoundAnimation, true);
 		Sender->SendChatMessage("Rendering Animation '" + Arguments[1] + "'.");
+		return EExecutionStatus::COMPLETED;
+	}
+	if (Arguments[0] == "timelapse") {
+		if (Arguments.Num() < 2) {
+			for (TPair<FString, AFICTimelapseCamera*> Entry : SubSys->TimelapseCameras) {
+				Sender->SendChatMessage(FString::Printf(TEXT("%s-Timelapse: %fs"), *Entry.Key, Entry.Value->Frequency));
+			}
+			return EExecutionStatus::COMPLETED;
+		} else if (Arguments[1] == "create") {
+			if (Arguments.Num() < 4) return EExecutionStatus::BAD_ARGUMENTS;
+			FString CameraName = FString::Printf(TEXT("%s-Timelapse"), *Arguments[2]);
+			if (SubSys->TimelapseCameras.Contains(CameraName)) {
+				Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' already exists.");
+				return EExecutionStatus::UNCOMPLETED;
+			} else {
+				float Frequency;
+				if (!FDefaultValueHelper::ParseFloat(Arguments[3], Frequency)) return EExecutionStatus::BAD_ARGUMENTS;
+				FVector Pos = Sender->GetPlayer()->PlayerCameraManager->GetCameraLocation();
+				FRotator Rot = Sender->GetPlayer()->PlayerCameraManager->GetCameraRotation();
+				FActorSpawnParameters Params;
+				Params.Name = FName(CameraName);
+				AFICTimelapseCamera* Camera = GetWorld()->SpawnActor<AFICTimelapseCamera>(Pos, Rot, Params);
+				SubSys->TimelapseCameras.Add(CameraName, Camera);
+				Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' created.");
+			}
+			return EExecutionStatus::COMPLETED;
+		} else if (Arguments[1] == "delete") {
+			if (Arguments.Num() < 3) return EExecutionStatus::BAD_ARGUMENTS;
+			FString CameraName = FString::Printf(TEXT("%s-Timelapse"), *Arguments[2]);
+			AFICTimelapseCamera** Camera = SubSys->TimelapseCameras.Find(CameraName);
+			if (!Camera) {
+				Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' doesn't exists.");
+				return EExecutionStatus::UNCOMPLETED;
+			} else {
+				(*Camera)->Destroy();
+				SubSys->TimelapseCameras.Remove(CameraName);
+				Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' deleted.");
+				return EExecutionStatus::COMPLETED;
+			}
+		} else if (Arguments[1] == "start") {
+			if (Arguments.Num() < 3) return EExecutionStatus::BAD_ARGUMENTS;
+			FString CameraName = FString::Printf(TEXT("%s-Timelapse"), *Arguments[2]);
+			if (!SubSys->TimelapseCameras.Contains(CameraName)) {
+				Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' doesn't exists.");
+				return EExecutionStatus::UNCOMPLETED;
+			} else {
+				SubSys->TimelapseCameras[CameraName]->StartTimelapse();
+				Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' started.");
+				return EExecutionStatus::COMPLETED;
+			}
+		} else if (Arguments[1] == "stop") {
+			if (Arguments.Num() < 3) return EExecutionStatus::BAD_ARGUMENTS;
+			FString CameraName = FString::Printf(TEXT("%s-Timelapse"), *Arguments[2]);
+			if (!SubSys->TimelapseCameras.Contains(CameraName)) {
+				Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' doesn't exists.");
+				return EExecutionStatus::UNCOMPLETED;
+			} else {
+				SubSys->TimelapseCameras[CameraName]->StopTimelapse();
+				Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' stopped.");
+				return EExecutionStatus::COMPLETED;
+			}
+		}
 	}
 	return EExecutionStatus::BAD_ARGUMENTS;
 }

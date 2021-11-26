@@ -5,6 +5,7 @@
 #include "FICAnimation.h"
 #include "FGSaveInterface.h"
 #include "FICCameraCharacter.h"
+#include "FICTimelapseCamera.h"
 #include "UI/FICEditorContext.h"
 #include "FICSubsystem.generated.h"
 
@@ -25,6 +26,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, SaveGame, Category="FicsIt-Cam")
 	TMap<FString, AFICAnimation*> StoredAnimations;
 
+	UPROPERTY(BlueprintReadWrite, SaveGame, Category="FicsIt-Cam")
+	TMap<FString, AFICTimelapseCamera*> TimelapseCameras;
+	
 	UPROPERTY()
 	TSet<AFICAnimation*> VisibleAnimations;
 

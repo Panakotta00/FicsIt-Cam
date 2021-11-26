@@ -3,6 +3,7 @@
 #include "CineCameraComponent.h"
 #include "Engine/World.h"
 #include "FGPlayerController.h"
+#include "FICUtils.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 
@@ -69,6 +70,8 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 			
 			Time = Progress;
 			Progress += 1;
+
+			Cast<APlayerController>(GetController())->SetPause(true);
 		} else {
 			Time = Progress * Animation->FPS;
 			Progress += DeltaSeconds;
@@ -99,7 +102,7 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 			CaptureComponent->FOVAngle = Camera->FieldOfView;
 			FWeightedBlendables Blendables = CaptureComponent->PostProcessSettings.WeightedBlendables;
 			CaptureComponent->PostProcessSettings = ViewInfo.PostProcessSettings;
-			CaptureComponent->PostProcessSettings.WeightedBlendables = Blendables;
+			//CaptureComponent->PostProcessSettings.WeightedBlendables = Blendables;
 			CaptureComponent->PostProcessBlendWeight = Camera->PostProcessBlendWeight;
 			
 			CaptureComponent->CaptureScene();
@@ -115,23 +118,11 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 
 			FSP = FPaths::Combine(FSP, FString::FromInt((int)Progress) + TEXT(".jpg"));
 
-			IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
-			TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
-
-			FRenderTarget* RenderTargetResource = RenderTarget->GameThread_GetRenderTargetResource();
-			if (RenderTargetResource && ImageWrapper.IsValid()) {
-				TArray<FColor> RawData;
-				bool bReadPixels = RenderTargetResource->ReadPixels(RawData);
-				if (bReadPixels) {
-					bool bRaw = ImageWrapper->SetRaw(RawData.GetData(), RawData.GetTypeSize() * RawData.Num(), RenderTarget->SizeX, RenderTarget->SizeY, ERGBFormat::BGRA, 8);
-					if (bRaw) {
-						TArray64<uint8> CompressedData = ImageWrapper->GetCompressed();
-						FFileHelper::SaveArrayToFile(CompressedData, *FSP);
-
-						if (Animation->GetEndOfAnimation() < Progress / Animation->FPS) {
-							StopAnimation();
-						}
-					}
+			bool bSuccess = FIC_SaveRenderTargetAsJPG(FSP, RenderTarget);
+			if (bSuccess) {
+				Cast<APlayerController>(GetController())->SetPause(false);
+				if (Animation->GetEndOfAnimation() < Progress / Animation->FPS) {
+					StopAnimation();
 				}
 			}
 		} else {
