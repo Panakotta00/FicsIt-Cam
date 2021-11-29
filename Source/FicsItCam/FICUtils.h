@@ -4,7 +4,21 @@
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "FICUtils.generated.h"
 
-FRotator NormalizeRotator(FRotator Rot);
+UCLASS(Abstract)
+class UFICUtils : public UObject {
+	GENERATED_BODY()
 
-bool FIC_SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget);
+public:
+	UFUNCTION()
+	static FRotator NormalizeRotator(FRotator Rot);
+
+	UFUNCTION()
+	static bool SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget);
+
+	UFUNCTION()
+	static FString KeymappingToString(const FString& Keymapping);
+};
+
+

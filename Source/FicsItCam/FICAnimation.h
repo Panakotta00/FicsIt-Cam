@@ -33,6 +33,9 @@ public:
 	virtual void GetInControlAsFloat(float& OutFrame, float& OutValue) {}
 	virtual void GetOutControlAsFloat(float& OutFrame, float& OutValue) {}
 	virtual void SetValueFromFloat(float InValue) {}
+	virtual void SetInControlAsFloat(float InFrame, float InValue) {}
+	virtual void SetOutControlAsFloat(float InFrame, float InValue) {}
+	
 
 	UPROPERTY(SaveGame)
 	TEnumAsByte<EFICKeyframeType> KeyframeType = FIC_KF_EASE;
@@ -103,7 +106,9 @@ struct FFICFloatKeyframe : public FFICKeyframe {
 	virtual float GetValueAsFloat() const { return Value; }
 	virtual void SetValueFromFloat(float InValue) { Value = InValue; }
 	virtual void GetInControlAsFloat(float& OutFrame, float& OutValue) { OutFrame = InTanTime; OutValue = InTanValue; }
+	virtual void SetInControlAsFloat(float InFrame, float InValue) override { InTanTime = FMath::Max(InFrame, 0.f); InTanValue = InValue; }
 	virtual void GetOutControlAsFloat(float& OutFrame, float& OutValue) { OutFrame = OutTanTime; OutValue = OutTanValue; }
+	virtual void SetOutControlAsFloat(float InFrame, float InValue) override { OutTanTime = FMath::Max(InFrame, 0.f); OutTanValue = InValue; }
 };
 
 USTRUCT(BlueprintType)

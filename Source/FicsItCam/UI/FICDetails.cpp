@@ -4,6 +4,7 @@
 #include "FICNumericType.h"
 #include "FICVectorEditor.h"
 #include "FICKeyframeControl.h"
+#include "FicsItCam/FICUtils.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 
 FSlateColorBrush SFICDetails::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
@@ -64,6 +65,23 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 			+SVerticalBox::Slot().Padding(5).AutoHeight()[
 				SNew(STextBlock)
 				.Text(FText::FromString("Details:"))
+			]
+			+SVerticalBox::Slot().Padding(5).AutoHeight()[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+					SNew(STextBlock)
+					.Text(FText::FromString(TEXT("All Keyframe:")))
+					.ToolTipText(FText::FromString(FString::Printf(TEXT("Allows you to manipulate the keyframes of all attributes at the current frame.\n\nToggle All Keyframes: %s\nGo-To Next Keyframe: %s\nGo-To Previous Keyframe: %s"), *UFICUtils::KeymappingToString("FicsItCam.ToggleAllKeyframes"), *UFICUtils::KeymappingToString("FicsItCam.NextKeyframe"), *UFICUtils::KeymappingToString("FicsItCam.PrevKeyframe"))))
+				]
+				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+					SNew(SFICKeyframeControl)
+					.Attribute_Lambda([this]() -> FFICEditorAttributeBase* {
+						return &Context->All;
+					})
+					.Frame_Lambda([this]() {
+						return Context->GetCurrentFrame();
+					})
+				]
 			]
 			+SVerticalBox::Slot().Padding(5).AutoHeight()[
 				SNew(SHorizontalBox)
@@ -176,6 +194,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
 							Context->GetAnimation()->bUseCinematic = State == ECheckBoxState::Checked;
 						})
+						.ToolTipText(FText::FromString(TEXT("If enabled, tries to use a more fancy camera which f.e. can do Depth-Of-Field,\ntho it will require more performance hence using it in combination with the play command is not reccomended.")))
 					]
 					+SVerticalBox::Slot().Padding(5).AutoHeight()[
 						SNew(SCheckBox)
@@ -186,6 +205,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
 							Context->GetAnimation()->bBulletTime = State == ECheckBoxState::Checked;
 						})
+						.ToolTipText(FText::FromString(TEXT("If enabled, game simulation will pause allowing you to have a bullet time effect.")))
 					]
 				]
 			]
@@ -206,6 +226,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
 							Context->bMoveCamera = State == ECheckBoxState::Checked;
 						})
+						.ToolTipText(FText::FromString(FString::Printf(TEXT("If enabled, the viewport camera will be locked to the virtual camera for the animation,\nthis allows (if disabled) to move the camera on path without changing the viewport camera view/orientation.\n\n%s"), *UFICUtils::KeymappingToString("FicsItCam.ToggleLockCamera"))))
 					]
 					+SVerticalBox::Slot().Padding(5).AutoHeight()[
 						SNew(SCheckBox)
@@ -216,6 +237,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
 							Context->bShowPath = State == ECheckBoxState::Checked;
 						})
+						.ToolTipText(FText::FromString(FString::Printf(TEXT("If enabled, a camera path will be drawn into the world that shows how the camera moves through space,\nit additionally shows the camera orientation at the current frame.\n\n%s"), *UFICUtils::KeymappingToString("FicsItCam.ToggleShowPath"))))
 					]
 					+SVerticalBox::Slot().Padding(5).AutoHeight()[
 						SNew(SCheckBox)
@@ -226,6 +248,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
 							Context->bAutoKeyframe = State == ECheckBoxState::Checked;
 						})
+						.ToolTipText(FText::FromString(FString::Printf(TEXT("If enabled, a change of value of a attribute will directly cause it to set/create a keyframe for that attribute at the current frame.\n\n%s"), *UFICUtils::KeymappingToString("FicsItCam.ToggleAutoKeyframe"))))
 					]
 				]
 			]

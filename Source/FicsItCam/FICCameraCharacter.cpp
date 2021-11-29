@@ -120,7 +120,7 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 
 			FSP = FPaths::Combine(FSP, FString::FromInt((int)Progress) + TEXT(".jpg"));
 
-			bool bSuccess = FIC_SaveRenderTargetAsJPG(FSP, RenderTarget);
+			bool bSuccess = UFICUtils::SaveRenderTargetAsJPG(FSP, RenderTarget);
 		if (!Animation->bBulletTime)
 			if (bSuccess) {
 				Cast<APlayerController>(GetController())->SetPause(false);

@@ -52,7 +52,7 @@ void AFICTimelapseCamera::CaptureTick() {
 
 	FSP = FPaths::Combine(FSP, FString::Printf(TEXT("%s-%i.jpg"), *CaptureStart.ToString(), CaptureIncrement));
 
-	bool bSuccess = FIC_SaveRenderTargetAsJPG(FSP, RenderTarget);
+	bool bSuccess = UFICUtils::SaveRenderTargetAsJPG(FSP, RenderTarget);
 	if (bSuccess) ++CaptureIncrement;
 
 	if (Character) Character->SetFirstPersonMode();

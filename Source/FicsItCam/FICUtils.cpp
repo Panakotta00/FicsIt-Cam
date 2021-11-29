@@ -1,6 +1,9 @@
 ﻿#include "FICUtils.h"
 
-FRotator NormalizeRotator(FRotator Rot) {
+#include "FGGameUserSettings.h"
+#include "GameFramework/InputSettings.h"
+
+FRotator UFICUtils::NormalizeRotator(FRotator Rot) {
 	while (Rot.Pitch > 180.0) Rot.Pitch -= 360.0f;
 	while (Rot.Pitch < -180.0) Rot.Pitch += 360.0f;
 	while (Rot.Yaw > 180.0) Rot.Yaw -= 360.0f;
@@ -10,7 +13,7 @@ FRotator NormalizeRotator(FRotator Rot) {
 	return Rot;
 }
 
-bool FIC_SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget) {
+bool UFICUtils::SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget) {
 	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
 	TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
 
@@ -27,4 +30,19 @@ bool FIC_SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* 
 	TArray64<uint8> CompressedData = ImageWrapper->GetCompressed();
 	FFileHelper::SaveArrayToFile(CompressedData, *FilePath);
 	return true;
+}
+
+FString UFICUtils::KeymappingToString(const FString& Keymapping) {
+	TArray<FInputActionKeyMapping> Mappings;
+	UInputSettings::GetInputSettings()->GetActionMappingByName(FName(Keymapping), Mappings);
+	if (Mappings.Num() > 0) {
+		FInputActionKeyMapping Map = Mappings[0];
+		FString Str;
+		if (Map.bCtrl) Str += TEXT("CTRL + ");
+		if (Map.bShift) Str += TEXT("SHIFT + ");
+		if (Map.bAlt) Str += TEXT("ALT + ");
+		Str += Map.Key.GetDisplayName().ToString();
+		return Str;
+	}
+	return TEXT("");
 }

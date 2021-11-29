@@ -1,5 +1,7 @@
 ﻿#include "FICKeyframeControl.h"
 
+#include "FICDragDrop.h"
+#include "FICGraphView.h"
 #include "Brushes/SlateColorBrush.h"
 #include "Engine/Texture2D.h"
 #include "Widgets/Images/SImage.h"
@@ -48,19 +50,52 @@ FFICKeyframeControlStyle::FFICKeyframeControlStyle() {
 	}
 }
 
+void SFICKeyframeHandle::Construct(const FArguments& InArgs, SFICKeyframeControl* InKeyframeControl) {
+	KeyframeControl = InKeyframeControl;
+	
+	bIsOutHandle = InArgs._IsOutHandle;
+
+	ChildSlot[
+		SNew(SBox)
+		.HeightOverride(20)
+		.WidthOverride(20)[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("O")))
+		]
+	];
+}
+
+FReply SFICKeyframeHandle::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	return FReply::Handled().DetectDrag(AsShared(), EKeys::LeftMouseButton);
+}
+
+FReply SFICKeyframeHandle::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	if (MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)) {
+		return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphKeyframeHandleDragDrop>(SharedThis(this)));
+	}
+	return FReply::Unhandled();
+}
+
+FCursorReply SFICKeyframeHandle::OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const {
+	return FCursorReply::Cursor(EMouseCursor::GrabHand);
+}
+
 FFICKeyframeControlStyle* SFICKeyframeControl::DefaultStyle() {
 	static FFICKeyframeControlStyle* Style = nullptr;
 	if (!Style) Style = new FFICKeyframeControlStyle();
 	return Style;
 }
 
+SFICKeyframeControl::SFICKeyframeControl() : Children(this) {}
+
 void SFICKeyframeControl::Construct(FArguments InArgs) {
 	Attribute = InArgs._Attribute;
 	Style = InArgs._Style;
 	Frame = InArgs._Frame;
+	GraphView = InArgs._GraphView;
 	
-	ChildSlot[
-		SNew(SBox)
+	Children.Add(
+		SAssignNew(MainHandle, SBox)
 		.ToolTipText_Lambda([this]() {
 			TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
 	        if (KF && *KF.Get()) {
@@ -120,7 +155,58 @@ void SFICKeyframeControl::Construct(FArguments InArgs) {
 				})
 			]
 		]
-	];
+	);
+
+	if (!InArgs._GraphView) InArgs._ShowHandles = false;
+	if (InArgs._ShowHandles) {
+		FromHandle = SNew(SFICKeyframeHandle, this);
+		Children.Add(FromHandle.ToSharedRef());
+		ToHandle = SNew(SFICKeyframeHandle, this).IsOutHandle(true);;
+		Children.Add(ToHandle.ToSharedRef());
+	}
+}
+
+FVector2D SFICKeyframeControl::ComputeDesiredSize(float F) const {
+	return MainHandle->GetDesiredSize();
+}
+
+FChildren* SFICKeyframeControl::GetChildren() {
+	return &Children;
+}
+
+void SFICKeyframeControl::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const {
+	ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(MainHandle.ToSharedRef(), -MainHandle->GetDesiredSize()/2.0f, MainHandle->GetDesiredSize(), 1));
+	if (FromHandle) {
+		float TimelinePerLocal, ValuePerLocal;
+		int64 TimelineBegin, TimelineEnd;
+		float ValueBegin, ValueEnd;
+		GraphView->GetTimeRange(TimelineBegin, TimelineEnd);
+		GraphView->GetValueRange(ValueBegin, ValueEnd);
+
+		ValuePerLocal = (float)(ValueEnd - ValueBegin) / GraphView->GetCachedGeometry().Size.Y;
+		TimelinePerLocal = (float)(TimelineEnd - TimelineBegin) / GraphView->GetCachedGeometry().Size.X;
+
+		FFICKeyframe* Keyframe = Attribute.Get()->GetKeyframe(Frame.Get().GetValue())->Get();
+
+		if (Keyframe) {
+			float FromFrame, FromValue;
+			Keyframe->GetInControlAsFloat(FromFrame, FromValue);
+			FVector2D FromHandleOffset(-FromFrame, FromValue);
+			FromHandleOffset /= FVector2D(TimelinePerLocal, ValuePerLocal);
+			ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(FromHandle.ToSharedRef(), FromHandleOffset, FromHandle->GetDesiredSize(), 1));
+			
+			float ToFrame, ToValue;
+			Keyframe->GetOutControlAsFloat(ToFrame, ToValue);
+			FVector2D ToHandleOffset(ToFrame, -ToValue);
+			ToHandleOffset /= FVector2D(TimelinePerLocal, ValuePerLocal);
+			ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(ToHandle.ToSharedRef(), ToHandleOffset, ToHandle->GetDesiredSize(), 1));
+		}
+	}
+}
+
+FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	if (GraphView) return FReply::Handled().DetectDrag(AsShared(), EKeys::LeftMouseButton);
+	else return FReply::Unhandled();
 }
 
 FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
@@ -170,7 +256,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
 		}
 		return FReply::Handled();
 	}
-	return SCompoundWidget::OnMouseButtonUp(MyGeometry, Event);
+	return SPanel::OnMouseButtonUp(MyGeometry, Event);
 }
 
 FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& Event) {
@@ -180,7 +266,17 @@ FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry
 		for (const TPair<int64, TSharedPtr<FFICKeyframeRef>>& KF : Keyframes) Attr->RemoveKeyframe(KF.Key);
 		return FReply::Handled();
 	}
-	return SCompoundWidget::OnMouseButtonDoubleClick(MyGeometry, Event);
+	return SPanel::OnMouseButtonDoubleClick(MyGeometry, Event);
+}
+
+FReply SFICKeyframeControl::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	if (MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)) {
+		if (GraphView) {
+			return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphKeyframeDragDrop>(SharedThis(GraphView), SharedThis(this)));
+		}
+	}
+	
+	return SPanel::OnDragDetected(MyGeometry, MouseEvent);
 }
 
 int64 SFICKeyframeControl::GetFrame() {
@@ -189,6 +285,6 @@ int64 SFICKeyframeControl::GetFrame() {
 	return Attribute.Get()->GetFrame();
 }
 
-FFICEditorAttributeBase* SFICKeyframeControl::GetAttribute() {
+FFICEditorAttributeBase* SFICKeyframeControl::GetAttribute() const {
 	return Attribute.Get();
 }

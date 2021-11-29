@@ -40,12 +40,12 @@ UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	});
 	ModKeyBindings.Add({
         TEXT("FicsItCam.NextKeyframe"),
-        FInputActionKeyMapping(TEXT("FicsItCam.NextKeyframe"), EKeys::M),
+        FInputActionKeyMapping(TEXT("FicsItCam.NextKeyframe"), EKeys::Period),
         FText::FromString(TEXT("Goto next keyframe"))
     });
 	ModKeyBindings.Add({
         TEXT("FicsItCam.PrevKeyframe"),
-        FInputActionKeyMapping(TEXT("FicsItCam.PrevKeyframe"), EKeys::N),
+        FInputActionKeyMapping(TEXT("FicsItCam.PrevKeyframe"), EKeys::Comma),
         FText::FromString(TEXT("Goto previous keyframe"))
 	});
 	ModKeyBindings.Add({

@@ -220,6 +220,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 				.Clipping(EWidgetClipping::ClipToBoundsAlways)
 				.Content()[
 					SAssignNew(Graph, SFICGraphView)
+					.Attributes({&Context->PosX, &Context->PosY, &Context->PosZ})
 					.AutoFit(true)
 					.Clipping(EWidgetClipping::ClipToBoundsAlways)
 					.Frame_Lambda([this]() {

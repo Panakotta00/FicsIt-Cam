@@ -1,12 +1,13 @@
 #include "FICGraphView.h"
 
+#include "FICDragDrop.h"
+
 void SFICGraphView::Construct(const FArguments& InArgs) {
 	ActiveFrame = InArgs._Frame;
 	TimelineRangeBegin = InArgs._TimelineRangeBegin;
 	TimelineRangeEnd = InArgs._TimelineRangeEnd;
 	ValueRangeBegin = InArgs._ValueRangeBegin;
 	ValueRangeEnd = InArgs._ValueRangeEnd;
-	AutoFit = InArgs._AutoFit;
 	OnTimelineRangeChanged = InArgs._OnTimelineRangedChanged;
 	OnValueRangeChanged = InArgs._OnValueRangeChanged;
 
@@ -18,6 +19,13 @@ void SFICGraphView::Construct(const FArguments& InArgs) {
 		if (!ValueRangeBegin.IsBound()) ValueRangeBegin.Set(Start);
 		if (!ValueRangeEnd.IsBound()) ValueRangeEnd.Set(End);
 	});
+
+	SetAttributes(InArgs._Attributes);
+	Update();
+
+	if (InArgs._AutoFit) {
+		FitAll();
+	}
 }
 
 SFICGraphView::SFICGraphView() : Children(this) {
@@ -93,37 +101,10 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 }
 
 FReply SFICGraphView::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	if (!bIsDragging) {
-		FArrangedChildren ArrangedChildren(EVisibility::Visible);
-		ArrangeChildren(MyGeometry, ArrangedChildren);
-		int ChildUnderMouseIndex = FindChildUnderPosition(ArrangedChildren, MouseEvent.GetScreenSpacePosition());
-		StartLocal = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
-		DragStartFrame = DragCurrentFrame = LocalToFrame(MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).X);
-		DragStartValue = DragCurrentValue = LocalToValue(MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).Y);
-		if (ChildUnderMouseIndex >= 0) {
-			TSharedRef<SFICKeyframeControl> Child = StaticCastSharedRef<SFICKeyframeControl>(Children.GetChildAt(ChildUnderMouseIndex));
-			DragStartFrame = DragCurrentFrame = Child->GetFrame();
-			bIsDraggingKeyframe = true;
-			DraggingAttribute = Child->GetAttribute();
-			return FReply::Handled();
-		} else {
-			bIsDraggingView = bIsDragging = true;
-			DragViewStartFrameBegin = TimelineRangeBegin.Get();
-			DragViewStartFrameEnd = TimelineRangeEnd.Get();
-			DragViewStartValueBegin = ValueRangeBegin.Get();
-			DragViewStartValueEnd = ValueRangeEnd.Get();
-			return FReply::Handled().CaptureMouse(AsShared());
-		}
-	}
-	
-	return SPanel::OnMouseButtonDown(MyGeometry, MouseEvent);
+	return FReply::Unhandled().DetectDrag(AsShared(), EKeys::RightMouseButton);
 }
 
 FReply SFICGraphView::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	if (bIsDragging) {
-		bIsDragging = bIsDraggingKeyframe = bIsDraggingView = false;
-		return FReply::Handled().ReleaseMouseCapture();
-	}
 	return SPanel::OnMouseButtonUp(MyGeometry, MouseEvent);
 }
 
@@ -131,38 +112,14 @@ FReply SFICGraphView::OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, co
 	return SPanel::OnMouseButtonDoubleClick(InMyGeometry, InMouseEvent);
 }
 
+FReply SFICGraphView::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton)) {
+		return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphPanDragDrop>(SharedThis(this)));
+	}
+	return FReply::Unhandled();
+}
+
 FReply SFICGraphView::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	int64 Frame = LocalToFrame(MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).X);
-	float Value = LocalToValue(MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).Y);
-	if (!bIsDragging && (bIsDraggingKeyframe)) {
-		if (Frame != DragStartFrame || Value != DragStartValue) bIsDragging = true;
-	}
-	if (bIsDragging) {
-		int64 DragOldFrame = DragCurrentFrame;
-		CurrentLocal = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
-		DragCurrentFrame = Frame;
-		DragCurrentValue = Value;
-		if (bIsDraggingKeyframe) {
-			if (DraggingAttribute->GetKeyframe(DragCurrentFrame).IsValid()) {
-				DragCurrentFrame = DragOldFrame;
-			} else {
-				DraggingAttribute->GetAttribute()->MoveKeyframe(DragOldFrame, DragCurrentFrame);
-				DraggingAttribute->GetKeyframe(DragCurrentFrame)->Get()->SetValueFromFloat(DragCurrentValue);
-				DraggingAttribute->GetAttribute()->RecalculateAllKeyframes();
-				Update();
-			}
-		} else if (bIsDraggingView) {
-			int64 FrameDiff = LocalToFrame(StartLocal.X) - LocalToFrame(CurrentLocal.X);
-			int64 ValueDiff = LocalToValue(StartLocal.Y) - LocalToValue(CurrentLocal.Y);
-			DragStartFrame = DragCurrentFrame;
-			DragStartValue = DragCurrentValue;
-			OnTimelineRangeChanged.Execute(DragViewStartFrameBegin + FrameDiff, DragViewStartFrameEnd + FrameDiff);
-			OnValueRangeChanged.Execute(DragViewStartValueBegin + ValueDiff, DragViewStartValueEnd + ValueDiff);
-		}
-		if (DragCurrentFrame != DragStartFrame || DragCurrentValue != DragStartValue) return FReply::Handled().CaptureMouse(AsShared());
-		return FReply::Handled();
-	}
-	
 	return SPanel::OnMouseMove(MyGeometry, MouseEvent);
 }
 
@@ -191,7 +148,7 @@ void SFICGraphView::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrang
 		const TSharedRef<SFICKeyframeControl>& Child = Children[ChildIndex];
 		float Frame = FrameToLocal(Child->GetFrame());
 		float Value = ValueToLocal(Child->GetAttribute()->GetKeyframe(Child->GetFrame())->Get()->GetValueAsFloat());
-		ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(Child, FVector2D(Frame, Value) - Child->GetDesiredSize()/2.0f, Child->GetDesiredSize(), 1));
+		ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(Child, FVector2D(Frame, Value) /* - Child->GetDesiredSize()/2.0f */, Child->GetDesiredSize(), 1));
 	}
 }
 
@@ -199,8 +156,6 @@ void SFICGraphView::SetAttributes(const TArray<FFICEditorAttributeBase*>& InAttr
 	Attributes = InAttributes;
 
 	Update();
-	
-	if (AutoFit.Get()) FitAll();
 }
 
 
@@ -212,7 +167,9 @@ void SFICGraphView::Update() {
 			TSharedRef<SFICKeyframeControl> Child =
 				SNew(SFICKeyframeControl)
 				.Attribute(Attribute)
-				.Frame(Keyframe.Key);
+				.Frame(Keyframe.Key)
+				.GraphView(this)
+				.ShowHandles(true);
 			Children.Add(Child);
 		}
 	}
@@ -275,8 +232,25 @@ float SFICGraphView::ValueToLocal(float Value) const {
 		Value));
 }
 
+float SFICGraphView::GetFramePerLocal() const {
+	return (float)(TimelineRangeEnd.Get() - TimelineRangeBegin.Get()) / GetCachedGeometry().Size.X;
+}
+float SFICGraphView::GetValuePerLocal() const {
+	return (float)(ValueRangeEnd.Get() - ValueRangeBegin.Get()) / GetCachedGeometry().Size.Y;
+}
+
 FVector2D SFICGraphView::FrameAttributeToLocal(const FFICEditorAttributeBase* InAttribute, int64 InFrame) const {
 	return FVector2D(
 		FrameToLocal(InFrame),
 		ValueToLocal(InAttribute->GetValueAsFloat(InFrame)));
+}
+
+TSharedPtr<SFICKeyframeControl> SFICGraphView::FindKeyframeControl(const FFICEditorAttributeBase* InAttribute, int64 InFrame) {
+	for (int i = 0; i < Children.Num(); ++i) {
+		TSharedRef<SFICKeyframeControl> Child = StaticCastSharedRef<SFICKeyframeControl>(Children.GetChildAt(i));
+		if (Child->GetAttribute() == InAttribute && Child->GetFrame() == InFrame) {
+			return Child;
+		}
+	}
+	return nullptr;
 }
