@@ -187,6 +187,12 @@ public:
 	UPROPERTY(SaveGame)
 	int64 FPS = 30;
 
+	UPROPERTY(SaveGame)
+	bool bUseCinematic = true;
+
+	UPROPERTY(SaveGame)
+	bool bBulletTime = false;
+
 	AFICAnimation();
 
 	// Begin IFGSaveInterface

@@ -33,8 +33,11 @@ public:
 	AFICTimelapseCamera();
 
 protected:
+	// Begin AActor
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	// End AActor
+	
 	void CaptureTick();
 
 public:

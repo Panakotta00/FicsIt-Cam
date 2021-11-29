@@ -57,6 +57,7 @@ void UFICEditorContext::HideEditor() {
 		APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 		UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 	}
+	UGameplayStatics::SetGamePaused(this, false);
 }
 
 UFICEditorContext::UFICEditorContext() :

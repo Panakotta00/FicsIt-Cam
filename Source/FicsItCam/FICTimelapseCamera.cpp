@@ -1,13 +1,14 @@
 ﻿#include "FICTimelapseCamera.h"
 
+#include "FGGameUserSettings.h"
+#include "FGPlayerController.h"
 #include "FICUtils.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 
 AFICTimelapseCamera::AFICTimelapseCamera() {
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>("RenderTarget");
-	RenderTarget->InitCustomFormat(4096, 2304, EPixelFormat::PF_R8G8B8A8, false);
-
+	
 	CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>("CaptureComponent");
 	CaptureComponent->SetupAttachment(RootComponent);
 	CaptureComponent->bCaptureEveryFrame = false;
@@ -18,6 +19,13 @@ AFICTimelapseCamera::AFICTimelapseCamera() {
 	CaptureComponent->TextureTarget = RenderTarget;
 }
 
+void AFICTimelapseCamera::OnConstruction(const FTransform& Transform) {
+	Super::OnConstruction(Transform);
+
+	FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
+	RenderTarget->InitCustomFormat(Resolution.X, Resolution.Y, EPixelFormat::PF_R8G8B8A8, false);
+}
+
 void AFICTimelapseCamera::EndPlay(const EEndPlayReason::Type EndPlayReason) {
 	Super::EndPlay(EndPlayReason);
 
@@ -25,6 +33,10 @@ void AFICTimelapseCamera::EndPlay(const EEndPlayReason::Type EndPlayReason) {
 }
 
 void AFICTimelapseCamera::CaptureTick() {
+	AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
+	AFGCharacterPlayer* Character = Cast<AFGCharacterPlayer>(Controller->GetCharacter());
+	if (Character) Character->SetThirdPersonMode();
+	
 	CaptureComponent->CaptureScene();
 
 	FString FSP;
@@ -42,6 +54,8 @@ void AFICTimelapseCamera::CaptureTick() {
 
 	bool bSuccess = FIC_SaveRenderTargetAsJPG(FSP, RenderTarget);
 	if (bSuccess) ++CaptureIncrement;
+
+	if (Character) Character->SetFirstPersonMode();
 }
 
 void AFICTimelapseCamera::StartTimelapse() {

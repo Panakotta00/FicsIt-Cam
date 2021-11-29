@@ -163,6 +163,36 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 			SNew(SHorizontalBox)
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
 					SNew(STextBlock)
+					.Text(FText::FromString("Settings:"))
+				]
+				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+					SNew(SVerticalBox)
+					+SVerticalBox::Slot().Padding(5).AutoHeight()[
+						SNew(SCheckBox)
+						.Content()[SNew(STextBlock).Text(FText::FromString("Use Cinematic Camera"))]
+						.IsChecked_Lambda([this]() {
+							return Context->GetAnimation()->bUseCinematic ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+						})
+						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
+							Context->GetAnimation()->bUseCinematic = State == ECheckBoxState::Checked;
+						})
+					]
+					+SVerticalBox::Slot().Padding(5).AutoHeight()[
+						SNew(SCheckBox)
+						.Content()[SNew(STextBlock).Text(FText::FromString("Bullet Time"))]
+						.IsChecked_Lambda([this]() {
+							return Context->GetAnimation()->bBulletTime ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+						})
+						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
+							Context->GetAnimation()->bBulletTime = State == ECheckBoxState::Checked;
+						})
+					]
+				]
+			]
+			+SVerticalBox::Slot().Padding(5).AutoHeight()[
+			SNew(SHorizontalBox)
+				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+					SNew(STextBlock)
 					.Text(FText::FromString("Editor:"))
 				]
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[

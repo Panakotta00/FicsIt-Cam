@@ -30,7 +30,7 @@ private:
 	
 public:
 	UPROPERTY()
-	UCineCameraComponent* Camera = nullptr;
+	UCameraComponent* Camera = nullptr;
 
 	UPROPERTY()
 	USceneCaptureComponent2D* CaptureComponent = nullptr;
@@ -43,6 +43,7 @@ public:
 	AFICCameraCharacter();
 
 	// Begin AActor
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void Tick( float DeltaSeconds ) override;
 	virtual void BeginPlay() override;
 	// End AActor
@@ -58,4 +59,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
 	void StopAnimation();
+
+	void SetTimeDilation(float InTimeDialation);
 };

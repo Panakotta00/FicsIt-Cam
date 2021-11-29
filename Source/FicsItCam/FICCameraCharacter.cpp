@@ -1,6 +1,7 @@
 #include "FICCameraCharacter.h"
 
 #include "CineCameraComponent.h"
+#include "FGGameUserSettings.h"
 #include "Engine/World.h"
 #include "FGPlayerController.h"
 #include "FICUtils.h"
@@ -17,11 +18,6 @@ void AFICCameraCharacter::OnTickWorldStreamTimer() {
 }
 
 AFICCameraCharacter::AFICCameraCharacter() {
-	Camera = CreateDefaultSubobject<UCineCameraComponent>("Camera");
-	Camera->SetupAttachment(GetCapsuleComponent());
-	Camera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
-	Camera->bConstrainAspectRatio = false;
-
 	CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>("CaptureComponent");
 	CaptureComponent->SetupAttachment(GetCapsuleComponent());
 	CaptureComponent->bCaptureEveryFrame = false;
@@ -31,7 +27,6 @@ AFICCameraCharacter::AFICCameraCharacter() {
 	CaptureComponent->ShowFlags.SetTemporalAA(true);
 
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>("RenderTarget");
-	RenderTarget->InitCustomFormat(4096, 2304, EPixelFormat::PF_R8G8B8A8, false);
 	CaptureComponent->TextureTarget = RenderTarget;
 	
 	PrimaryActorTick.bCanEverTick = true;
@@ -46,10 +41,14 @@ AFICCameraCharacter::AFICCameraCharacter() {
 	bUseControllerRotationRoll = false;
 }
 
+void AFICCameraCharacter::OnConstruction(const FTransform& Transform) {
+	Super::OnConstruction(Transform);
+	
+	
+}
+
 void AFICCameraCharacter::BeginPlay() {
 	Super::BeginPlay();
-
-	Camera->SetActive(true);
 }
 
 void AFICCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
@@ -71,7 +70,7 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 			Time = Progress;
 			Progress += 1;
 
-			Cast<APlayerController>(GetController())->SetPause(true);
+			if (!Animation->bBulletTime) SetTimeDilation(1.0f/Animation->FPS/DeltaSeconds);
 		} else {
 			Time = Progress * Animation->FPS;
 			Progress += DeltaSeconds;
@@ -92,8 +91,11 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 		SetActorRotation(Rot);
 		GetController()->SetControlRotation(Rot);
 		Camera->SetFieldOfView(FOV);
-		Camera->CurrentAperture = Aperture;
-		Camera->FocusSettings.ManualFocusDistance = FocusDistance;
+		UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
+		if (CineCamera) {
+			CineCamera->CurrentAperture = Aperture;
+			CineCamera->FocusSettings.ManualFocusDistance = FocusDistance;
+		}
 
 		if (bDoRender) {
 			FMinimalViewInfo ViewInfo;
@@ -119,6 +121,7 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 			FSP = FPaths::Combine(FSP, FString::FromInt((int)Progress) + TEXT(".jpg"));
 
 			bool bSuccess = FIC_SaveRenderTargetAsJPG(FSP, RenderTarget);
+		if (!Animation->bBulletTime)
 			if (bSuccess) {
 				Cast<APlayerController>(GetController())->SetPause(false);
 				if (Animation->GetEndOfAnimation() < Progress / Animation->FPS) {
@@ -147,6 +150,27 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation, bool bInDoR
 	OriginalCharacter->SetActorHiddenInGame(true);
 	Cast<AFGHUD>(NewController->GetHUD())->SetPumpiMode(true);
 	NewController->PlayerCameraManager->UnlockFOV();
+	
+	if (bDoRender) {
+		FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
+		RenderTarget->InitCustomFormat(Resolution.X, Resolution.Y, EPixelFormat::PF_R8G8B8A8, false);
+	}
+	if (Camera) Camera->DestroyComponent();
+	if (Animation->bUseCinematic) {
+		UCineCameraComponent* CineCamera = NewObject<UCineCameraComponent>(this);
+		CineCamera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
+		CineCamera->bConstrainAspectRatio = false;
+		Camera = CineCamera;
+	} else {
+		Camera = NewObject<UCameraComponent>(this);
+	}
+	Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+	AController* PController = Controller;
+	PController->UnPossess();
+	PController->Possess(this);
+
+	if (Animation->bBulletTime) SetTimeDilation(0);
 }
 
 void AFICCameraCharacter::StopAnimation() {
@@ -159,5 +183,12 @@ void AFICCameraCharacter::StopAnimation() {
 		Progress = 0.0f;
 		Cast<AFGCharacterPlayer>(OriginalCharacter)->CheatToggleGhostFly(true);
 		GetWorld()->GetTimerManager().SetTimer(WorldStreamTimer, this, &AFICCameraCharacter::OnTickWorldStreamTimer, 0.1f, true);
+		SetTimeDilation(1);
 	}
+}
+
+void AFICCameraCharacter::SetTimeDilation(float InTimeDilation) {
+	if (InTimeDilation < 0.0001) InTimeDilation = 0.0001;
+	UGameplayStatics::SetGlobalTimeDilation(this, InTimeDilation);
+	CustomTimeDilation = 1.0f/InTimeDilation;
 }

@@ -16,12 +16,6 @@ AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	PrimaryActorTick.bCanEverTick = true;
 	bSimGravityDisabled = true;
 
-	Camera = CreateDefaultSubobject<UCineCameraComponent>("Camera");
-	Camera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
-	Camera->bConstrainAspectRatio = false;
-
-	Camera->SetupAttachment(GetCapsuleComponent());
-
 	SetActorEnableCollision(false);
 	
 	bUseControllerRotationPitch = true;
@@ -32,6 +26,29 @@ AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
 
+	bool bUseCinematic = EditorContext->GetAnimation()->bUseCinematic;
+	if (!IsValid(Camera) || Camera->IsA<UCineCameraComponent>() != bUseCinematic) {
+		if (Camera) Camera->DestroyComponent();
+		if (bUseCinematic) {
+			UCineCameraComponent* CineCamera = NewObject<UCineCameraComponent>(this);
+			CineCamera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
+			Camera = CineCamera;
+		} else {
+			Camera = NewObject<UCameraComponent>(this);
+		}
+		
+		Camera->bConstrainAspectRatio = false;
+		Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+		AController* PController = Controller;
+		PController->UnPossess();
+		PController->Possess(this);
+		
+		Camera->SetActive(true);
+
+		UpdateValues();
+	}
+	
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->MaxFlySpeed = bIsSprinting ? MaxFlySpeed * 10 : MaxFlySpeed;
 	GetCharacterMovement()->MaxAcceleration = 1000000;
@@ -92,6 +109,9 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 				PrevLoc = Loc;
 			}
 		}
+		
+		UGameplayStatics::SetGlobalTimeDilation(this, EditorContext->GetAnimation()->bBulletTime ? 0.00001 : 1);
+		CustomTimeDilation = 1.0f/UGameplayStatics::GetGlobalTimeDilation(this);
 	}
 	
 	if (MyController) GetController()->SetControlRotation(RotatorFix);
@@ -99,8 +119,6 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 
 void AFICEditorCameraCharacter::BeginPlay() {
 	Super::BeginPlay();
-
-	Camera->SetActive(true);
 
 	UCharacterMovementComponent* Mov = GetCharacterMovement();
 	Mov->GravityScale = 0;
@@ -157,6 +175,8 @@ void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
 
 void AFICEditorCameraCharacter::UnPossessed() {
 	Super::UnPossessed();
+	UGameplayStatics::SetGlobalTimeDilation(this, 1);
+	CustomTimeDilation = 1;
 }
 
 void AFICEditorCameraCharacter::MoveForward(float Value) {
@@ -278,8 +298,11 @@ void AFICEditorCameraCharacter::UpdateValues() {
 				Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
 			}
 			Camera->SetFieldOfView(EditorContext->FOV.GetValue());
-			Camera->CurrentAperture = EditorContext->Aperture.GetValue();
-			Camera->FocusSettings.ManualFocusDistance = EditorContext->FocusDistance.GetValue();
+			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
+			if (CineCamera) {
+				CineCamera->CurrentAperture = EditorContext->Aperture.GetValue();
+				CineCamera->FocusSettings.ManualFocusDistance = EditorContext->FocusDistance.GetValue();
+			}
 		}
 		CameraActor->SetActorTransform(FTransform(Rot, Pos));
 		CameraActor->UpdateGizmo();

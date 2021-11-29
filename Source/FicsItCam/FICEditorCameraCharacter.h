@@ -16,7 +16,7 @@ class AFICEditorCameraCharacter : public ACharacter {
 
 private:
 	UPROPERTY()
-	UCineCameraComponent* Camera;
+	UCameraComponent* Camera;
 
 	UPROPERTY()
 	AFICEditorCameraActor* CameraActor = nullptr;
