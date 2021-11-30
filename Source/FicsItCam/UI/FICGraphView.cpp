@@ -2,12 +2,17 @@
 
 #include "FICDragDrop.h"
 
+FSlateColorBrush SFICGraphView::DefaultAnimationBrush = FSlateColorBrush(FColor::FromHex("050505"));
+
 void SFICGraphView::Construct(const FArguments& InArgs) {
+	AnimationBrush = InArgs._AnimationBrush;
 	ActiveFrame = InArgs._Frame;
 	TimelineRangeBegin = InArgs._TimelineRangeBegin;
 	TimelineRangeEnd = InArgs._TimelineRangeEnd;
 	ValueRangeBegin = InArgs._ValueRangeBegin;
 	ValueRangeEnd = InArgs._ValueRangeEnd;
+	AnimationStart = InArgs._AnimationStart;
+	AnimationEnd = InArgs._AnimationEnd;
 	OnTimelineRangeChanged = InArgs._OnTimelineRangedChanged;
 	OnValueRangeChanged = InArgs._OnValueRangeChanged;
 
@@ -37,8 +42,12 @@ FVector2D SFICGraphView::ComputeDesiredSize(float) const {
 }
 
 int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
+	// Draw Background
+	FVector2D AnimationLocalStart = FVector2D(FrameToLocal(AnimationStart.Get()), 0);
+	FVector2D AnimationLocalEnd = FVector2D(FrameToLocal(AnimationEnd.Get()), AllottedGeometry.GetLocalSize().Y);
+	FSlateDrawElement::MakeBox(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(AnimationLocalEnd - AnimationLocalStart, FSlateLayoutTransform(AnimationLocalStart)), AnimationBrush.Get(), ESlateDrawEffect::None, AnimationBrush.Get()->TintColor.GetSpecifiedColor());
+	
 	// Draw Grid
-	//FSlateDrawElement::MakeBox(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), &BackgroundBrush, ESlateDrawEffect::None, BackgroundBrush.TintColor.GetSpecifiedColor());
 	FVector2D Distance = FVector2D(10,10);
 	FVector2D Start = FVector2D(LocalToFrame(0), LocalToValue(0)) / Distance;
 	FVector2D RenderOffset = FVector2D(FMath::Fractional(Start.X) * Distance.X, FMath::Fractional(Start.Y) * Distance.Y);
@@ -61,7 +70,7 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	}
 	FLinearColor FrameColor = FLinearColor(FColor::FromHex("666600"));
 	FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), {FVector2D(FrameToLocal(ActiveFrame.Get()), 0), FVector2D(FrameToLocal(ActiveFrame.Get()), AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None, FrameColor, true, 2);
-
+	
 	// Draw Plots
 	for (FFICEditorAttributeBase* const& Attribute : Attributes) {
 		int64 StartFrame = TimelineRangeBegin.Get();
@@ -71,7 +80,7 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 			FVector2D PlotPoint = FrameAttributeToLocal(Attribute, Frame);
 			PlotPoints.Add(PlotPoint);
 		}
-		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, FLinearColor::White, true, 2);
+		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, Attribute->GraphColor, true, 2);
 	}
 
 	// Draw Handles
@@ -105,7 +114,22 @@ FReply SFICGraphView::OnMouseButtonDown(const FGeometry& MyGeometry, const FPoin
 }
 
 FReply SFICGraphView::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	return SPanel::OnMouseButtonUp(MyGeometry, MouseEvent);
+	if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton) {
+		TSharedPtr<IMenu> MenuHandle;
+		FMenuBuilder MenuBuilder(true, NULL);
+		MenuBuilder.AddMenuEntry(
+			FText::FromString("FitAll"),
+			FText(),
+			FSlateIcon(),
+			FUIAction(FExecuteAction::CreateLambda([this]() {
+				FitAll();
+			}), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+				
+		FSlateApplication::Get().PushMenu(SharedThis(this), *MouseEvent.GetEventPath(), MenuBuilder.MakeWidget(), MouseEvent.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
+
+		return FReply::Handled();
+	}
+	return FReply::Unhandled();
 }
 
 FReply SFICGraphView::OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, const FPointerEvent& InMouseEvent) {
@@ -124,7 +148,43 @@ FReply SFICGraphView::OnMouseMove(const FGeometry& MyGeometry, const FPointerEve
 }
 
 FReply SFICGraphView::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	return SPanel::OnMouseWheel(MyGeometry, MouseEvent);
+	float Delta = MouseEvent.GetWheelDelta() * -10.0f;
+	FVector2D LocalPos = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+	int64 StartFrame = LocalToFrame(LocalPos.X);
+	float StartValue = LocalToValue(LocalPos.Y);
+	float FramePerLocal = GetFramePerLocal();
+	float ValuePerLocal = GetValuePerLocal();
+
+	bool bMoveToCursor = false;
+	if (MouseEvent.IsControlDown() || MouseEvent.IsShiftDown()) {
+		int64 FrameBegin, FrameEnd;
+		GetTimeRange(FrameBegin, FrameEnd);
+		SetTimeRange(FrameBegin - Delta * FramePerLocal, FrameEnd + Delta * FramePerLocal);
+		bMoveToCursor = true;
+	}
+	if (MouseEvent.IsControlDown() || MouseEvent.IsAltDown()) {
+		float ValueBegin, ValueEnd;
+		GetValueRange(ValueBegin, ValueEnd);
+		SetValueRange(ValueBegin - Delta * ValuePerLocal, ValueEnd + Delta * ValuePerLocal);
+		bMoveToCursor = true;
+	}
+
+	if (bMoveToCursor) {
+		int64 StopFrame = LocalToFrame(LocalPos.X);
+		float StopValue = LocalToValue(LocalPos.Y);
+	
+		int64 FrameDiff = StartFrame - StopFrame;
+		float ValueDiff = StartValue - StopValue;
+
+		GetTimeRange(StartFrame, StopFrame);
+		SetTimeRange(StartFrame + FrameDiff, StopFrame + FrameDiff);
+		GetValueRange(StartValue, StopValue);
+		SetValueRange(StartValue + ValueDiff, StopValue + ValueDiff);
+
+		return FReply::Handled();
+	}
+
+	return FReply::Unhandled();
 }
 
 FReply SFICGraphView::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) {

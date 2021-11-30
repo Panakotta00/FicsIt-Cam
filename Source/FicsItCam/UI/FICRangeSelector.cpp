@@ -39,7 +39,7 @@ void SFICRangeSelector::Tick(const FGeometry& AllottedGeometry, const double InC
 int32 SFICRangeSelector::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
 	// Draw Background
 	FSlateDrawElement::MakeBox(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), BackgroundBrush.Get(), ESlateDrawEffect::None, BackgroundBrush.Get()->TintColor.GetSpecifiedColor());
-
+	
 	// Draw Range Increments
 	int64 Start = RangeStart.Get();
 	int64 End = RangeEnd.Get();

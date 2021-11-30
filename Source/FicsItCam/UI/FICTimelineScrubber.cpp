@@ -1,10 +1,13 @@
 ﻿#include "FICTimelineScrubber.h"
 
 FSlateColorBrush SFICTimelineScrubber::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
+FSlateColorBrush SFICTimelineScrubber::DefaultAnimationBrush = FSlateColorBrush(FColor::FromHex("050505"));
 FLinearColor SFICTimelineScrubber::DefaultIncrementColor = FLinearColor(FColor::FromHex("404040"));
 FLinearColor SFICTimelineScrubber::DefaultFrameColor = FLinearColor(FColor::FromHex("FF8500"));
 
 void SFICTimelineScrubber::Construct(const FArguments& InArgs) {
+	AnimationStart = InArgs._AnimationStart;
+	AnimationEnd = InArgs._AnimationEnd;
 	RangeStart = InArgs._RangeStart;
 	RangeEnd = InArgs._RangeEnd;
 	FrameAttr = InArgs._Frame;
@@ -12,6 +15,7 @@ void SFICTimelineScrubber::Construct(const FArguments& InArgs) {
 	IncrementColor = InArgs._IncrementColor;
 	FrameColor = InArgs._FrameColor;
 	FrameChanged = InArgs._FrameChanged;
+	AnimationBrush = InArgs._AnimationBrush;
 
 	Frame = FrameAttr.Get();
 }
@@ -23,6 +27,9 @@ void SFICTimelineScrubber::Tick(const FGeometry& AllottedGeometry, const double 
 int32 SFICTimelineScrubber::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
 	// Draw Background
 	FSlateDrawElement::MakeBox(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), BackgroundBrush.Get(), ESlateDrawEffect::None, BackgroundBrush.Get()->TintColor.GetSpecifiedColor());
+	FVector2D AnimationLocalStart = FVector2D(RangePosToLocalPos(AllottedGeometry, AnimationStart.Get()), 0);
+	FVector2D AnimationLocalEnd = FVector2D(RangePosToLocalPos(AllottedGeometry, AnimationEnd.Get()), AllottedGeometry.GetLocalSize().Y);
+	FSlateDrawElement::MakeBox(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(AnimationLocalEnd - AnimationLocalStart, FSlateLayoutTransform(AnimationLocalStart)), AnimationBrush.Get(), ESlateDrawEffect::None, AnimationBrush.Get()->TintColor.GetSpecifiedColor());
 
 	// Draw Range Increments
 	int64 Start = RangeStart.Get();

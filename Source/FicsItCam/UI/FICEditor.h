@@ -19,7 +19,10 @@ private:
 	UFICEditorContext* Context = nullptr;
 	TSharedPtr<SWidget> GameWidget;
 	TSharedPtr<SWidget> GameSpacer;
+	TSharedPtr<FTabManager::FLayout> TabLayout;
 	SHorizontalBox::FSlot* GameSlot = nullptr;
+	TSharedPtr<SDockTab> MainTab;
+	TSharedPtr<FTabManager> TabManager;
 
 	bool bIsLeft = false;
 	bool bIsRight = false;

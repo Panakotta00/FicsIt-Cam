@@ -15,9 +15,6 @@ public:
 	static FRotator NormalizeRotator(FRotator Rot);
 
 	UFUNCTION()
-	static bool SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget);
-
-	UFUNCTION()
 	static FString KeymappingToString(const FString& Keymapping);
 };
 

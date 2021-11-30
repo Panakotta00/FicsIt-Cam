@@ -8,6 +8,7 @@ DECLARE_DELEGATE_TwoParams(FFICGraphViewValueRangeChanged, float /* New Min Valu
 
 class SFICGraphView : public SPanel {
 	SLATE_BEGIN_ARGS(SFICGraphView) :
+	_AnimationBrush(&DefaultAnimationBrush),
 	_AutoFit(true),
 	_ValueRangeBegin(-1),
 	_ValueRangeEnd(1) {}
@@ -16,6 +17,9 @@ class SFICGraphView : public SPanel {
 		SLATE_ATTRIBUTE(int64, TimelineRangeEnd)
 		SLATE_ATTRIBUTE(float, ValueRangeBegin)
 		SLATE_ATTRIBUTE(float, ValueRangeEnd)
+		SLATE_ATTRIBUTE(int64, AnimationStart)
+		SLATE_ATTRIBUTE(int64, AnimationEnd)
+		SLATE_ATTRIBUTE(const FSlateBrush*, AnimationBrush)
 		SLATE_ARGUMENT_DEFAULT(bool, AutoFit) = false;
 		SLATE_ARGUMENT(TArray<FFICEditorAttributeBase*>, Attributes)
 		SLATE_EVENT(FFICGraphViewTimelineRangeChanged, OnTimelineRangedChanged)
@@ -26,6 +30,8 @@ public:
 	void Construct(const FArguments& InArgs);
 
 private:
+	static FSlateColorBrush DefaultAnimationBrush;
+	
 	TSlotlessChildren<SFICKeyframeControl> Children;
 
 	TAttribute<int64> ActiveFrame;
@@ -33,6 +39,9 @@ private:
 	TAttribute<int64> TimelineRangeEnd;
 	TAttribute<float> ValueRangeBegin;
 	TAttribute<float> ValueRangeEnd;
+	TAttribute<int64> AnimationStart;
+	TAttribute<int64> AnimationEnd;
+	TAttribute<const FSlateBrush*> AnimationBrush;
 	FFICGraphViewTimelineRangeChanged OnTimelineRangeChanged;
 	FFICGraphViewValueRangeChanged OnValueRangeChanged;
 

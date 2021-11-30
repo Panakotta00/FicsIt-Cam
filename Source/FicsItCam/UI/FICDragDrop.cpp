@@ -1,11 +1,19 @@
 #include "FICDragDrop.h"
 
-FFICGraphDragDrop::FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView) : GraphView(GraphView) {}
+FFICGraphDragDrop::FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent) : GraphView(GraphView) {
+	FVector2D LocalPos = GraphView->GetCachedGeometry().AbsoluteToLocal(InitEvent.GetScreenSpacePosition());
+	TimelineStart = GraphView->LocalToFrame(LocalPos.X);
+	ValueStart = GraphView->LocalToValue(LocalPos.Y);
+}
 
 void FFICGraphDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FDragDropOperation::OnDragged(DragDropEvent);
 
 	FVector2D CursorDelta = DragDropEvent.GetCursorDelta();
+
+	if (DragDropEvent.IsControlDown()) CursorDelta.Y = 0;
+	if (DragDropEvent.IsShiftDown()) CursorDelta.X = 0;
+	
 	KommulativeDelta += CursorDelta;
 	
 	float TimelinePerLocal, ValuePerLocal;
@@ -39,16 +47,26 @@ void FFICGraphKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	if (!KeyframeControl) return;
 
 	FFICKeyframe* Keyframe = KeyframeControl->GetAttribute()->GetKeyframe(KeyframeControl->GetFrame())->Get();
-	Keyframe->SetValueFromFloat(Keyframe->GetValueAsFloat() - ValueDiff);
+	float NewValue = Keyframe->GetValueAsFloat() - ValueDiff;
+	if (DragDropEvent.IsControlDown()) NewValue = ValueStart;
+	Keyframe->SetValueFromFloat(NewValue);
 	
 	int64 NewFrame = KeyframeControl->GetFrame() + TimelineDiff;
+	if (DragDropEvent.IsShiftDown()) NewFrame = TimelineStart;
 	KeyframeControl->GetAttribute()->GetAttribute()->MoveKeyframe(KeyframeControl->GetFrame(), NewFrame);
 	GraphView->Update();
 	KeyframeControl = GraphView->FindKeyframeControl(KeyframeControl->GetAttribute(), NewFrame);
 }
 
-FFICGraphKeyframeHandleDragDrop::FFICGraphKeyframeHandleDragDrop(TSharedPtr<SFICKeyframeHandle> KeyframeHandle) : FFICGraphDragDrop(SharedThis(KeyframeHandle->KeyframeControl->GraphView)), KeyframeHandle(KeyframeHandle) {}
-#pragma optimize("", off)
+TSharedPtr<SWidget> FFICGraphKeyframeDragDrop::GetDefaultDecorator() const {
+	return SNew(SToolTip)
+	.Text_Lambda([this]() {
+		return FText::FromString(FString::Printf(TEXT("Frame: %lld\nValue: %f\n\nShift: Fixed Frame\nCTRL: Fixed Value"), KeyframeControl->GetFrame(), KeyframeControl->GetAttribute()->GetValueAsFloat(KeyframeControl->GetFrame())));
+	});
+}
+
+FFICGraphKeyframeHandleDragDrop::FFICGraphKeyframeHandleDragDrop(TSharedPtr<SFICKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent) : FFICGraphDragDrop(SharedThis(KeyframeHandle->KeyframeControl->GraphView), InitEvent), KeyframeHandle(KeyframeHandle) {}
+
 void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FFICGraphDragDrop::OnDragged(DragDropEvent);
 
@@ -79,6 +97,7 @@ void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEv
 			OldVector.X /= TimelinePerLocal;
 			OldVector.Y /= ValuePerLocal;
 			NewVector = OldVector.GetRotated(-Angle);
+			if (FMath::IsNaN(NewVector.X) || FMath::IsNaN(NewVector.Y)) break;
 			Keyframe->SetInControlAsFloat(NewVector.X*TimelinePerLocal, NewVector.Y*ValuePerLocal);
 			break;
 		}
@@ -112,6 +131,7 @@ void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEv
 			OldVector.X /= TimelinePerLocal;
 			OldVector.Y /= ValuePerLocal;
 			NewVector = OldVector.GetRotated(-Angle);
+			if (FMath::IsNaN(NewVector.X) || FMath::IsNaN(NewVector.Y)) break;
 			Keyframe->SetOutControlAsFloat(NewVector.X*TimelinePerLocal, NewVector.Y*ValuePerLocal);
 			break;
 		}
@@ -120,4 +140,3 @@ void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEv
 		}
 	}
 }
-#pragma optimize("", on)

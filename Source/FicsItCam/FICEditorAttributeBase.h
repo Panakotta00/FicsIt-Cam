@@ -21,7 +21,9 @@ protected:
 	FFICAttributeValueChanged OnValueChanged;
 	
 public:
-	FFICEditorAttributeBase(const FFICAttributeValueChanged& OnValueChanged) : OnValueChanged(OnValueChanged) {}
+	FLinearColor GraphColor;
+	
+	FFICEditorAttributeBase(const FFICAttributeValueChanged& OnValueChanged, FLinearColor GraphColor) : OnValueChanged(OnValueChanged), GraphColor(GraphColor) {}
 	virtual ~FFICEditorAttributeBase() = default;
 	
 	/**
@@ -90,7 +92,7 @@ private:
 	typename AttribType::ValueType CurrentValue = AttribType::ValueType();
 
 public:
-	TFICEditorAttribute(TAttribute<AttribType*> inAttribute = nullptr, FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged()) : FFICEditorAttributeBase(OnValueChanged) {
+	TFICEditorAttribute(TAttribute<AttribType*> inAttribute = nullptr, FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged(), FLinearColor GraphColor) : FFICEditorAttributeBase(OnValueChanged, GraphColor) {
 		Attribute = inAttribute;
 		if (Attribute.Get()) CurrentValue = Attribute.Get()->GetValue(0);
 	}

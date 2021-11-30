@@ -61,17 +61,18 @@ void UFICEditorContext::HideEditor() {
 }
 
 UFICEditorContext::UFICEditorContext() :
-	PosX(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosX : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	PosY(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosY : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	PosZ(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosZ : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	RotPitch(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotPitch : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	RotYaw(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotYaw : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	RotRoll(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotRoll : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	FOV(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->FOV : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	Aperture(TAttribute<FFICFloatAttribute*>::Create([this]() { return Animation ? &Animation->Aperture : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
-	FocusDistance(TAttribute<FFICFloatAttribute*>::Create([this]() { return Animation ? &Animation->FocusDistance : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues)),
+	PosX(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosX : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Red),
+	PosY(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosY : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Green),
+	PosZ(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosZ : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Blue),
+	RotPitch(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotPitch : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Red),
+	RotYaw(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotYaw : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Green),
+	RotRoll(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotRoll : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Blue),
+	FOV(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->FOV : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Yellow),
+	Aperture(TAttribute<FFICFloatAttribute*>::Create([this]() { return Animation ? &Animation->Aperture : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Orange),
+	FocusDistance(TAttribute<FFICFloatAttribute*>::Create([this]() { return Animation ? &Animation->FocusDistance : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Purple),
 	All({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}, {"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}, {"FOV", &FOV}, {"Aperture", &Aperture}, {"Focus Distance", &FocusDistance}}),
-	Pos({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}}) {}
+	Pos({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}}),
+	Rot({{"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}}) {}
 
 void UFICEditorContext::SetAnimation(AFICAnimation* Anim) {
 	Animation = Anim;

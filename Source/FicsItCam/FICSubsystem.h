@@ -9,6 +9,18 @@
 #include "UI/FICEditorContext.h"
 #include "FICSubsystem.generated.h"
 
+USTRUCT()
+struct FFICRenderRequest{
+	GENERATED_BODY()
+
+	TArray<FColor> Image;
+	FRenderCommandFence RenderFence;
+	FString Path;
+
+	UPROPERTY()
+	UTextureRenderTarget2D* RenderTarget = nullptr;
+};
+
 UCLASS()
 class AFICSubsystem : public AModSubsystem, public IFGSaveInterface {
 	GENERATED_BODY()
@@ -21,6 +33,8 @@ private:
 
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
+
+	TQueue<TSharedPtr<FFICRenderRequest>> RenderRequestQueue;
 	
 public:
 	UPROPERTY(BlueprintReadWrite, SaveGame, Category="FicsIt-Cam")
@@ -59,4 +73,7 @@ public:
 	UFICEditorContext* GetEditor() const;
 
 	void CreateCamera();
+
+	
+	void SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget);
 };

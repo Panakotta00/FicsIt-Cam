@@ -2,6 +2,8 @@
 
 #include "FGGameUserSettings.h"
 #include "FGPlayerController.h"
+#include "FicsItCamModule.h"
+#include "FICSubsystem.h"
 #include "FICUtils.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -24,6 +26,7 @@ void AFICTimelapseCamera::OnConstruction(const FTransform& Transform) {
 
 	FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
 	RenderTarget->InitCustomFormat(Resolution.X, Resolution.Y, EPixelFormat::PF_R8G8B8A8, false);
+	RenderTarget->bGPUSharedFlag = true;
 }
 
 void AFICTimelapseCamera::EndPlay(const EEndPlayReason::Type EndPlayReason) {
@@ -35,9 +38,9 @@ void AFICTimelapseCamera::EndPlay(const EEndPlayReason::Type EndPlayReason) {
 void AFICTimelapseCamera::CaptureTick() {
 	AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
 	AFGCharacterPlayer* Character = Cast<AFGCharacterPlayer>(Controller->GetCharacter());
-	if (Character) Character->SetThirdPersonMode();
+	//if (Character) Character->SetThirdPersonMode();
 	
-	CaptureComponent->CaptureScene();
+	CaptureComponent->CaptureSceneDeferred();
 
 	FString FSP;
 	// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
@@ -51,11 +54,11 @@ void AFICTimelapseCamera::CaptureTick() {
 	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
 
 	FSP = FPaths::Combine(FSP, FString::Printf(TEXT("%s-%i.jpg"), *CaptureStart.ToString(), CaptureIncrement));
+	
+	AFICSubsystem::GetFICSubsystem(this)->SaveRenderTargetAsJPG(FSP, RenderTarget);
+	++CaptureIncrement;
 
-	bool bSuccess = UFICUtils::SaveRenderTargetAsJPG(FSP, RenderTarget);
-	if (bSuccess) ++CaptureIncrement;
-
-	if (Character) Character->SetFirstPersonMode();
+	//if (Character) Character->SetFirstPersonMode();
 }
 
 void AFICTimelapseCamera::StartTimelapse() {

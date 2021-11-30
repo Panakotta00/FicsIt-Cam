@@ -68,6 +68,8 @@ private:
 	TSharedPtr<SFICKeyframeHandle> FromHandle;
 	TSharedPtr<SFICKeyframeHandle> ToHandle;
 
+	bool bWasDoubleClick = false;
+
 public:
 	SFICGraphView* GraphView = nullptr;
 	

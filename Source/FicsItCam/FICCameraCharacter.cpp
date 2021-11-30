@@ -4,6 +4,7 @@
 #include "FGGameUserSettings.h"
 #include "Engine/World.h"
 #include "FGPlayerController.h"
+#include "FICSubsystem.h"
 #include "FICUtils.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
@@ -120,13 +121,11 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 
 			FSP = FPaths::Combine(FSP, FString::FromInt((int)Progress) + TEXT(".jpg"));
 
-			bool bSuccess = UFICUtils::SaveRenderTargetAsJPG(FSP, RenderTarget);
+			AFICSubsystem::GetFICSubsystem(this)->SaveRenderTargetAsJPG(FSP, RenderTarget);
 		if (!Animation->bBulletTime)
-			if (bSuccess) {
-				Cast<APlayerController>(GetController())->SetPause(false);
-				if (Animation->GetEndOfAnimation() < Progress / Animation->FPS) {
-					StopAnimation();
-				}
+			Cast<APlayerController>(GetController())->SetPause(false);
+			if (Animation->GetEndOfAnimation() < Progress / Animation->FPS) {
+				StopAnimation();
 			}
 		} else {
 			if (Animation->GetEndOfAnimation() < Progress) {

@@ -27,7 +27,11 @@ public class FicsItCam : ModuleRules
             "AnimGraphRuntime",
             "Slate", "SlateCore",
             "InteractiveToolsFramework",
-            "CinematicCamera"
+            "CinematicCamera",
+            "RHI",
+            "Renderer",
+            "RenderCore",
+            "ImageWrapper"
 		});
 			
 		if (Target.Type == TargetRules.TargetType.Editor) {

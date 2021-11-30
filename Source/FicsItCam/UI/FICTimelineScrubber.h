@@ -6,6 +6,7 @@ DECLARE_DELEGATE_TwoParams(FFICTimelineScrubberFrameChanged, int64 /* Previous V
 
 class SFICTimelineScrubber : public SLeafWidget {
 	static FSlateColorBrush DefaultBackgroundBrush;
+	static FSlateColorBrush DefaultAnimationBrush;
 	static FLinearColor DefaultIncrementColor;
 	static FLinearColor DefaultFrameColor;
 	
@@ -14,16 +15,20 @@ class SFICTimelineScrubber : public SLeafWidget {
 		_RangeEnd(100),
 		_Frame(50),
 		_BackgroundBrush(&DefaultBackgroundBrush),
+		_AnimationBrush(&DefaultAnimationBrush),
 	    _IncrementColor(DefaultIncrementColor),
 		_FrameColor(DefaultFrameColor) {
 			Clipping(EWidgetClipping::ClipToBoundsAlways);
 		}
+		SLATE_ATTRIBUTE(int64, AnimationStart)
+		SLATE_ATTRIBUTE(int64, AnimationEnd)
 		SLATE_ATTRIBUTE(int64, RangeStart)
 	    SLATE_ATTRIBUTE(int64, RangeEnd)
 		SLATE_ATTRIBUTE(int64, Frame)
 		SLATE_ATTRIBUTE(const FSlateBrush*, BackgroundBrush)
         SLATE_ATTRIBUTE(FLinearColor, IncrementColor)
         SLATE_ATTRIBUTE(FLinearColor, FrameColor)
+		SLATE_ATTRIBUTE(const FSlateBrush*, AnimationBrush)
 		SLATE_EVENT(FFICTimelineScrubberFrameChanged, FrameChanged)
 	SLATE_END_ARGS()
 
@@ -31,12 +36,15 @@ public:
 	void Construct(const FArguments& InArgs);
 
 private:
+	TAttribute<int64> AnimationStart;
+	TAttribute<int64> AnimationEnd;
 	TAttribute<int64> RangeStart;
 	TAttribute<int64> RangeEnd;
 	TAttribute<int64> FrameAttr;
 	TAttribute<const FSlateBrush*> BackgroundBrush;
 	TAttribute<FLinearColor> IncrementColor;
 	TAttribute<FLinearColor> FrameColor;
+	TAttribute<const FSlateBrush*> AnimationBrush;
 	FFICTimelineScrubberFrameChanged FrameChanged;
 
 	int64 Frame = 0;

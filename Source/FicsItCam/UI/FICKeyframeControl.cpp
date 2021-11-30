@@ -207,12 +207,13 @@ void SFICKeyframeControl::OnArrangeChildren(const FGeometry& AllottedGeometry, F
 }
 
 FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	bWasDoubleClick = false;
 	if (GraphView) return FReply::Handled().DetectDrag(AsShared(), EKeys::LeftMouseButton);
 	else return FReply::Unhandled();
 }
 
 FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
-	if (Event.GetEffectingButton() == EKeys::LeftMouseButton) {
+	if (Event.GetEffectingButton() == EKeys::LeftMouseButton && !FromHandle.IsValid() && !bWasDoubleClick) {
 		if (Attribute.Get()->GetKeyframe(GetFrame()) && !Attribute.Get()->HasChanged(GetFrame())) Attribute.Get()->RemoveKeyframe(GetFrame());
 		else Attribute.Get()->SetKeyframe(GetFrame());
 		return FReply::Handled();
@@ -262,6 +263,8 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
 }
 
 FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& Event) {
+	bWasDoubleClick = true;
+	
 	FFICEditorAttributeBase* Attr = Attribute.Get();
 	TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = Attr->GetAttribute()->GetKeyframes();
 	if (Keyframes.Num() > 0) {
@@ -274,7 +277,7 @@ FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry
 FReply SFICKeyframeControl::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	if (MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)) {
 		if (GraphView) {
-			return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphKeyframeDragDrop>(SharedThis(GraphView), SharedThis(this)));
+			return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphKeyframeDragDrop>(SharedThis(GraphView), SharedThis(this), MouseEvent));
 		}
 	}
 	

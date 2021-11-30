@@ -50,6 +50,7 @@ public:
 	TFICEditorAttribute<FFICFloatAttribute> FocusDistance;
 	FFICEditorGroupAttribute All;
 	FFICEditorGroupAttribute Pos;
+	FFICEditorGroupAttribute Rot;
 	bool bMoveCamera = true;
 	bool bShowPath = true;
 	bool bAutoKeyframe = false;

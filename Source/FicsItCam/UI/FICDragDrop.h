@@ -9,10 +9,13 @@ public:
 	TSharedRef<SFICGraphView> GraphView;
 	FVector2D KommulativeDelta;
 
+	int64 TimelineStart;
+	float ValueStart;
+	
 	int64 TimelineDiff;
 	float ValueDiff;
 
-	FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView);
+	FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent);
 	
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
@@ -24,7 +27,7 @@ class FFICGraphPanDragDrop : public FFICGraphDragDrop {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICGraphPanDragDrop, FFICGraphDragDrop)
 
-	FFICGraphPanDragDrop(TSharedRef<SFICGraphView> GraphView) : FFICGraphDragDrop(GraphView) {}
+	FFICGraphPanDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent) : FFICGraphDragDrop(GraphView, InitEvent) {}
 
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
@@ -37,10 +40,11 @@ public:
 
 	TSharedPtr<SFICKeyframeControl> KeyframeControl;
 
-	FFICGraphKeyframeDragDrop(TSharedRef<SFICGraphView> GraphView, TSharedRef<SFICKeyframeControl> KeyframeControl) : FFICGraphDragDrop(GraphView), KeyframeControl(KeyframeControl) {}
+	FFICGraphKeyframeDragDrop(TSharedRef<SFICGraphView> GraphView, TSharedRef<SFICKeyframeControl> KeyframeControl, FPointerEvent InitEvent) : FFICGraphDragDrop(GraphView, InitEvent), KeyframeControl(KeyframeControl) {}
 	
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual TSharedPtr<SWidget> GetDefaultDecorator() const override;
 	// End FDragDropOperation
 };
 
@@ -50,7 +54,7 @@ public:
 
 	TSharedPtr<SFICKeyframeHandle> KeyframeHandle;
 
-	FFICGraphKeyframeHandleDragDrop(TSharedPtr<SFICKeyframeHandle> KeyframeHandle);
+	FFICGraphKeyframeHandleDragDrop(TSharedPtr<SFICKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent);
 
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;

@@ -87,7 +87,20 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 				SNew(SHorizontalBox)
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
 					SNew(STextBlock)
-					.Text(FText::FromString("Position:"))
+					.Text(FText::FromString("Position"))
+				]
+				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+					SNew(SFICKeyframeControl)
+					.Attribute_Lambda([this]() -> FFICEditorAttributeBase* {
+						return &Context->Pos;
+					})
+					.Frame_Lambda([this]() {
+						return Context->GetCurrentFrame();
+					})
+				]
+				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+					SNew(STextBlock)
+					.Text(FText::FromString(":"))
 				]
 				+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
 					SNew(SFICVectorEditor)
@@ -113,7 +126,20 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 				SNew(SHorizontalBox)
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
 					SNew(STextBlock)
-					.Text(FText::FromString("Rotation:"))
+					.Text(FText::FromString("Rotation"))
+				]
+				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+					SNew(SFICKeyframeControl)
+					.Attribute_Lambda([this]() -> FFICEditorAttributeBase* {
+						return &Context->Rot;
+					})
+					.Frame_Lambda([this]() {
+						return Context->GetCurrentFrame();
+					})
+				]
+				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+					SNew(STextBlock)
+					.Text(FText::FromString(":"))
 				]
 				+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
 					SNew(SFICVectorEditor)

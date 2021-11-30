@@ -212,32 +212,38 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 		        .RangeEnd_Lambda([this]() {
 		            return ActiveRangeEnd;
 		        })
+		        .AnimationStart_Lambda([this]() {
+			        return Context->GetAnimation()->AnimationStart;
+		        })
+		        .AnimationEnd_Lambda([this]() {
+			        return Context->GetAnimation()->AnimationEnd;
+		        })
 			]
-			/*+SGridPanel::Slot(1, 2)[
-				SNew(SBox)
-				.MaxDesiredHeight(200)
-				.MaxDesiredWidth(200)
+			+SGridPanel::Slot(1, 2).HAlign(HAlign_Fill).VAlign(VAlign_Fill)[
+				SAssignNew(Graph, SFICGraphView)
+				.Attributes({&Context->PosX, &Context->PosY, &Context->PosZ})
+				.AutoFit(true)
 				.Clipping(EWidgetClipping::ClipToBoundsAlways)
-				.Content()[
-					SAssignNew(Graph, SFICGraphView)
-					.Attributes({&Context->PosX, &Context->PosY, &Context->PosZ})
-					.AutoFit(true)
-					.Clipping(EWidgetClipping::ClipToBoundsAlways)
-					.Frame_Lambda([this]() {
-						return Context->GetCurrentFrame();
-					})
-					.TimelineRangeBegin_Lambda([this]() {
-						return ActiveRangeStart;
-					})
-					.TimelineRangeEnd_Lambda([this]() {
-						return ActiveRangeEnd;
-					})
-					.OnTimelineRangedChanged_Lambda([this](int64 Begin, int64 End) {
-						ActiveRangeStartChanged(ActiveRangeStart, Begin);
-						ActiveRangeEndChanged(ActiveRangeEnd, End);
-					})
-				]
-			]*/
+				.Frame_Lambda([this]() {
+					return Context->GetCurrentFrame();
+				})
+				.TimelineRangeBegin_Lambda([this]() {
+					return ActiveRangeStart;
+				})
+				.TimelineRangeEnd_Lambda([this]() {
+					return ActiveRangeEnd;
+				})
+				.AnimationStart_Lambda([this]() {
+				return Context->GetAnimation()->AnimationStart;
+				})
+				.AnimationEnd_Lambda([this]() {
+					return Context->GetAnimation()->AnimationEnd;
+				})
+				.OnTimelineRangedChanged_Lambda([this](int64 Begin, int64 End) {
+					ActiveRangeStartChanged(ActiveRangeStart, Begin);
+					ActiveRangeEndChanged(ActiveRangeEnd, End);
+				})
+			]
 		]
 	];
 
@@ -257,6 +263,6 @@ void SFICTimelinePanel::ActiveRangeEndChanged(int64 Prev, int64 Cur) {
 void SFICTimelinePanel::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
 	SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
 
-	ActiveRangeStart = FMath::Clamp(ActiveRangeStart, Context->GetAnimation()->AnimationStart, ActiveRangeEnd-1);
-	ActiveRangeEnd = FMath::Clamp(ActiveRangeEnd, ActiveRangeStart+1, Context->GetAnimation()->AnimationEnd);
+	//ActiveRangeStart = FMath::Clamp(ActiveRangeStart, Context->GetAnimation()->AnimationStart, ActiveRangeEnd-1);
+	//ActiveRangeEnd = FMath::Clamp(ActiveRangeEnd, ActiveRangeStart+1, Context->GetAnimation()->AnimationEnd);
 }
