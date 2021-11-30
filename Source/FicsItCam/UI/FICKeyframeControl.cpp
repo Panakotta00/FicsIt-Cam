@@ -175,7 +175,7 @@ FChildren* SFICKeyframeControl::GetChildren() {
 }
 
 void SFICKeyframeControl::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const {
-	ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(MainHandle.ToSharedRef(), -MainHandle->GetDesiredSize()/2.0f, MainHandle->GetDesiredSize(), 1));
+	ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(MainHandle.ToSharedRef(), FromHandle ? -MainHandle->GetDesiredSize()/2.0f : FVector2D::ZeroVector, MainHandle->GetDesiredSize(), 1));
 	if (FromHandle) {
 		float TimelinePerLocal, ValuePerLocal;
 		int64 TimelineBegin, TimelineEnd;
@@ -193,12 +193,14 @@ void SFICKeyframeControl::OnArrangeChildren(const FGeometry& AllottedGeometry, F
 			Keyframe->GetInControlAsFloat(FromFrame, FromValue);
 			FVector2D FromHandleOffset(-FromFrame, FromValue);
 			FromHandleOffset /= FVector2D(TimelinePerLocal, ValuePerLocal);
+			FromHandleOffset -= FromHandle->GetDesiredSize()/2.0f;
 			ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(FromHandle.ToSharedRef(), FromHandleOffset, FromHandle->GetDesiredSize(), 1));
 			
 			float ToFrame, ToValue;
 			Keyframe->GetOutControlAsFloat(ToFrame, ToValue);
 			FVector2D ToHandleOffset(ToFrame, -ToValue);
 			ToHandleOffset /= FVector2D(TimelinePerLocal, ValuePerLocal);
+			ToHandleOffset -= ToHandle->GetDesiredSize()/2.0f;
 			ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(ToHandle.ToSharedRef(), ToHandleOffset, ToHandle->GetDesiredSize(), 1));
 		}
 	}

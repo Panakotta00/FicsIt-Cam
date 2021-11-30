@@ -75,6 +75,7 @@ float Interpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVector2D P3, float 
 	float Current = 0.5;
 	float CurrentT;
 	float CurrentV;
+	int Increments = 0;
 	do {
 		CurrentT = FMath::Pow(1-Current, 3) * P0.X + 3*FMath::Pow(1-Current, 2) * Current * P1.X + 3*(1-Current) * Current*Current * P2.X + Current*Current*Current * P3.X;
 		CurrentV = FMath::Pow(1-Current, 3) * P0.Y + 3*FMath::Pow(1-Current, 2) * Current * P1.Y + 3*(1-Current) * Current*Current * P2.Y + Current*Current*Current * P3.Y;
@@ -84,7 +85,7 @@ float Interpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVector2D P3, float 
 			Upper = Current;
 		}
 		Current = Lower + ((Upper - Lower)/2.0);
-	} while (FMath::Abs(t - CurrentT) > 0.001);
+	} while (FMath::Abs(t - CurrentT) > 0.001 && Increments++ < 100);
 	return CurrentV;
 }
 

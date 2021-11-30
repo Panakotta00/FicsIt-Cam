@@ -62,16 +62,24 @@ void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEv
 		NewValue -= ValueDiff;
 		Keyframe->SetOutControlAsFloat(NewFrame, NewValue);
 
+		float TimelinePerLocal = GraphView->GetFramePerLocal();
+		float ValuePerLocal = GraphView->GetValuePerLocal();
+
 		switch (Keyframe->KeyframeType) {
 		case FIC_KF_EASE:
 			Keyframe->KeyframeType = FIC_KF_MIRROR;
 		case FIC_KF_MIRROR: {
-			FVector2D OldVector(OldFrame, OldValue);
-			FVector2D NewVector(NewFrame, NewValue);
-			float Angle = FMath::RadiansToDegrees(acosf(FVector2D::DotProduct(OldVector.GetSafeNormal(), NewVector.GetSafeNormal())));
+			FVector2D OldVector(OldFrame/TimelinePerLocal, OldValue/ValuePerLocal);
+			FVector2D NewVector(NewFrame/TimelinePerLocal, NewValue/ValuePerLocal);
+			OldVector.Normalize();
+			NewVector.Normalize();
+			float Angle = FMath::RadiansToDegrees(FMath::Atan2(OldVector.Y, OldVector.X) - FMath::Atan2(NewVector.Y, NewVector.X));
+			if (FMath::IsNaN(Angle)) break;
 			Keyframe->GetInControlAsFloat(OldVector.X, OldVector.Y);
-			NewVector = OldVector.GetRotated(Angle);
-			Keyframe->SetInControlAsFloat(NewVector.X, NewVector.Y);
+			OldVector.X /= TimelinePerLocal;
+			OldVector.Y /= ValuePerLocal;
+			NewVector = OldVector.GetRotated(-Angle);
+			Keyframe->SetInControlAsFloat(NewVector.X*TimelinePerLocal, NewVector.Y*ValuePerLocal);
 			break;
 		}
 		case FIC_KF_EASEINOUT:
@@ -96,9 +104,14 @@ void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEv
 		case FIC_KF_MIRROR: {
 			FVector2D OldVector(OldFrame/TimelinePerLocal, OldValue/ValuePerLocal);
 			FVector2D NewVector(NewFrame/TimelinePerLocal, NewValue/ValuePerLocal);
-			float Angle = FMath::RadiansToDegrees(acosf(FVector2D::DotProduct(OldVector.GetSafeNormal(), NewVector.GetSafeNormal())));
+			OldVector.Normalize();
+			NewVector.Normalize();
+			float Angle = FMath::RadiansToDegrees(FMath::Atan2(OldVector.Y, OldVector.X) - FMath::Atan2(NewVector.Y, NewVector.X));
+			if (FMath::IsNaN(Angle)) break;
 			Keyframe->GetOutControlAsFloat(OldVector.X, OldVector.Y);
-			NewVector = OldVector.GetRotated(0.01f);
+			OldVector.X /= TimelinePerLocal;
+			OldVector.Y /= ValuePerLocal;
+			NewVector = OldVector.GetRotated(-Angle);
 			Keyframe->SetOutControlAsFloat(NewVector.X*TimelinePerLocal, NewVector.Y*ValuePerLocal);
 			break;
 		}
