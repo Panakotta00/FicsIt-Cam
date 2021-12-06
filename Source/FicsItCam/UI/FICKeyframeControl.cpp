@@ -48,19 +48,34 @@ FFICKeyframeControlStyle::FFICKeyframeControlStyle() {
 		StepBrush.ImageSize.X = Texture->GetSizeX();
 		StepBrush.ImageSize.Y = Texture->GetSizeY();
 	}
+
+	Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Handle.Handle"));
+	if (Texture) {
+		Texture->AddToRoot();
+		HandleBrush.SetResourceObject(Texture);
+		HandleBrush.ImageSize.X = Texture->GetSizeX();
+		HandleBrush.ImageSize.Y = Texture->GetSizeY();
+	}
 }
 
 void SFICKeyframeHandle::Construct(const FArguments& InArgs, SFICKeyframeControl* InKeyframeControl) {
 	KeyframeControl = InKeyframeControl;
 	
 	bIsOutHandle = InArgs._IsOutHandle;
+	Style = InArgs._Style;
 
 	ChildSlot[
 		SNew(SBox)
 		.HeightOverride(20)
-		.WidthOverride(20)[
-			SNew(STextBlock)
-			.Text(FText::FromString(TEXT("O")))
+		.WidthOverride(20)
+		.Padding(8)[
+			SNew(SImage)
+			.Image_Lambda([this]() {
+				return &Style.Get()->HandleBrush;
+			})
+			.ColorAndOpacity_Lambda([this]() {
+				return Style.Get()->SetColor.GetSpecifiedColor();
+			})
 		]
 	];
 }
@@ -71,7 +86,7 @@ FReply SFICKeyframeHandle::OnMouseButtonDown(const FGeometry& MyGeometry, const 
 
 FReply SFICKeyframeHandle::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	if (MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)) {
-		return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphKeyframeHandleDragDrop>(SharedThis(this)));
+		return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphKeyframeHandleDragDrop>(SharedThis(this), MouseEvent));
 	}
 	return FReply::Unhandled();
 }
@@ -159,11 +174,35 @@ void SFICKeyframeControl::Construct(FArguments InArgs) {
 
 	if (!InArgs._GraphView) InArgs._ShowHandles = false;
 	if (InArgs._ShowHandles) {
-		FromHandle = SNew(SFICKeyframeHandle, this);
+		FromHandle = SNew(SFICKeyframeHandle, this).Style(Style);
 		Children.Add(FromHandle.ToSharedRef());
-		ToHandle = SNew(SFICKeyframeHandle, this).IsOutHandle(true);;
+		ToHandle = SNew(SFICKeyframeHandle, this).IsOutHandle(true).Style(Style);
 		Children.Add(ToHandle.ToSharedRef());
 	}
+}
+
+int SFICKeyframeControl::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
+	int NewLayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+
+	TSharedPtr<FFICKeyframeRef> KeyframeRef = GetAttribute()->GetKeyframe(GetFrame());
+	if (FromHandle && KeyframeRef.IsValid()) {
+		FFICKeyframe* Keyframe = KeyframeRef->Get();
+		if (FIC_KF_NONE < Keyframe->KeyframeType && Keyframe->KeyframeType <= FIC_KF_CUSTOM) {
+			float Handle1Frame;
+			float Handle1Value;
+			float Handle2Frame;
+			float Handle2Value;
+			Keyframe->GetInControlAsFloat(Handle1Frame, Handle1Value);
+			Keyframe->GetOutControlAsFloat(Handle2Frame, Handle2Value);
+			TArray<FVector2D> PlotPoints;
+			PlotPoints.Add(FVector2D((1.0 / GraphView->GetFramePerLocal()) * -Handle1Frame, (1.0 / GraphView->GetValuePerLocal()) * Handle1Value));
+			PlotPoints.Add(FVector2D(0, 0));
+			PlotPoints.Add(FVector2D((1.0 / GraphView->GetFramePerLocal()) * Handle2Frame, (1.0 / GraphView->GetValuePerLocal()) * -Handle2Value));
+			FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, Style.Get()->SetColor.GetSpecifiedColor(), true, 1);
+		}
+	}
+
+	return NewLayerId;
 }
 
 FVector2D SFICKeyframeControl::ComputeDesiredSize(float F) const {
@@ -216,6 +255,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton && !FromHandle.IsValid() && !bWasDoubleClick) {
 		if (Attribute.Get()->GetKeyframe(GetFrame()) && !Attribute.Get()->HasChanged(GetFrame())) Attribute.Get()->RemoveKeyframe(GetFrame());
 		else Attribute.Get()->SetKeyframe(GetFrame());
+		GraphView->Update();
 		return FReply::Handled();
 	} else 	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
         TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
@@ -227,32 +267,36 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                    KF->Get()->KeyframeType = FIC_KF_EASE;
+                    Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_EASE, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	if (GraphView) GraphView->Update();
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
                 FText::FromString("Ease-In/Out"),
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                    KF->Get()->KeyframeType = FIC_KF_EASEINOUT;
+                    Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_EASEINOUT, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	if (GraphView) GraphView->Update();
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
                 FText::FromString("Linear"),
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                    KF->Get()->KeyframeType = FIC_KF_LINEAR;
+                    Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_LINEAR, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	if (GraphView) GraphView->Update();
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
                 FText::FromString("Step"),
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                    KF->Get()->KeyframeType = FIC_KF_STEP;
+                    Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_STEP, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	if (GraphView) GraphView->Update();
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 		
 			FSlateApplication::Get().PushMenu(SharedThis(this), *Event.GetEventPath(), MenuBuilder.MakeWidget(), Event.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
@@ -264,12 +308,14 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
 
 FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& Event) {
 	bWasDoubleClick = true;
-	
-	FFICEditorAttributeBase* Attr = Attribute.Get();
-	TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = Attr->GetAttribute()->GetKeyframes();
-	if (Keyframes.Num() > 0) {
-		for (const TPair<int64, TSharedPtr<FFICKeyframeRef>>& KF : Keyframes) Attr->RemoveKeyframe(KF.Key);
-		return FReply::Handled();
+
+	if (!GraphView) {
+		FFICEditorAttributeBase* Attr = Attribute.Get();
+		TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = Attr->GetAttribute()->GetKeyframes();
+		if (Keyframes.Num() > 0) {
+			for (const TPair<int64, TSharedPtr<FFICKeyframeRef>>& KF : Keyframes) Attr->RemoveKeyframe(KF.Key);
+			return FReply::Handled();
+		}
 	}
 	return SPanel::OnMouseButtonDoubleClick(MyGeometry, Event);
 }
@@ -284,7 +330,11 @@ FReply SFICKeyframeControl::OnDragDetected(const FGeometry& MyGeometry, const FP
 	return SPanel::OnDragDetected(MyGeometry, MouseEvent);
 }
 
-int64 SFICKeyframeControl::GetFrame() {
+FCursorReply SFICKeyframeControl::OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const {
+	return FCursorReply::Cursor(EMouseCursor::GrabHand);
+}
+
+int64 SFICKeyframeControl::GetFrame() const {
 	TOptional<int64> F = Frame.Get();
 	if (F.IsSet()) return F.GetValue();
 	return Attribute.Get()->GetFrame();

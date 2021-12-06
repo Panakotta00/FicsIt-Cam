@@ -82,7 +82,7 @@ public:
 	 * Set a keyframe at the given frame from the given float value,
 	 * intended to be used for unified attribute views that can edit the attribute, like graph view.
 	 */
-	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE) = 0;
+	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE, bool bCreate = true) = 0;
 };
 
 template<typename AttribType>
@@ -92,7 +92,7 @@ private:
 	typename AttribType::ValueType CurrentValue = AttribType::ValueType();
 
 public:
-	TFICEditorAttribute(TAttribute<AttribType*> inAttribute = nullptr, FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged(), FLinearColor GraphColor) : FFICEditorAttributeBase(OnValueChanged, GraphColor) {
+	TFICEditorAttribute(TAttribute<AttribType*> inAttribute = nullptr, FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged(), FLinearColor GraphColor = FColor::White) : FFICEditorAttributeBase(OnValueChanged, GraphColor) {
 		Attribute = inAttribute;
 		if (Attribute.Get()) CurrentValue = Attribute.Get()->GetValue(0);
 	}
@@ -125,7 +125,8 @@ public:
 		return Attribute.Get()->GetValue(InFrame);
 	}
 
-	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE) override {
+	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE, bool bCreate = true) override {
+		if (!bCreate && !GetKeyframe(InFrame)) return;
 		Attribute.Get()->SetKeyframe(InFrame, AttribType::KeyframeType(InValue, InType));
 	}
 	// End FFICEditorAttributeBase
@@ -155,7 +156,7 @@ private:
 	FFICGroupAttribute All;
 
 public:
-	FFICEditorGroupAttribute(const TMap<FString, TAttribute<FFICEditorAttributeBase*>>& Attributes = TMap<FString, TAttribute<FFICEditorAttributeBase*>>(), FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged()) : FFICEditorAttributeBase(OnValueChanged), Attributes(Attributes) {
+	FFICEditorGroupAttribute(const TMap<FString, TAttribute<FFICEditorAttributeBase*>>& Attributes = TMap<FString, TAttribute<FFICEditorAttributeBase*>>(), FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged(), FLinearColor GraphColor = FColor::White) : FFICEditorAttributeBase(OnValueChanged, GraphColor), Attributes(Attributes) {
 		for (const TPair<FString, TAttribute<FFICEditorAttributeBase*>>& Attr : Attributes) {
 			All.Children.Add(Attr.Key, TAttribute<FFICAttribute*>::Create([Attr]() {
 				FFICEditorAttributeBase* Attrib = Attr.Value.Get();
@@ -171,7 +172,7 @@ public:
 	virtual const FFICAttribute* GetAttributeConst() const override;
 	virtual void UpdateValue() override;
 	virtual float GetValueAsFloat(int64 InFrame) const override;
-	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE) override;
+	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE, bool bCreate = true) override;
 	// End FFICEditorAttributeBase
 
 	TMap<FString, TAttribute<FFICEditorAttributeBase*>> GetAttributes();

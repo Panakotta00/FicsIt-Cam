@@ -6,6 +6,11 @@ FFICGraphDragDrop::FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPoint
 	ValueStart = GraphView->LocalToValue(LocalPos.Y);
 }
 
+void FFICGraphDragDrop::Construct() {
+	bCreateNewWindow = true;
+	FDragDropOperation::Construct();
+}
+
 void FFICGraphDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FDragDropOperation::OnDragged(DragDropEvent);
 
@@ -53,16 +58,28 @@ void FFICGraphKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	
 	int64 NewFrame = KeyframeControl->GetFrame() + TimelineDiff;
 	if (DragDropEvent.IsShiftDown()) NewFrame = TimelineStart;
-	KeyframeControl->GetAttribute()->GetAttribute()->MoveKeyframe(KeyframeControl->GetFrame(), NewFrame);
+	FFICAttribute* Attribute = KeyframeControl->GetAttribute()->GetAttribute();
+	Attribute->MoveKeyframe(KeyframeControl->GetFrame(), NewFrame);
+	Attribute->RecalculateAllKeyframes();
 	GraphView->Update();
 	KeyframeControl = GraphView->FindKeyframeControl(KeyframeControl->GetAttribute(), NewFrame);
 }
 
 TSharedPtr<SWidget> FFICGraphKeyframeDragDrop::GetDefaultDecorator() const {
-	return SNew(SToolTip)
-	.Text_Lambda([this]() {
-		return FText::FromString(FString::Printf(TEXT("Frame: %lld\nValue: %f\n\nShift: Fixed Frame\nCTRL: Fixed Value"), KeyframeControl->GetFrame(), KeyframeControl->GetAttribute()->GetValueAsFloat(KeyframeControl->GetFrame())));
-	});
+	return SNew(SBorder)
+		.BorderImage( FCoreStyle::Get().GetBrush("ToolTip.BrightBackground") )
+		.Padding(FMargin(11.0f))[
+			SNew(STextBlock)
+			.ColorAndOpacity( FLinearColor::Black )
+			.WrapTextAt_Static( &SToolTip::GetToolTipWrapWidth )
+			.Text_Lambda([this]() {
+				return FText::FromString(FString::Printf(TEXT("Frame: %lld\nValue: %f\n\nShift: Fixed Frame\nCTRL: Fixed Value"), KeyframeControl->GetFrame(), KeyframeControl->GetAttribute()->GetValueAsFloat(KeyframeControl->GetFrame())));
+			})
+		];
+}
+
+FVector2D FFICGraphKeyframeDragDrop::GetDecoratorPosition() const {
+	return FFICGraphDragDrop::GetDecoratorPosition();
 }
 
 FFICGraphKeyframeHandleDragDrop::FFICGraphKeyframeHandleDragDrop(TSharedPtr<SFICKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent) : FFICGraphDragDrop(SharedThis(KeyframeHandle->KeyframeControl->GraphView), InitEvent), KeyframeHandle(KeyframeHandle) {}

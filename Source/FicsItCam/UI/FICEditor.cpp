@@ -15,75 +15,7 @@ FSlateColorBrush SFICEditor::Background = FSlateColorBrush(FColor::FromHex("0303
 void SFICEditor::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context.Get();
 	GameWidget = InArgs._GameWidget.Get();
-
-	SAssignNew(MainTab, SDockTab).TabRole(ETabRole::MajorTab);
-	TabManager = FGlobalTabmanager::Get()->NewTabManager(MainTab.ToSharedRef());
 	
-	TabLayout = FTabManager::NewLayout("FicsItCam.Editor")
-	->AddArea(
-		FTabManager::NewPrimaryArea()
-		->SetOrientation(Orient_Vertical)
-		->Split(
-			FTabManager::NewSplitter()
-			->SetOrientation(Orient_Horizontal)
-			->SetSizeCoefficient(3.0f)
-			->Split(
-				FTabManager::NewStack()
-				->AddTab("Details-Panel", ETabState::OpenedTab)
-			)
-			->Split(
-				FTabManager::NewStack()
-				->AddTab("Viewport", ETabState::OpenedTab)
-				->SetSizeCoefficient(4.0f)
-			)
-		)
-		->Split(
-			FTabManager::NewStack()
-			->AddTab("Timeline", ETabState::OpenedTab)
-		)
-	);
-	
-	TabManager->RegisterTabSpawner("Viewport", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& InArgs) -> TSharedRef<SDockTab> {
-		return SNew(SDockTab)
-		.OnCanCloseTab_Lambda([]() { return false; })
-		.Content()[
-			GameWidget.ToSharedRef()
-		];
-	}));
-
-	TabManager->RegisterTabSpawner("Details-Panel", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& InArgs) {
-		return SNew(SDockTab)
-		.OnCanCloseTab_Lambda([]() { return false; })
-		.Content()[
-		SNew(SVerticalBox)
-			+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Left)[
-				SNew(SButton)
-				.Text(FText::FromString("Exit"))
-				.OnClicked_Lambda([this]() {
-					AFICSubsystem::GetFICSubsystem(Context->GetWorld())->SetActiveAnimation(nullptr);
-					MainTab->SetCanCloseTab(SDockTab::FCanCloseTab::CreateLambda([]() { return true; }));
-					MainTab->RequestCloseTab();
-					TabManager->CloseAllAreas();
-					TabManager.Reset();
-					return FReply::Handled();
-				})
-			]
-			+SVerticalBox::Slot().FillHeight(1)[
-				SNew(SFICDetails)
-				.Context(Context)
-			]
-		];
-	}));
-
-	TabManager->RegisterTabSpawner("Timeline", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& InArgs) {
-		return SNew(SDockTab)
-		.OnCanCloseTab_Lambda([]() { return false; })
-		.Content()[
-			SNew(SFICTimelinePanel)
-			.Context(Context)
-		];
-	}));
-
 	ChildSlot[
 		SNew(SOverlay)
 		+SOverlay::Slot()[
@@ -91,7 +23,34 @@ void SFICEditor::Construct(const FArguments& InArgs) {
 			.Image(&Background)
 		]
 		+SOverlay::Slot()[
-			TabManager->RestoreFrom(TabLayout.ToSharedRef(), FSlateApplication::Get().FindWidgetWindow(AsShared())).ToSharedRef()
+			SNew(SSplitter)
+			.Orientation(EOrientation::Orient_Vertical)
+			+SSplitter::Slot().Value(2)[
+				SNew(SSplitter)
+				.Orientation(EOrientation::Orient_Horizontal)
+				+SSplitter::Slot()[
+					SNew(SVerticalBox)
+					+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Left)[
+						SNew(SButton)
+						.Text(FText::FromString("Exit"))
+						.OnClicked_Lambda([this]() {
+							AFICSubsystem::GetFICSubsystem(Context->GetWorld())->SetActiveAnimation(nullptr);
+							return FReply::Handled();
+						})
+					]
+					+SVerticalBox::Slot().FillHeight(1)[
+						SNew(SFICDetails)
+						.Context(Context)
+					]
+				]
+				+SSplitter::Slot().Value(4)[
+					GameWidget.ToSharedRef()
+				]
+			]
+			+SSplitter::Slot().SizeRule(SSplitter::ESizeRule::FractionOfParent)[
+				SNew(SFICTimelinePanel)
+				.Context(Context)
+			]
 		]
 	];
 	

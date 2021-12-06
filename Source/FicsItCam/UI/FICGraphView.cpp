@@ -38,10 +38,12 @@ SFICGraphView::SFICGraphView() : Children(this) {
 }
 
 FVector2D SFICGraphView::ComputeDesiredSize(float) const {
-	return FVector2D(1000, 1000);
+	return FVector2D(0, 0);
 }
 
 int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
+	OutDrawElements.PushClip(FSlateClippingZone(MyCullingRect));
+
 	// Draw Background
 	FVector2D AnimationLocalStart = FVector2D(FrameToLocal(AnimationStart.Get()), 0);
 	FVector2D AnimationLocalEnd = FVector2D(FrameToLocal(AnimationEnd.Get()), AllottedGeometry.GetLocalSize().Y);
@@ -61,8 +63,8 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	int64 FrameStart = TimelineRangeBegin.Get();
 	int64 FrameEnd = TimelineRangeEnd.Get();
 	int64 Steps = 1;
-	while ((FrameEnd - FrameStart) / Steps > 30) Steps *= 10;
-	for (float x = FrameStart - FrameStart % Steps; x <= FrameEnd; x += Steps) {
+	while (FMath::Abs(FrameEnd - FrameStart) / Steps > 30) Steps *= 10;
+	for (float x = FMath::Abs(FrameStart - FrameStart % Steps); x <= FrameEnd; x += Steps) {
 		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), {FVector2D(FrameToLocal(x), 0), FVector2D(FrameToLocal(x), AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None, GridColor, true, 1);
 	}
 	for (float y = 0; y <= AllottedGeometry.GetLocalSize().Y; y += Distance.Y) {
@@ -83,28 +85,9 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, Attribute->GraphColor, true, 2);
 	}
 
-	// Draw Handles
-	for (int i = 0; i < Children.Num(); ++i) {
-		TSharedRef<SFICKeyframeControl> Child = StaticCastSharedRef<SFICKeyframeControl>(const_cast<TSlotlessChildren<SFICKeyframeControl>*>(&Children)->GetChildAt(i));
-		FFICKeyframe* Keyframe = Child->GetAttribute()->GetKeyframe(Child->GetFrame())->Get();
-		if (FIC_KF_NONE < Keyframe->KeyframeType && Keyframe->KeyframeType <= FIC_KF_CUSTOM) {
-			int64 Frame = Child->GetFrame();
-			float Value = Keyframe->GetValueAsFloat();
-			float Handle1Frame;
-			float Handle1Value;
-			float Handle2Frame;
-			float Handle2Value;
-			Keyframe->GetInControlAsFloat(Handle1Frame, Handle1Value);
-			Keyframe->GetOutControlAsFloat(Handle2Frame, Handle2Value);
-			TArray<FVector2D> PlotPoints;
-			PlotPoints.Add(FVector2D(FrameToLocal(Frame - Handle1Frame), ValueToLocal(Value - Handle1Value)));
-			PlotPoints.Add(FVector2D(FrameToLocal(Frame), ValueToLocal(Value)));
-			PlotPoints.Add(FVector2D(FrameToLocal(Frame + Handle2Frame), ValueToLocal(Value + Handle2Value)));
-			FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, FLinearColor::White, true, 1);
-		}
-	}
-
 	LayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId+1, InWidgetStyle, bParentEnabled);
+
+	OutDrawElements.PopClip();
 	
 	return LayerId;
 }
@@ -138,7 +121,7 @@ FReply SFICGraphView::OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, co
 
 FReply SFICGraphView::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton)) {
-		return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphPanDragDrop>(SharedThis(this)));
+		return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphPanDragDrop>(SharedThis(this), MouseEvent));
 	}
 	return FReply::Unhandled();
 }

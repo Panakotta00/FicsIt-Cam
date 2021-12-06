@@ -114,7 +114,7 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		return EExecutionStatus::COMPLETED;
 	}
 	if (Arguments[0] == "timelapse") {
-		if (Arguments.Num() < 2) {
+		if (Arguments.Num() >= 2) {
 			if (Arguments[1] == "list") {
 				Sender->SendChatMessage(TEXT("List of Timelapse-Cameras:"));
 				for (TPair<FString, AFICTimelapseCamera*> Entry : SubSys->TimelapseCameras) {
@@ -194,6 +194,7 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		Sender->SendChatMessage(TEXT("/fic timelapse delete <name>"), FColor::Red);
 		Sender->SendChatMessage(TEXT("/fic timelapse start <name>"), FColor::Red);
 		Sender->SendChatMessage(TEXT("/fic timelapse stop <name>"), FColor::Red);
+		return EExecutionStatus::BAD_ARGUMENTS;
 	}
 	
 	Sender->SendChatMessage(TEXT("No valid Subcommand!"), FColor::Red);

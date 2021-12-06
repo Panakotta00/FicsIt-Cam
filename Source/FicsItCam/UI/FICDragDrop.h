@@ -18,8 +18,8 @@ public:
 	FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent);
 	
 	// Begin FDragDropOperation
+	virtual void Construct() override;
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
-	virtual FCursorReply OnCursorQuery() { return FCursorReply::Cursor(EMouseCursor::GrabHandClosed); }
 	// End FDragDropOperation
 };
 
@@ -31,6 +31,7 @@ public:
 
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual FCursorReply OnCursorQuery() { return FCursorReply::Cursor(EMouseCursor::Hand); }
 	// End FDragDropOperation
 };
 
@@ -45,6 +46,7 @@ public:
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
 	virtual TSharedPtr<SWidget> GetDefaultDecorator() const override;
+	virtual FVector2D GetDecoratorPosition() const override;
 	// End FDragDropOperation
 };
 

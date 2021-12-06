@@ -22,10 +22,15 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 			SNew(SImage)
 			.Image(BackgroundBrush)
 		]
-		+SOverlay::Slot()[
+		+SOverlay::Slot()
+		.HAlign(HAlign_Fill)
+		.VAlign(VAlign_Fill)[
 			SNew(SGridPanel)
 			.FillColumn(1, 1)
-			+SGridPanel::Slot(0,0).RowSpan(2).Padding(5)[
+			.FillRow(2, 1)
+			+SGridPanel::Slot(0,0)
+			.RowSpan(2)
+			.Padding(5)[
 				SNew(SGridPanel)
 				+SGridPanel::Slot(0,0).Padding(5)[
 	                SNew(STextBlock)
@@ -219,7 +224,9 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 			        return Context->GetAnimation()->AnimationEnd;
 		        })
 			]
-			+SGridPanel::Slot(1, 2).HAlign(HAlign_Fill).VAlign(VAlign_Fill)[
+			+SGridPanel::Slot(1, 2)
+			.HAlign(HAlign_Fill)
+			.VAlign(VAlign_Fill)[
 				SAssignNew(Graph, SFICGraphView)
 				.Attributes({&Context->PosX, &Context->PosY, &Context->PosZ})
 				.AutoFit(true)

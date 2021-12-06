@@ -62,9 +62,10 @@ float FFICEditorGroupAttribute::GetValueAsFloat(int64 InFrame) const {
 	return Sum / Attributes.Num();
 }
 
-void FFICEditorGroupAttribute::SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType) {
+void FFICEditorGroupAttribute::SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType, bool bCreate) {
 	for (const TTuple<FString, TAttribute<FFICEditorAttributeBase*>>& Attribute : Attributes) {
-		Attribute.Value.Get()->SetKeyframeFromFloat(InFrame, InValue, InType);
+		if (!bCreate && !Attribute.Value.Get()->GetKeyframe(InFrame)) continue;
+		Attribute.Value.Get()->SetKeyframeFromFloat(InFrame, Attribute.Value.Get()->GetValueAsFloat(InFrame), InType);
 	}
 }
 
