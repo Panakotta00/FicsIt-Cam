@@ -1,5 +1,7 @@
 ﻿#include "FICAnimation.h"
 
+#include "FGGameUserSettings.h"
+
 FFICKeyframeRef::~FFICKeyframeRef() {
 	if (bShouldDestroy && Keyframe) delete Keyframe;
 	Keyframe = nullptr;
@@ -291,6 +293,14 @@ AFICAnimation::AFICAnimation() {
 	FOV.FallBackValue = 90.0f;
 	Aperture.FallBackValue = 100;
 	FocusDistance.FallBackValue = 10000;
+}
+
+void AFICAnimation::OnConstruction(const FTransform& Transform) {
+	FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
+	ResolutionWidth = Resolution.X;
+	ResolutionHeight = Resolution.Y;
+	
+	Super::OnConstruction(Transform);
 }
 
 void AFICAnimation::RecalculateAllKeyframes() {

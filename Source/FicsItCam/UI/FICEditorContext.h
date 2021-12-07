@@ -54,6 +54,7 @@ public:
 	bool bMoveCamera = true;
 	bool bShowPath = true;
 	bool bAutoKeyframe = false;
+	bool bForceResolution = false;
 
 	UFICEditorContext();
 	

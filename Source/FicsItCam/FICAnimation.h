@@ -191,6 +191,11 @@ public:
 
 	UPROPERTY(SaveGame)
 	int64 FPS = 30;
+	
+	UPROPERTY(SaveGame)
+	int64 ResolutionWidth = 1920;
+	UPROPERTY(SaveGame)
+	int64 ResolutionHeight = 1080;
 
 	UPROPERTY(SaveGame)
 	bool bUseCinematic = true;
@@ -199,6 +204,10 @@ public:
 	bool bBulletTime = false;
 
 	AFICAnimation();
+
+	// Begin AActor
+	virtual void OnConstruction(const FTransform& Transform) override;
+	// End AActor
 
 	// Begin IFGSaveInterface
 	virtual bool ShouldSave_Implementation() const override { return true; }

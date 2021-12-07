@@ -204,12 +204,12 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 				ScalarAttribute(Context, Context->FocusDistance, TEXT("Focus Distance:"))
 			]
 			+SVerticalBox::Slot().Padding(5).AutoHeight()[
-			SNew(SHorizontalBox)
+				SNew(SHorizontalBox)
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
 					SNew(STextBlock)
-					.Text(FText::FromString("Settings:"))
+					.Text(FText::FromString("Settings: "))
 				]
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
+				+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
 					SNew(SVerticalBox)
 					+SVerticalBox::Slot().Padding(5).AutoHeight()[
 						SNew(SCheckBox)
@@ -232,6 +232,72 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 							Context->GetAnimation()->bBulletTime = State == ECheckBoxState::Checked;
 						})
 						.ToolTipText(FText::FromString(TEXT("If enabled, game simulation will pause allowing you to have a bullet time effect.")))
+					]
+					+SVerticalBox::Slot().Padding(5).AutoHeight().HAlign(HAlign_Fill)[
+						SNew(SHorizontalBox)
+						+SHorizontalBox::Slot().AutoWidth()[
+							SNew(STextBlock).Text(FText::FromString("FPS: "))
+						]
+						+SHorizontalBox::Slot().FillWidth(1)[
+							SNew(SNumericEntryBox<int>)
+							.Value_Lambda([this]() {
+								return Context->GetAnimation()->FPS;
+							})
+							.SupportDynamicSliderMaxValue(true)
+							.SliderExponent(1)
+							.Delta(1)
+							.MinValue(1)
+							.LinearDeltaSensitivity(10)
+							.AllowSpin(false)
+							.OnValueCommitted_Lambda([this](int Val, auto) {
+								Context->GetAnimation()->FPS = FMath::Max(1, Val);
+							})
+							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
+						]
+					]
+					+SVerticalBox::Slot().Padding(5).AutoHeight().HAlign(HAlign_Fill)[
+						SNew(SHorizontalBox)
+						.ToolTipText(FText::FromString(TEXT("The resolution setting will be used for rendering the animation.")))
+						+SHorizontalBox::Slot().AutoWidth()[
+							SNew(STextBlock).Text(FText::FromString("Resolution: "))
+						]
+						+SHorizontalBox::Slot().FillWidth(1)[
+							SNew(SNumericEntryBox<int>)
+							.Value_Lambda([this]() {
+								return Context->GetAnimation()->ResolutionWidth;
+							})
+							.SupportDynamicSliderMaxValue(true)
+							.SliderExponent(1)
+							.Delta(1)
+							.MinValue(1)
+							.LinearDeltaSensitivity(10)
+							.AllowSpin(false)
+							.OnValueCommitted_Lambda([this](int Val, auto) {
+								Context->GetAnimation()->ResolutionWidth = FMath::Max(1, Val);
+							})
+							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
+							.ToolTipText(FText::FromString(TEXT("Resolution Width")))
+						]
+						+SHorizontalBox::Slot().AutoWidth()[
+							SNew(STextBlock).Text(FText::FromString(" x "))
+						]
+						+SHorizontalBox::Slot().FillWidth(1)[
+							SNew(SNumericEntryBox<int>)
+							.Value_Lambda([this]() {
+								return Context->GetAnimation()->ResolutionHeight;
+							})
+							.SupportDynamicSliderMaxValue(true)
+							.SliderExponent(1)
+							.Delta(1)
+							.MinValue(1)
+							.LinearDeltaSensitivity(10)
+							.AllowSpin(false)
+							.OnValueCommitted_Lambda([this](int Val, auto) {
+								Context->GetAnimation()->ResolutionHeight = FMath::Max(1, Val);
+							})
+							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
+							.ToolTipText(FText::FromString(TEXT("Resolution Height")))
+						]
 					]
 				]
 			]
@@ -275,6 +341,17 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 							Context->bAutoKeyframe = State == ECheckBoxState::Checked;
 						})
 						.ToolTipText(FText::FromString(FString::Printf(TEXT("If enabled, a change of value of a attribute will directly cause it to set/create a keyframe for that attribute at the current frame.\n\n%s"), *UFICUtils::KeymappingToString("FicsItCam.ToggleAutoKeyframe"))))
+					]
+					+SVerticalBox::Slot().Padding(5).AutoHeight()[
+						SNew(SCheckBox)
+						.Content()[SNew(STextBlock).Text(FText::FromString("Force Resolution"))]
+						.IsChecked_Lambda([this]() {
+							return Context->bForceResolution ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+						})
+						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
+							Context->bForceResolution = State == ECheckBoxState::Checked;
+						})
+						.ToolTipText(FText::FromString(FString::Printf(TEXT("If enabled, viewport will be forced to use the aspect ratio of the resolution of the animation, causing black bars to appear."))))
 					]
 				]
 			]

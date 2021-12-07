@@ -151,8 +151,7 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation, bool bInDoR
 	NewController->PlayerCameraManager->UnlockFOV();
 	
 	if (bDoRender) {
-		FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
-		RenderTarget->InitCustomFormat(Resolution.X, Resolution.Y, EPixelFormat::PF_R8G8B8A8, false);
+		RenderTarget->InitCustomFormat(Animation->ResolutionWidth, Animation->ResolutionHeight, EPixelFormat::PF_R8G8B8A8, false);
 	}
 	if (Camera) Camera->DestroyComponent();
 	if (Animation->bUseCinematic) {

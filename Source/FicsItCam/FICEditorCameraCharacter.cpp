@@ -37,7 +37,6 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			Camera = NewObject<UCameraComponent>(this);
 		}
 		
-		Camera->bConstrainAspectRatio = false;
 		Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
 		AController* PController = Controller;
@@ -48,6 +47,9 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 
 		UpdateValues();
 	}
+
+	Camera->bConstrainAspectRatio = EditorContext->bForceResolution;
+	Camera->SetAspectRatio((float)EditorContext->GetAnimation()->ResolutionHeight / (float)EditorContext->GetAnimation()->ResolutionWidth);
 	
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->MaxFlySpeed = bIsSprinting ? MaxFlySpeed * 10 : MaxFlySpeed;
