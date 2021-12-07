@@ -12,6 +12,10 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context;
 	BackgroundBrush = InArgs._Background;
 
+	for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Attribute : Context->All.GetChildAttributes()) {
+		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, Attribute.Value.Get()));
+	}
+
 	ActiveRangeStart = Context->GetAnimation()->AnimationStart;
 	ActiveRangeEnd = Context->GetAnimation()->AnimationEnd;
 
@@ -164,7 +168,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                SNew(SBox)
 	                .WidthOverride(50)
 	                .Content()[
-	                SNew(SNumericEntryBox<int64>)
+						SNew(SNumericEntryBox<int64>)
 	                    .TypeInterface(Interface)
 	                    .Value_Lambda([this]() {
 	                        return Context->GetAnimation()->AnimationEnd;
@@ -178,6 +182,65 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                    })
 	                ]
 	            ]
+			]
+			+SGridPanel::Slot(0, 2).Padding(5).VAlign(VAlign_Fill).HAlign(HAlign_Fill)[
+				SNew(SVerticalBox)
+				+SVerticalBox::Slot().AutoHeight()[
+					SNew(STextBlock)
+					.Text(FText::FromString(TEXT("Attributes shown in Graph View:")))
+				]
+				+SVerticalBox::Slot().Padding(5).FillHeight(1).VAlign(VAlign_Fill).HAlign(HAlign_Fill)[
+					SAssignNew(AttributeTree, STreeView<TSharedPtr<FFICEditorAttributeReference>>)
+					.TreeItemsSource(&Attributes)
+					.SelectionMode(ESelectionMode::None)
+					.OnGenerateRow_Lambda([this](TSharedPtr<FFICEditorAttributeReference> Attribute, const TSharedRef<STableViewBase>& Base) {
+						return SNew(STableRow<TSharedPtr<FFICEditorAttributeReference>>, Base)
+						.Content()[
+							SNew(SCheckBox)
+							.Content()[
+								SNew(STextBlock)
+								.Text(FText::FromString(Attribute->Name))
+							].IsChecked_Lambda([Attribute]() {
+								if (Attribute->Attribute->GetChildAttributes().Num() < 1) return Attribute->Attribute->bShowInGraph ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+								TFunction<bool(FFICEditorAttributeBase*)> HasCheckedChild;
+								ECheckBoxState State = ECheckBoxState::Checked;
+								HasCheckedChild = [&HasCheckedChild, &State](FFICEditorAttributeBase* Attrib) {
+									bool bAtLeastOne = false;
+									for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Child : Attrib->GetChildAttributes()) {
+										if (Child.Value.Get()->GetChildAttributes().Num() < 1) {
+											if (Child.Value.Get()->bShowInGraph) {
+												bAtLeastOne = true;
+											} else {
+												State = ECheckBoxState::Undetermined;
+											}
+										} else {
+											bAtLeastOne = HasCheckedChild(Child.Value.Get()) || bAtLeastOne;
+										}
+									}
+									return bAtLeastOne;
+								};
+								if (HasCheckedChild(Attribute->Attribute)) return State;
+								return ECheckBoxState::Unchecked;
+							})
+							.OnCheckStateChanged_Lambda([this, Attribute](ECheckBoxState State) {
+								TFunction<void(FFICEditorAttributeBase*)> SetChildren;
+								SetChildren = [&SetChildren, State](FFICEditorAttributeBase* Attrib) {
+									Attrib->bShowInGraph = State == ECheckBoxState::Checked;
+									for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Child : Attrib->GetChildAttributes()) {
+										SetChildren(Child.Value.Get());
+									}
+								};
+								SetChildren(Attribute->Attribute);
+								UpdateLeafAttributes();
+							})
+						];
+					})
+					.OnGetChildren_Lambda([](TSharedPtr<FFICEditorAttributeReference> InEntry, TArray<TSharedPtr<FFICEditorAttributeReference>>& OutArray) {
+						for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Attribute : InEntry->Attribute->GetChildAttributes()) {
+							OutArray.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, Attribute.Value.Get()));
+						}
+					})
+				]
 			]
 			+SGridPanel::Slot(1, 0)[
 				SAssignNew(VisibleRange, SFICRangeSelector)
@@ -253,7 +316,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 			]
 		]
 	];
-
+	
 	// TArray<FFICEditorAttributeBase*> Attributes;
 	// Attributes.Add(Context->All.GetAttributes()["X"].Get());
 	// Graph->SetAttributes(Attributes);
@@ -265,6 +328,22 @@ void SFICTimelinePanel::ActiveRangeStartChanged(int64 Prev, int64 Cur) {
 
 void SFICTimelinePanel::ActiveRangeEndChanged(int64 Prev, int64 Cur) {
 	ActiveRangeEnd = Cur;
+}
+
+void SFICTimelinePanel::UpdateLeafAttributes() {
+	SelectedLeafAttributes.Empty();
+	TFunction<void(FFICEditorAttributeBase*)> AddLeaves;
+	AddLeaves = [this, &AddLeaves](FFICEditorAttributeBase* Attribute) {
+		if (Attribute->GetChildAttributes().Num() < 1 && Attribute->bShowInGraph) SelectedLeafAttributes.Add(Attribute); 
+		for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Child : Attribute->GetChildAttributes()) {
+			AddLeaves(Child.Value.Get());
+		}
+	};
+	for (TSharedPtr<FFICEditorAttributeReference> Item : Attributes) {
+		AddLeaves(Item->Attribute);
+	}
+	Graph->SetAttributes(SelectedLeafAttributes);
+	Graph->FitAll();
 }
 
 void SFICTimelinePanel::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {

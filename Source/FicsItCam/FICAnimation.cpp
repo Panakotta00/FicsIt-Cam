@@ -13,6 +13,8 @@ void FFICAttribute::RecalculateAllKeyframes() {
 	for (int64 Time : Keys) {
 		RecalculateKeyframe(Time);
 	}
+
+	OnUpdate.Broadcast();
 }
 
 bool FFICAttribute::GetPrevKeyframe(int64 Time, int64& outTime, TSharedPtr<FFICKeyframeRef>& outKeyframe) {
@@ -148,7 +150,7 @@ void FFICFloatAttribute::RecalculateKeyframe(int64 Time) {
 	}
 
 	if (!K) return;
-	if (K->KeyframeType & (FIC_KF_CUSTOM | FIC_KF_LINEAR | FIC_KF_MIRROR | FIC_KF_STEP)) return;
+	if (K->KeyframeType & (FIC_KF_CUSTOM | FIC_KF_LINEAR | FIC_KF_MIRROR | FIC_KF_STEP) & ~FIC_KF_HANDLES) return;
 	float Factor = 1.0/3.0;
 	//Factor = 0.5;
 	if (PK) {
@@ -163,10 +165,12 @@ void FFICFloatAttribute::RecalculateKeyframe(int64 Time) {
 
 			K->OutTanTime = KTimeDiff * Factor;
 			K->InTanTime = KTimeDiff * Factor;
+			
 			if (K->KeyframeType == FIC_KF_EASE) {
 				K->InTanValue = K->OutTanValue = KValueDiff * Factor;
 			} else if (K->KeyframeType == FIC_KF_EASEINOUT) {
 				K->OutTanValue = 0;
+				K->InTanValue = 0;
 			}
 		} else {
 			if (K->KeyframeType == FIC_KF_EASE) {

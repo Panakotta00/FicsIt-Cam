@@ -70,9 +70,13 @@ UFICEditorContext::UFICEditorContext() :
 	FOV(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->FOV : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Yellow),
 	Aperture(TAttribute<FFICFloatAttribute*>::Create([this]() { return Animation ? &Animation->Aperture : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Orange),
 	FocusDistance(TAttribute<FFICFloatAttribute*>::Create([this]() { return Animation ? &Animation->FocusDistance : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Purple),
-	All({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}, {"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}, {"FOV", &FOV}, {"Aperture", &Aperture}, {"Focus Distance", &FocusDistance}}),
 	Pos({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}}),
-	Rot({{"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}}) {}
+	Rot({{"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}}),
+	All({{"Pos", &Pos}, {"Rot", &Rot}, {"Aperture", &Aperture}, {"Focus Distance", &FocusDistance}}) {
+	PosX.bShowInGraph = true;
+	PosY.bShowInGraph = true;
+	PosZ.bShowInGraph = true;
+}
 
 void UFICEditorContext::SetAnimation(AFICAnimation* Anim) {
 	Animation = Anim;

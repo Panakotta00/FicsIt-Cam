@@ -68,7 +68,7 @@ void SFICKeyframeHandle::Construct(const FArguments& InArgs, SFICKeyframeControl
 		SNew(SBox)
 		.HeightOverride(20)
 		.WidthOverride(20)
-		.Padding(8)[
+		.Padding(5)[
 			SNew(SImage)
 			.Image_Lambda([this]() {
 				return &Style.Get()->HandleBrush;
@@ -174,35 +174,42 @@ void SFICKeyframeControl::Construct(FArguments InArgs) {
 
 	if (!InArgs._GraphView) InArgs._ShowHandles = false;
 	if (InArgs._ShowHandles) {
-		FromHandle = SNew(SFICKeyframeHandle, this).Style(Style);
-		Children.Add(FromHandle.ToSharedRef());
-		ToHandle = SNew(SFICKeyframeHandle, this).IsOutHandle(true).Style(Style);
-		Children.Add(ToHandle.ToSharedRef());
+		FFICKeyframe* Keyframe = GetAttribute()->GetKeyframe(GetFrame())->Get();
+		TSharedPtr<FFICKeyframeRef> NextKeyframe, PrevKeyframe;
+		int64 NextKeyframeTime, PrevKeyframeTime;
+		Attribute.Get()->GetAttribute()->GetNextKeyframe(Frame.Get().GetValue(), NextKeyframeTime, NextKeyframe);
+		Attribute.Get()->GetAttribute()->GetPrevKeyframe(Frame.Get().GetValue(), PrevKeyframeTime, PrevKeyframe);
+		if (PrevKeyframe && PrevKeyframe->Get()->KeyframeType & FIC_KF_HANDLES && Keyframe->KeyframeType != FIC_KF_STEP) {
+			FromHandle = SNew(SFICKeyframeHandle, this).Style(Style);
+			Children.Add(FromHandle.ToSharedRef());
+		}
+		if (Keyframe && (Keyframe->KeyframeType & FIC_KF_HANDLES || NextKeyframe->Get()->KeyframeType & FIC_KF_HANDLES)) {
+			ToHandle = SNew(SFICKeyframeHandle, this).IsOutHandle(true).Style(Style);
+			Children.Add(ToHandle.ToSharedRef());
+		}
 	}
 }
 
 int SFICKeyframeControl::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
-	int NewLayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
-
 	TSharedPtr<FFICKeyframeRef> KeyframeRef = GetAttribute()->GetKeyframe(GetFrame());
-	if (FromHandle && KeyframeRef.IsValid()) {
+	if ((FromHandle || ToHandle) && KeyframeRef.IsValid()) {
 		FFICKeyframe* Keyframe = KeyframeRef->Get();
-		if (FIC_KF_NONE < Keyframe->KeyframeType && Keyframe->KeyframeType <= FIC_KF_CUSTOM) {
-			float Handle1Frame;
-			float Handle1Value;
-			float Handle2Frame;
-			float Handle2Value;
-			Keyframe->GetInControlAsFloat(Handle1Frame, Handle1Value);
-			Keyframe->GetOutControlAsFloat(Handle2Frame, Handle2Value);
-			TArray<FVector2D> PlotPoints;
-			PlotPoints.Add(FVector2D((1.0 / GraphView->GetFramePerLocal()) * -Handle1Frame, (1.0 / GraphView->GetValuePerLocal()) * Handle1Value));
-			PlotPoints.Add(FVector2D(0, 0));
-			PlotPoints.Add(FVector2D((1.0 / GraphView->GetFramePerLocal()) * Handle2Frame, (1.0 / GraphView->GetValuePerLocal()) * -Handle2Value));
-			FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, Style.Get()->SetColor.GetSpecifiedColor(), true, 1);
-		}
+		float Handle1Frame;
+		float Handle1Value;
+		float Handle2Frame;
+		float Handle2Value;
+		Keyframe->GetInControlAsFloat(Handle1Frame, Handle1Value);
+		Keyframe->GetOutControlAsFloat(Handle2Frame, Handle2Value);
+		TArray<FVector2D> PlotPoints;
+		if (FromHandle) PlotPoints.Add(FVector2D((1.0 / GraphView->GetFramePerLocal()) * -Handle1Frame, (1.0 / GraphView->GetValuePerLocal()) * Handle1Value));
+		PlotPoints.Add(FVector2D(0, 0));
+		if (ToHandle) PlotPoints.Add(FVector2D((1.0 / GraphView->GetFramePerLocal()) * Handle2Frame, (1.0 / GraphView->GetValuePerLocal()) * -Handle2Value));
+		FSlateDrawElement::MakeLines(OutDrawElements, LayerId+5, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, Style.Get()->SetColor.GetSpecifiedColor(), true, 2);
 	}
+	
+	int NewLayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId+10, InWidgetStyle, bParentEnabled);
 
-	return NewLayerId;
+	return NewLayerId+10;
 }
 
 FVector2D SFICKeyframeControl::ComputeDesiredSize(float F) const {
@@ -214,8 +221,8 @@ FChildren* SFICKeyframeControl::GetChildren() {
 }
 
 void SFICKeyframeControl::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const {
-	ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(MainHandle.ToSharedRef(), FromHandle ? -MainHandle->GetDesiredSize()/2.0f : FVector2D::ZeroVector, MainHandle->GetDesiredSize(), 1));
-	if (FromHandle) {
+	ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(MainHandle.ToSharedRef(), (FromHandle || ToHandle) ? -MainHandle->GetDesiredSize()/2.0f : FVector2D::ZeroVector, MainHandle->GetDesiredSize(), 1));
+	if (FromHandle || ToHandle) {
 		float TimelinePerLocal, ValuePerLocal;
 		int64 TimelineBegin, TimelineEnd;
 		float ValueBegin, ValueEnd;
@@ -228,19 +235,23 @@ void SFICKeyframeControl::OnArrangeChildren(const FGeometry& AllottedGeometry, F
 		FFICKeyframe* Keyframe = Attribute.Get()->GetKeyframe(Frame.Get().GetValue())->Get();
 
 		if (Keyframe) {
-			float FromFrame, FromValue;
-			Keyframe->GetInControlAsFloat(FromFrame, FromValue);
-			FVector2D FromHandleOffset(-FromFrame, FromValue);
-			FromHandleOffset /= FVector2D(TimelinePerLocal, ValuePerLocal);
-			FromHandleOffset -= FromHandle->GetDesiredSize()/2.0f;
-			ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(FromHandle.ToSharedRef(), FromHandleOffset, FromHandle->GetDesiredSize(), 1));
-			
-			float ToFrame, ToValue;
-			Keyframe->GetOutControlAsFloat(ToFrame, ToValue);
-			FVector2D ToHandleOffset(ToFrame, -ToValue);
-			ToHandleOffset /= FVector2D(TimelinePerLocal, ValuePerLocal);
-			ToHandleOffset -= ToHandle->GetDesiredSize()/2.0f;
-			ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(ToHandle.ToSharedRef(), ToHandleOffset, ToHandle->GetDesiredSize(), 1));
+			if (FromHandle) {
+				float FromFrame, FromValue;
+				Keyframe->GetInControlAsFloat(FromFrame, FromValue);
+				FVector2D FromHandleOffset(-FromFrame, FromValue);
+				FromHandleOffset /= FVector2D(TimelinePerLocal, ValuePerLocal);
+				FromHandleOffset -= FromHandle->GetDesiredSize()/2.0f;
+				ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(FromHandle.ToSharedRef(), FromHandleOffset, FromHandle->GetDesiredSize(), 1));
+			}
+
+			if (ToHandle) {
+				float ToFrame, ToValue;
+				Keyframe->GetOutControlAsFloat(ToFrame, ToValue);
+				FVector2D ToHandleOffset(ToFrame, -ToValue);
+				ToHandleOffset /= FVector2D(TimelinePerLocal, ValuePerLocal);
+				ToHandleOffset -= ToHandle->GetDesiredSize()/2.0f;
+				ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(ToHandle.ToSharedRef(), ToHandleOffset, ToHandle->GetDesiredSize(), 1));
+			}
 		}
 	}
 }
@@ -252,10 +263,11 @@ FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const
 }
 
 FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
-	if (Event.GetEffectingButton() == EKeys::LeftMouseButton && !FromHandle.IsValid() && !bWasDoubleClick) {
-		if (Attribute.Get()->GetKeyframe(GetFrame()) && !Attribute.Get()->HasChanged(GetFrame())) Attribute.Get()->RemoveKeyframe(GetFrame());
+	if (Event.GetEffectingButton() == EKeys::LeftMouseButton && !bWasDoubleClick) {
+		FFICAttribute* Attrib = Attribute.Get()->GetAttribute();
+		if (Attribute.Get()->GetKeyframe(GetFrame()) && (ToHandle || FromHandle || !Attribute.Get()->HasChanged(GetFrame()))) Attribute.Get()->RemoveKeyframe(GetFrame());
 		else Attribute.Get()->SetKeyframe(GetFrame());
-		GraphView->Update();
+		Attrib->OnUpdate.Broadcast();
 		return FReply::Handled();
 	} else 	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
         TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
@@ -269,7 +281,6 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                     Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_EASE, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
-                	if (GraphView) GraphView->Update();
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
                 FText::FromString("Ease-In/Out"),
@@ -278,7 +289,6 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                     Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_EASEINOUT, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
-                	if (GraphView) GraphView->Update();
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
                 FText::FromString("Linear"),
@@ -287,7 +297,6 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                     Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_LINEAR, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
-                	if (GraphView) GraphView->Update();
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
                 FText::FromString("Step"),
@@ -296,7 +305,6 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                     Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_STEP, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
-                	if (GraphView) GraphView->Update();
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 		
 			FSlateApplication::Get().PushMenu(SharedThis(this), *Event.GetEventPath(), MenuBuilder.MakeWidget(), Event.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);

@@ -37,6 +37,12 @@ SFICGraphView::SFICGraphView() : Children(this) {
 	Clipping = EWidgetClipping::ClipToBoundsAlways;
 }
 
+SFICGraphView::~SFICGraphView() {
+	for (FFICEditorAttributeBase* Attribute : Attributes) {
+		Attribute->GetAttribute()->OnUpdate.Remove(DelegateHandles[Attribute]);
+	}
+}
+
 FVector2D SFICGraphView::ComputeDesiredSize(float) const {
 	return FVector2D(0, 0);
 }
@@ -64,7 +70,7 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	int64 FrameEnd = TimelineRangeEnd.Get();
 	int64 Steps = 1;
 	while (FMath::Abs(FrameEnd - FrameStart) / Steps > 30) Steps *= 10;
-	for (float x = FMath::Abs(FrameStart - FrameStart % Steps); x <= FrameEnd; x += Steps) {
+	for (float x = FrameStart - FrameStart % Steps; x <= FrameEnd; x += Steps) {
 		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), {FVector2D(FrameToLocal(x), 0), FVector2D(FrameToLocal(x), AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None, GridColor, true, 1);
 	}
 	for (float y = 0; y <= AllottedGeometry.GetLocalSize().Y; y += Distance.Y) {
@@ -85,11 +91,11 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, Attribute->GraphColor, true, 2);
 	}
 
-	LayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId+1, InWidgetStyle, bParentEnabled);
+	LayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId+10, InWidgetStyle, bParentEnabled);
 
 	OutDrawElements.PopClip();
 	
-	return LayerId;
+	return LayerId+20;
 }
 
 FReply SFICGraphView::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
@@ -111,6 +117,21 @@ FReply SFICGraphView::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointe
 		FSlateApplication::Get().PushMenu(SharedThis(this), *MouseEvent.GetEventPath(), MenuBuilder.MakeWidget(), MouseEvent.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
 
 		return FReply::Handled();
+	} else if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
+		FVector2D LocalMousePos = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+		for (FFICEditorAttributeBase* const& Attribute : Attributes) {
+			int64 StartFrame = TimelineRangeBegin.Get();
+			int64 EndFrame = TimelineRangeEnd.Get();
+			for (int64 Frame = StartFrame; Frame <= EndFrame; ++Frame) {
+				FVector2D PlotPoint = FrameAttributeToLocal(Attribute, Frame);
+				FVector2D Difference = PlotPoint - LocalMousePos;
+				if (Difference.Size() < 5) {
+					Attribute->SetKeyframeFromFloat(Frame, LocalToValue(LocalMousePos.Y));
+					Attribute->GetAttribute()->RecalculateAllKeyframes();
+					return FReply::Handled();
+				}
+			}
+		}
 	}
 	return FReply::Unhandled();
 }
@@ -196,8 +217,16 @@ void SFICGraphView::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrang
 }
 
 void SFICGraphView::SetAttributes(const TArray<FFICEditorAttributeBase*>& InAttributes) {
+	for (FFICEditorAttributeBase* Attribute : Attributes) {
+		Attribute->GetAttribute()->OnUpdate.Remove(DelegateHandles[Attribute]);
+	}
+	
 	Attributes = InAttributes;
 
+	for (FFICEditorAttributeBase* Attribute : Attributes) {
+		DelegateHandles.Add(Attribute, Attribute->GetAttribute()->OnUpdate.AddRaw(this, &SFICGraphView::Update));
+	}
+	
 	Update();
 }
 
@@ -219,24 +248,32 @@ void SFICGraphView::Update() {
 }
 
 void SFICGraphView::FitAll() {
-	int64 FrameMin = 0;
-	int64 FrameMax = 0;
-	float ValueMin = 0;
-	float ValueMax = 0;
-	for (int i = 0; i < Children.Num(); ++i) {
-		TSharedRef<SFICKeyframeControl> Child = StaticCastSharedRef<SFICKeyframeControl>(Children.GetChildAt(i));
-		int64 Frame = Child->GetFrame();
-		float Value = Child->GetAttribute()->GetValueAsFloat(Frame);
-		if (i == 0) {
-			FrameMin = FrameMax = Frame;
-			ValueMin = ValueMax = Value;
-		} else {
-			if (Frame < FrameMin) FrameMin = Frame;
-			if (FrameMax < Frame) FrameMax = Frame;
-			if (Value < ValueMin) ValueMin = Value;
-			if (ValueMax < Value) ValueMax = Value;
+	int64 FrameMin = TNumericLimits<int64>::Max();
+	int64 FrameMax = TNumericLimits<int64>::Min();
+	float ValueMin = TNumericLimits<float>::Max();
+	float ValueMax = TNumericLimits<float>::Min();
+	for (FFICEditorAttributeBase* Attribute : Attributes) {
+		for (TTuple<int64, TSharedPtr<FFICKeyframeRef>> Keyframe : Attribute->GetAttribute()->GetKeyframes()) {
+			FFICKeyframe* KF = Keyframe.Value->Get();
+			float Value = KF->GetValueAsFloat();
+			int64 Frame = Keyframe.Key;
+			float InFrame, InValue, OutFrame, OutValue;
+			KF->GetInControlAsFloat(InFrame, InValue);
+			KF->GetOutControlAsFloat(OutFrame, OutValue);
+			FrameMin = FMath::Min3(FrameMin, Frame, (int64)FMath::Min(Frame + InFrame, Frame + OutFrame));
+			FrameMax = FMath::Max3(FrameMax, Frame, (int64)FMath::Max(Frame + InFrame, Frame + OutFrame));
+			ValueMin = FMath::Min3(ValueMin, Value, FMath::Min(Value - InValue, Value + OutValue));
+			ValueMax = FMath::Max3(ValueMax, Value, FMath::Max(Value - InValue, Value + OutValue));
 		}
 	}
+	int64 FrameSpan = FMath::Max(FMath::Abs(FrameMax - FrameMin), 10ll);
+	float ValueSpan = FMath::Max(FMath::Abs(ValueMax - ValueMin), 1.0f);
+	FrameSpan = FrameSpan/10;
+	ValueSpan = ValueSpan/10.0;
+	FrameMin -= FrameSpan;
+	FrameMax += FrameSpan;
+	ValueMin -= ValueSpan;
+	ValueMax += ValueSpan;
 	OnValueRangeChanged.Execute(ValueMin, ValueMax);
 	OnTimelineRangeChanged.Execute(FrameMin, FrameMax);
 }

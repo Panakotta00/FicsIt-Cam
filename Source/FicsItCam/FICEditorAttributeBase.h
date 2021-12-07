@@ -22,6 +22,7 @@ protected:
 	
 public:
 	FLinearColor GraphColor;
+	bool bShowInGraph = false;
 	
 	FFICEditorAttributeBase(const FFICAttributeValueChanged& OnValueChanged, FLinearColor GraphColor) : OnValueChanged(OnValueChanged), GraphColor(GraphColor) {}
 	virtual ~FFICEditorAttributeBase() = default;
@@ -83,6 +84,11 @@ public:
 	 * intended to be used for unified attribute views that can edit the attribute, like graph view.
 	 */
 	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE, bool bCreate = true) = 0;
+
+	/**
+	 * Returns a map of child attributes and names
+	 */
+	virtual TMap<FString, TAttribute<FFICEditorAttributeBase*>> GetChildAttributes() { return TMap<FString, TAttribute<FFICEditorAttributeBase*>>(); };
 };
 
 template<typename AttribType>
@@ -126,8 +132,17 @@ public:
 	}
 
 	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE, bool bCreate = true) override {
-		if (!bCreate && !GetKeyframe(InFrame)) return;
-		Attribute.Get()->SetKeyframe(InFrame, AttribType::KeyframeType(InValue, InType));
+		TSharedPtr<FFICKeyframeRef> Keyframe = GetKeyframe(InFrame);
+		if (!bCreate && !Keyframe) return;
+		AttribType::KeyframeType NewKeyframe;
+		if (Keyframe) {
+			NewKeyframe = *(AttribType::KeyframeType*)Keyframe->Get();
+			NewKeyframe.Value = InValue;
+			NewKeyframe.KeyframeType = InType;
+		} else {
+			NewKeyframe = AttribType::KeyframeType(InValue, InType);
+		}
+		Attribute.Get()->SetKeyframe(InFrame, NewKeyframe);
 	}
 	// End FFICEditorAttributeBase
 
@@ -168,12 +183,12 @@ public:
 	
 	// Begin FFICEditorAttributeBase
 	virtual void SetKeyframe(int64 Time) override;
+	virtual void RemoveKeyframe(int64 Time) override;
 	virtual bool HasChanged(int64 Time) const override;
 	virtual const FFICAttribute* GetAttributeConst() const override;
 	virtual void UpdateValue() override;
 	virtual float GetValueAsFloat(int64 InFrame) const override;
 	virtual void SetKeyframeFromFloat(int64 InFrame, float InValue, EFICKeyframeType InType = FIC_KF_EASE, bool bCreate = true) override;
+	virtual TMap<FString, TAttribute<FFICEditorAttributeBase*>> GetChildAttributes() override;
 	// End FFICEditorAttributeBase
-
-	TMap<FString, TAttribute<FFICEditorAttributeBase*>> GetAttributes();
 };

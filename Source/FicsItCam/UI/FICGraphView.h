@@ -46,9 +46,11 @@ private:
 	FFICGraphViewValueRangeChanged OnValueRangeChanged;
 
 	TArray<FFICEditorAttributeBase*> Attributes;
+	TMap<FFICEditorAttributeBase*, FDelegateHandle> DelegateHandles;
 
 public:
 	SFICGraphView();
+	virtual ~SFICGraphView() override;
 	
 	// Begin SWidget
 	virtual FVector2D ComputeDesiredSize(float) const override;

@@ -48,9 +48,9 @@ public:
 	TFICEditorAttribute<FFICFloatAttribute> FOV;
 	TFICEditorAttribute<FFICFloatAttribute> Aperture;
 	TFICEditorAttribute<FFICFloatAttribute> FocusDistance;
-	FFICEditorGroupAttribute All;
 	FFICEditorGroupAttribute Pos;
 	FFICEditorGroupAttribute Rot;
+	FFICEditorGroupAttribute All;
 	bool bMoveCamera = true;
 	bool bShowPath = true;
 	bool bAutoKeyframe = false;

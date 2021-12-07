@@ -35,6 +35,13 @@ void FFICEditorGroupAttribute::SetKeyframe(int64 Time) {
 	}
 }
 
+void FFICEditorGroupAttribute::RemoveKeyframe(int64 Time) {
+	for (const TPair<FString, TAttribute<FFICEditorAttributeBase*>>& Attrib : Attributes) {
+		FFICEditorAttributeBase* Base = Attrib.Value.Get();
+		if (Base) Base->RemoveKeyframe(Time);
+	} 
+}
+
 bool FFICEditorGroupAttribute::HasChanged(int64 Time) const {
 	for (const TPair<FString, TAttribute<FFICEditorAttributeBase*>>& Attrib : Attributes) {
 		FFICEditorAttributeBase* Base = Attrib.Value.Get();
@@ -69,6 +76,6 @@ void FFICEditorGroupAttribute::SetKeyframeFromFloat(int64 InFrame, float InValue
 	}
 }
 
-TMap<FString, TAttribute<FFICEditorAttributeBase*>> FFICEditorGroupAttribute::GetAttributes() {
+TMap<FString, TAttribute<FFICEditorAttributeBase*>> FFICEditorGroupAttribute::GetChildAttributes() {
 	return Attributes;
 }

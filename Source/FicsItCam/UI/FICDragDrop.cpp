@@ -61,7 +61,6 @@ void FFICGraphKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FFICAttribute* Attribute = KeyframeControl->GetAttribute()->GetAttribute();
 	Attribute->MoveKeyframe(KeyframeControl->GetFrame(), NewFrame);
 	Attribute->RecalculateAllKeyframes();
-	GraphView->Update();
 	KeyframeControl = GraphView->FindKeyframeControl(KeyframeControl->GetAttribute(), NewFrame);
 }
 

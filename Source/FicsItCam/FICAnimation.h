@@ -7,14 +7,15 @@
 
 UENUM()
 enum EFICKeyframeType {
-	FIC_KF_NONE			= 0b000000,
-	FIC_KF_EASE			= 0b000001,
-	FIC_KF_EASEINOUT	= 0b000010,
-	FIC_KF_MIRROR		= 0b000100,
-	FIC_KF_CUSTOM		= 0b001000,
-	FIC_KF_LINEAR		= 0b010000,
-	FIC_KF_STEP			= 0b100000,
-	FIC_KF_ALL			= 0b111111,
+	FIC_KF_NONE			= 0b0000000,
+	FIC_KF_HANDLES		= 0b1000000,
+	FIC_KF_EASE			= 0b1000001,
+	FIC_KF_EASEINOUT	= 0b1000010,
+	FIC_KF_MIRROR		= 0b1000100,
+	FIC_KF_CUSTOM		= 0b1001000,
+	FIC_KF_LINEAR		= 0b0010000,
+	FIC_KF_STEP			= 0b0100000,
+	FIC_KF_ALL			= 0b0111111,
 };
 
 USTRUCT(BlueprintType)
@@ -63,6 +64,9 @@ public:
 USTRUCT(BlueprintType)
 struct FFICAttribute {
 	GENERATED_BODY()
+
+	DECLARE_MULTICAST_DELEGATE(FOnUpdate)
+	FOnUpdate OnUpdate;
 
 	virtual ~FFICAttribute() = default;
 	virtual TMap<int64, TSharedPtr<FFICKeyframeRef>> GetKeyframes() { return TMap<int64, TSharedPtr<FFICKeyframeRef>>(); }

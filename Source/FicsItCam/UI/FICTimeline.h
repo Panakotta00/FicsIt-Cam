@@ -7,6 +7,13 @@
 
 class UFICEditorContext;
 
+struct FFICEditorAttributeReference {
+	FString Name;
+	FFICEditorAttributeBase* Attribute;
+
+	FFICEditorAttributeReference(FString Name, FFICEditorAttributeBase* Attribute) : Name(Name), Attribute(Attribute) {}
+};
+
 class SFICTimelinePanel : public SCompoundWidget {
 	static FSlateColorBrush DefaultBackgroundBrush;
 	
@@ -25,13 +32,19 @@ private:
 
 	TSharedPtr<SFICRangeSelector> VisibleRange;
 	TSharedPtr<SFICTimelineScrubber> Scrubber;
+	TSharedPtr<STreeView<TSharedPtr<FFICEditorAttributeReference>>> AttributeTree;
 	TSharedPtr<SFICGraphView> Graph;
 
 	int64 ActiveRangeStart = 0;
 	int64 ActiveRangeEnd = 0;
 
+	TArray<TSharedPtr<FFICEditorAttributeReference>> Attributes;
+	TArray<FFICEditorAttributeBase*> SelectedLeafAttributes;
+
 	void ActiveRangeStartChanged(int64 Prev, int64 Cur);
 	void ActiveRangeEndChanged(int64 Prev, int64 Cur);
+
+	void UpdateLeafAttributes();
 
 public:
 	// Begin SWidget
