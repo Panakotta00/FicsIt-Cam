@@ -204,18 +204,18 @@ FFICFloatKeyframe* FFICFloatAttribute::SetKeyframe(int64 Time, FFICFloatKeyframe
 }
 
 float FFICFloatAttribute::GetValue(float Time) {
-	float Time1 = -1;
+	float Time1 = TNumericLimits<float>::Min();
 	FFICFloatKeyframe KF1;
-	float Time2 = -1;
+	float Time2 = TNumericLimits<float>::Max();
 	FFICFloatKeyframe KF2;
 	for (const TPair<int64, FFICFloatKeyframe>& Keyframe : Keyframes) {
-		if (Keyframe.Key < Time) {
-			if (Time1 < 0 || Time1 < Keyframe.Key) {
+		if (Keyframe.Key <= Time) {
+			if (Time1 < Keyframe.Key) {
 				Time1 = Keyframe.Key;
 				KF1 = Keyframe.Value;
 			}
-		} else if (Keyframe.Key >= Time) {
-			if (Time2 < 0 || Time2 > Keyframe.Key) {
+		} else if (Keyframe.Key > Time) {
+			if (Time2 > Keyframe.Key) {
 				Time2 = Keyframe.Key;
 				KF2 = Keyframe.Value;
 			}
@@ -223,10 +223,10 @@ float FFICFloatAttribute::GetValue(float Time) {
 	}
 
 	float Interpolated = FallBackValue;
-	if (Time1 >= 0) {
-		if (Time2 >= 0) {
+	if (Time1 > TNumericLimits<float>::Min()) {
+		if (Time2 < TNumericLimits<float>::Max()) {
 			float Factor = (Time - Time1) / (Time2 - Time1);
-			if (KF2.KeyframeType == FIC_KF_STEP) {
+			if (KF1.KeyframeType == FIC_KF_STEP) {
 				Interpolated = KF1.Value;
 			} else if (KF1.KeyframeType == FIC_KF_LINEAR) {
 				Interpolated = FMath::Lerp(KF1.Value, KF2.Value, Factor);
@@ -238,7 +238,7 @@ float FFICFloatAttribute::GetValue(float Time) {
 			return KF1.Value;
 		}
 	} else {
-		if (Time2 >= 0) {
+		if (Time2 < TNumericLimits<float>::Max()) {
 			return KF2.Value;
 		}
 	}

@@ -202,6 +202,11 @@ public:
 	int64 ResolutionHeight = 1080;
 
 	UPROPERTY(SaveGame)
+	float SensorWidth = 23.76;
+	UPROPERTY(SaveGame)
+	float SensorHeight = 13.365;
+
+	UPROPERTY(SaveGame)
 	bool bUseCinematic = true;
 
 	UPROPERTY(SaveGame)

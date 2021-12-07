@@ -93,7 +93,7 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 		}
 		return FReply::Handled();
-	} else if (!GameWidget->HasAnyUserFocusOrFocusedDescendants()) {
+	} else /*if (!GameWidget->HasAnyUserFocusOrFocusedDescendants())*/ {
 		if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleAllKeyframes"))) {
 			int64 Time = Context->GetCurrentFrame();
 			if (Context->PosX.GetKeyframe(Time) && Context->PosY.GetKeyframe(Time) && Context->PosZ.GetKeyframe(Time) && Context->RotPitch.GetKeyframe(Time) && Context->RotYaw.GetKeyframe(Time) && Context->RotRoll.GetKeyframe(Time) && Context->FOV.GetKeyframe(Time) &&

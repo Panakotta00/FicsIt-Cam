@@ -49,7 +49,13 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 	}
 
 	Camera->bConstrainAspectRatio = EditorContext->bForceResolution;
-	Camera->SetAspectRatio((float)EditorContext->GetAnimation()->ResolutionHeight / (float)EditorContext->GetAnimation()->ResolutionWidth);
+	if (Camera->IsA<UCineCameraComponent>()) {
+		UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
+		CineCamera->Filmback.SensorWidth = EditorContext->GetAnimation()->SensorWidth;
+		CineCamera->Filmback.SensorHeight = EditorContext->GetAnimation()->SensorHeight;
+	} else {
+		Camera->SetAspectRatio(EditorContext->GetAnimation()->ResolutionHeight / EditorContext->GetAnimation()->ResolutionWidth);
+	}
 	
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->MaxFlySpeed = bIsSprinting ? MaxFlySpeed * 10 : MaxFlySpeed;

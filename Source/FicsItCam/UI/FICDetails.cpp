@@ -257,7 +257,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					]
 					+SVerticalBox::Slot().Padding(5).AutoHeight().HAlign(HAlign_Fill)[
 						SNew(SHorizontalBox)
-						.ToolTipText(FText::FromString(TEXT("The resolution setting will be used for rendering the animation.")))
+						.ToolTipText(FText::FromString(TEXT("The resolution setting will be used to determine the aspect ratio and image size for rendering the animation.")))
 						+SHorizontalBox::Slot().AutoWidth()[
 							SNew(STextBlock).Text(FText::FromString("Resolution: "))
 						]
@@ -297,6 +297,50 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 							})
 							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
 							.ToolTipText(FText::FromString(TEXT("Resolution Height")))
+						]
+					]
+					+SVerticalBox::Slot().Padding(5).AutoHeight().HAlign(HAlign_Fill)[
+						SNew(SHorizontalBox)
+						.ToolTipText(FText::FromString(TEXT("The sensor size used to adjust the DOF and aspect ration. (only functional with cinematic camera)")))
+						+SHorizontalBox::Slot().AutoWidth()[
+							SNew(STextBlock).Text(FText::FromString("Sensor Size: "))
+						]
+						+SHorizontalBox::Slot().FillWidth(1)[
+							SNew(SNumericEntryBox<float>)
+							.Value_Lambda([this]() {
+								return Context->GetAnimation()->SensorWidth;
+							})
+							.SupportDynamicSliderMaxValue(true)
+							.SliderExponent(1)
+							.Delta(0.1)
+							.MinValue(0)
+							.LinearDeltaSensitivity(10)
+							.AllowSpin(false)
+							.OnValueCommitted_Lambda([this](float Val, auto) {
+								Context->GetAnimation()->SensorWidth = FMath::Max(0.0f, Val);
+							})
+							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
+							.ToolTipText(FText::FromString(TEXT("Sensor Width")))
+						]
+						+SHorizontalBox::Slot().AutoWidth()[
+							SNew(STextBlock).Text(FText::FromString(" x "))
+						]
+						+SHorizontalBox::Slot().FillWidth(1)[
+							SNew(SNumericEntryBox<float>)
+							.Value_Lambda([this]() {
+								return Context->GetAnimation()->SensorHeight;
+							})
+							.SupportDynamicSliderMaxValue(true)
+							.SliderExponent(1)
+							.Delta(0.1)
+							.MinValue(0)
+							.LinearDeltaSensitivity(10)
+							.AllowSpin(false)
+							.OnValueCommitted_Lambda([this](float Val, auto) {
+								Context->GetAnimation()->SensorHeight = FMath::Max(0.0f, Val);
+							})
+							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
+							.ToolTipText(FText::FromString(TEXT("Sensor Height")))
 						]
 					]
 				]

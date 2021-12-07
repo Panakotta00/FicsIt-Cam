@@ -171,7 +171,7 @@ private:
 	FFICGroupAttribute All;
 
 public:
-	FFICEditorGroupAttribute(const TMap<FString, TAttribute<FFICEditorAttributeBase*>>& Attributes = TMap<FString, TAttribute<FFICEditorAttributeBase*>>(), FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged(), FLinearColor GraphColor = FColor::White) : FFICEditorAttributeBase(OnValueChanged, GraphColor), Attributes(Attributes) {
+	FFICEditorGroupAttribute(const TMap<FString, TAttribute<FFICEditorAttributeBase*>>& InAttributes = TMap<FString, TAttribute<FFICEditorAttributeBase*>>(), FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged(), FLinearColor GraphColor = FColor::White) : FFICEditorAttributeBase(OnValueChanged, GraphColor), Attributes(InAttributes) {
 		for (const TPair<FString, TAttribute<FFICEditorAttributeBase*>>& Attr : Attributes) {
 			All.Children.Add(Attr.Key, TAttribute<FFICAttribute*>::Create([Attr]() {
 				FFICEditorAttributeBase* Attrib = Attr.Value.Get();
@@ -179,6 +179,12 @@ public:
 				return (FFICAttribute*)nullptr;
 			}));
 		}
+
+		All.OnUpdate.AddLambda([this]() {
+			for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Attribute : Attributes) {
+				Attribute.Value.Get()->GetAttribute()->OnUpdate.Broadcast();
+			}
+		});
 	}
 	
 	// Begin FFICEditorAttributeBase

@@ -11,6 +11,18 @@ The mod introduces a couple of new chat commands:
  Plays the animation with the given name.
 - `/fic edit <animation>`
  Opens the animation editor for the animation with the given name.
+- `/fic render <animation>`
+ Renders the animation as image sequence.
+- `/fic timelapse`
+ Lists all timelapse cameras.
+- `/fic timelapse create <camera name> <seconds per frame>`
+ Creates a new timelapse camera with the transformation of the player running the command.
+- `/fic timelapse delete <camera name>`
+ Removes the timelapse camera with the given name.
+- `/fic timelapse start <camera name>`
+ Starts the timelapse camera with the given name.
+- `/fic timelapse stop <camera name>`
+ Stops the timelapse camera with the given name.
 
 Animation Editor:
 - The animation editor allows for creating and editing animation.

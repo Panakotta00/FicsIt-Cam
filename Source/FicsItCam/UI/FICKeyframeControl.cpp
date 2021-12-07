@@ -179,11 +179,11 @@ void SFICKeyframeControl::Construct(FArguments InArgs) {
 		int64 NextKeyframeTime, PrevKeyframeTime;
 		Attribute.Get()->GetAttribute()->GetNextKeyframe(Frame.Get().GetValue(), NextKeyframeTime, NextKeyframe);
 		Attribute.Get()->GetAttribute()->GetPrevKeyframe(Frame.Get().GetValue(), PrevKeyframeTime, PrevKeyframe);
-		if (PrevKeyframe && PrevKeyframe->Get()->KeyframeType & FIC_KF_HANDLES && Keyframe->KeyframeType != FIC_KF_STEP) {
+		if (PrevKeyframe && PrevKeyframe->Get()->KeyframeType & FIC_KF_HANDLES) {
 			FromHandle = SNew(SFICKeyframeHandle, this).Style(Style);
 			Children.Add(FromHandle.ToSharedRef());
 		}
-		if (Keyframe && (Keyframe->KeyframeType & FIC_KF_HANDLES || NextKeyframe->Get()->KeyframeType & FIC_KF_HANDLES)) {
+		if (Keyframe && (Keyframe->KeyframeType & FIC_KF_HANDLES)) {
 			ToHandle = SNew(SFICKeyframeHandle, this).IsOutHandle(true).Style(Style);
 			Children.Add(ToHandle.ToSharedRef());
 		}
@@ -322,6 +322,7 @@ FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry
 		TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = Attr->GetAttribute()->GetKeyframes();
 		if (Keyframes.Num() > 0) {
 			for (const TPair<int64, TSharedPtr<FFICKeyframeRef>>& KF : Keyframes) Attr->RemoveKeyframe(KF.Key);
+			Attr->GetAttribute()->OnUpdate.Broadcast();
 			return FReply::Handled();
 		}
 	}

@@ -157,10 +157,13 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation, bool bInDoR
 	if (Animation->bUseCinematic) {
 		UCineCameraComponent* CineCamera = NewObject<UCineCameraComponent>(this);
 		CineCamera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
-		CineCamera->bConstrainAspectRatio = false;
+		CineCamera->bConstrainAspectRatio = true;
+		CineCamera->Filmback.SensorWidth = Animation->SensorWidth;
+		CineCamera->Filmback.SensorHeight = Animation->SensorHeight;
 		Camera = CineCamera;
 	} else {
 		Camera = NewObject<UCameraComponent>(this);
+		Camera->bConstrainAspectRatio = true;
 	}
 	Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
