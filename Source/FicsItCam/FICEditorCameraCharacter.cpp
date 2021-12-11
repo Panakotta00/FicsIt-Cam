@@ -10,6 +10,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerController.h"
+#include "Slate/SceneViewport.h"
 #include "UI/FICEditorContext.h"
 
 AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
@@ -47,12 +48,14 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 
 		UpdateValues();
 	}
+	Cast<ULocalPlayer>(GetNetOwningPlayer())->Size = FVector2D(0.5,0.5);
 
 	Camera->bConstrainAspectRatio = EditorContext->bForceResolution;
 	if (Camera->IsA<UCineCameraComponent>()) {
 		UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
-		CineCamera->Filmback.SensorWidth = EditorContext->GetAnimation()->SensorWidth;
-		CineCamera->Filmback.SensorHeight = EditorContext->GetAnimation()->SensorHeight;
+		CineCamera->Filmback.SensorWidth = EditorContext->GetAnimation()->SensorWidth * EditorContext->SensorWidthAdjust;
+		CineCamera->Filmback.SensorHeight = EditorContext->GetAnimation()->SensorHeight * EditorContext->SensorWidthAdjust;
+		Camera->SetFieldOfView(EditorContext->FOV.GetValue());
 	} else {
 		Camera->SetAspectRatio(EditorContext->GetAnimation()->ResolutionHeight / EditorContext->GetAnimation()->ResolutionWidth);
 	}
@@ -305,8 +308,12 @@ void AFICEditorCameraCharacter::UpdateValues() {
 				GetController()->SetControlRotation(Rot);
 				Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
 			}
-			Camera->SetFieldOfView(EditorContext->FOV.GetValue());
 			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
+			if (CineCamera) {
+				CineCamera->Filmback.SensorWidth = EditorContext->GetAnimation()->SensorWidth * EditorContext->SensorWidthAdjust;
+				CineCamera->Filmback.SensorHeight = EditorContext->GetAnimation()->SensorHeight * EditorContext->SensorWidthAdjust;
+			}
+			Camera->SetFieldOfView(EditorContext->FOV.GetValue());
 			if (CineCamera) {
 				CineCamera->CurrentAperture = EditorContext->Aperture.GetValue();
 				CineCamera->FocusSettings.ManualFocusDistance = EditorContext->FocusDistance.GetValue();

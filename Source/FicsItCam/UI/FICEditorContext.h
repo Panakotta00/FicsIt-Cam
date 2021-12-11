@@ -56,6 +56,8 @@ public:
 	bool bAutoKeyframe = false;
 	bool bForceResolution = false;
 
+	float SensorWidthAdjust = 1.0f;
+
 	UFICEditorContext();
 	
 	void SetAnimation(AFICAnimation* Anim);

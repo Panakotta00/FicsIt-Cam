@@ -8,6 +8,7 @@ class SFICEditor : public SCompoundWidget {
 	SLATE_BEGIN_ARGS(SFICEditor) {}
 		SLATE_ATTRIBUTE(UFICEditorContext*, Context);
 		SLATE_ATTRIBUTE(TSharedPtr<SWidget>, GameWidget);
+		SLATE_ARGUMENT(TSharedPtr<SViewport>, Viewport)
 	SLATE_END_ARGS()
 
 public:
@@ -19,6 +20,7 @@ private:
 	UFICEditorContext* Context = nullptr;
 	TSharedPtr<SWidget> GameWidget;
 	TSharedPtr<SWidget> GameSpacer;
+	TSharedPtr<SViewport> GameViewport;
 	SHorizontalBox::FSlot* GameSlot = nullptr;
 
 	bool bIsLeft = false;

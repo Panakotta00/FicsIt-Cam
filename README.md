@@ -24,9 +24,18 @@ The mod introduces a couple of new chat commands:
 - `/fic timelapse stop <camera name>`
  Stops the timelapse camera with the given name.
 
+Animation Rendering:
+Animations can be render into a image sequence. Such Sequence is stored at `%localappdata%\FactoryGame\Saved\SaveGames\FicsItCam\<Animation Name>`.
+The images have the resolution set in the animation.
+
+Timelapse Cameras:
+Timelapse cameras can be used to take images of you factory in prediodic intervals and store these images in your filesystem.
+Your gameplay wont bit disrupted, tho depending on your hardware you might experience a small lag
+
 Animation Editor:
 - The animation editor allows for creating and editing animation.
 - On the bottom you can find the Timeline scrubber and range selector which allow you to view and change the currently active frame in the animation.
+- Also on the bottom you find the graph viewer which shows the select attributes on the left in a time-value-diagram and also allows you to manipulate the keyframes.
 - In the lower-left corner you find the frame settings were you can change the the active frame, change the animation range (length) and the selected frame range.
 - On the left side you can find the details panel were you can view and change the current values of the properties (like location, rotation and FOV)
 - Every property has a keyframe control which allows to set the keyframe at the active frame to the current value when clicking on the control and there is no keyframe or the keyframe differs from the current value.
@@ -36,7 +45,7 @@ Animation Editor:
 - A double click on the keyframe control results in deletion of all keyframes of that property
 - When clicking on the viewport you change into movement mode.
 - When the active frame changes, all properties get updated to the value in the animation at that time. If no keyframe is set, is just stores that value.
-- R-Clicking on a keyframe control allows to changed the interpolation type of the keyframe
+- R-Clicking on a keyframe control allows to changed the interpolation type of the keyframe.
 
 You can also use following key inputs:
 - `Right Alt` -

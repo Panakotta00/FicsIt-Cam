@@ -23,13 +23,13 @@ AFICCameraCharacter::AFICCameraCharacter() {
 	CaptureComponent->SetupAttachment(GetCapsuleComponent());
 	CaptureComponent->bCaptureEveryFrame = false;
 	CaptureComponent->bCaptureOnMovement = false;
-	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorHDR;
-	CaptureComponent->bUseRayTracingIfEnabled = true;
+	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+	//CaptureComponent->bUseRayTracingIfEnabled = true;
 	CaptureComponent->ShowFlags.SetTemporalAA(true);
 
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>("RenderTarget");
 	CaptureComponent->TextureTarget = RenderTarget;
-	
+		
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorTickEnabled(true);
 
@@ -91,6 +91,7 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 		SetActorLocation(Pos);
 		SetActorRotation(Rot);
 		GetController()->SetControlRotation(Rot);
+		Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
 		Camera->SetFieldOfView(FOV);
 		UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
 		if (CineCamera) {
@@ -102,12 +103,12 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 			FMinimalViewInfo ViewInfo;
 			Camera->GetCameraView(0, ViewInfo);
 			CaptureComponent->SetCameraView(ViewInfo);
-			CaptureComponent->FOVAngle = Camera->FieldOfView;
 			FWeightedBlendables Blendables = CaptureComponent->PostProcessSettings.WeightedBlendables;
 			CaptureComponent->PostProcessSettings = ViewInfo.PostProcessSettings;
-			//CaptureComponent->PostProcessSettings.WeightedBlendables = Blendables;
+			CaptureComponent->PostProcessSettings.WeightedBlendables = Blendables;
 			CaptureComponent->PostProcessBlendWeight = Camera->PostProcessBlendWeight;
-			
+			CaptureComponent->LODDistanceFactor = 0;
+						
 			CaptureComponent->CaptureScene();
 			
 			FString FSP;
@@ -152,6 +153,7 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation, bool bInDoR
 	
 	if (bDoRender) {
 		RenderTarget->InitCustomFormat(Animation->ResolutionWidth, Animation->ResolutionHeight, EPixelFormat::PF_R8G8B8A8, false);
+		RenderTarget->TargetGamma = GEngine->GetDisplayGamma();
 	}
 	if (Camera) Camera->DestroyComponent();
 	if (Animation->bUseCinematic) {
@@ -164,12 +166,15 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation, bool bInDoR
 	} else {
 		Camera = NewObject<UCameraComponent>(this);
 		Camera->bConstrainAspectRatio = true;
+		Camera->SetAspectRatio(Animation->ResolutionHeight / Animation->ResolutionWidth);
 	}
 	Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
 	AController* PController = Controller;
 	PController->UnPossess();
 	PController->Possess(this);
+	
+	Camera->SetActive(true);
 
 	if (Animation->bBulletTime) SetTimeDilation(0);
 }

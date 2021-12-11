@@ -26,12 +26,15 @@ void UFICEditorContext::ShowEditor() {
 	GameViewport = FSlateApplication::Get().GetGameViewport();
 	GameViewportContainer = StaticCastSharedPtr<SVerticalBox>(GameViewport->GetParentWidget());
 	GameOverlay = StaticCastSharedPtr<SOverlay>(GameViewportContainer->GetParentWidget());
+	//EWindowMode::Type WindowMode = GetWorld()->GetGameViewport()->ViewportFrame->GetViewport()->GetWindowMode();
+	//GetWorld()->GetGameViewport()->ViewportFrame->ResizeFrame(1920, 1080, WindowMode);
 
 	check(GameOverlay->RemoveSlot(GameViewportContainer.ToSharedRef()) == true);
 	
 	EditorWidget = SNew(SFICEditor)
         .Context(this)
-        .GameWidget(GameViewportContainer);
+        .GameWidget(GameViewportContainer)
+		.Viewport(GameViewport);
 	
 	GameOverlay->AddSlot()[
 		EditorWidget.ToSharedRef()

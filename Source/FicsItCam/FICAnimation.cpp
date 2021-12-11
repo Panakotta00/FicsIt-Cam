@@ -202,9 +202,9 @@ FFICFloatKeyframe* FFICFloatAttribute::SetKeyframe(int64 Time, FFICFloatKeyframe
 	*KF = Keyframe;
 	return KF;
 }
-
+#pragma optimize("", off)
 float FFICFloatAttribute::GetValue(float Time) {
-	float Time1 = TNumericLimits<float>::Min();
+	float Time1 = TNumericLimits<float>::Lowest();
 	FFICFloatKeyframe KF1;
 	float Time2 = TNumericLimits<float>::Max();
 	FFICFloatKeyframe KF2;
@@ -223,7 +223,7 @@ float FFICFloatAttribute::GetValue(float Time) {
 	}
 
 	float Interpolated = FallBackValue;
-	if (Time1 > TNumericLimits<float>::Min()) {
+	if (Time1 > TNumericLimits<float>::Lowest()) {
 		if (Time2 < TNumericLimits<float>::Max()) {
 			float Factor = (Time - Time1) / (Time2 - Time1);
 			if (KF1.KeyframeType == FIC_KF_STEP) {
@@ -244,6 +244,7 @@ float FFICFloatAttribute::GetValue(float Time) {
 	}
 	return Interpolated;
 }
+#pragma optimize("", on)
 
 TMap<int64, TSharedPtr<FFICKeyframeRef>> FFICGroupAttribute::GetKeyframes() {
 	TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes;

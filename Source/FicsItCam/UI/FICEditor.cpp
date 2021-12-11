@@ -8,13 +8,16 @@
 #include "FicsItCam/FicsItCamModule.h"
 #include "FicsItCam/FICSubsystem.h"
 #include "GameFramework/InputSettings.h"
+#include "Slate/SceneViewport.h"
 #include "Widgets/Docking/SDockTab.h"
+#include "Widgets/Layout/SScaleBox.h"
 
 FSlateColorBrush SFICEditor::Background = FSlateColorBrush(FColor::FromHex("030303"));
 
 void SFICEditor::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context.Get();
 	GameWidget = InArgs._GameWidget.Get();
+	GameViewport = InArgs._Viewport;
 	
 	ChildSlot[
 		SNew(SOverlay)
@@ -66,6 +69,13 @@ void SFICEditor::Tick(const FGeometry& AllottedGeometry, const double InCurrentT
 			KeyPressTime -= 0.2;
 		}
 	}
+
+	FVector2D ViewportSize = GameWidget->GetCachedGeometry().GetAbsoluteSize();
+	FVector2D GameSize = FVector2D(Context->GetAnimation()->ResolutionWidth, Context->GetAnimation()->ResolutionHeight);
+	FVector2D Size = Context->GetWorld()->GetGameViewport()->GetGameViewport()->GetSizeXY();
+	Size *= Scalability::GetResolutionScreenPercentage() / 100.0;
+	Size *= IConsoleManager::Get().FindConsoleVariable(TEXT("r.SecondaryScreenPercentage.GameViewport"), false)->GetFloat() / 100.0;
+	Context->SensorWidthAdjust = GameSize.X / Size.X;
 }
 
 bool IsAction(UObject* Context, const FKeyEvent& InKeyEvent, const FName& ActionName) {
