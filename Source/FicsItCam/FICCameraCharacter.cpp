@@ -24,8 +24,10 @@ AFICCameraCharacter::AFICCameraCharacter() {
 	CaptureComponent->bCaptureEveryFrame = false;
 	CaptureComponent->bCaptureOnMovement = false;
 	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+	CaptureComponent->DetailMode = DM_MAX;
+	CaptureComponent->LODDistanceFactor = 0.1;
 	//CaptureComponent->bUseRayTracingIfEnabled = true;
-	CaptureComponent->ShowFlags.SetTemporalAA(true);
+	//CaptureComponent->ShowFlags.SetTemporalAA(true);
 
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>("RenderTarget");
 	CaptureComponent->TextureTarget = RenderTarget;
@@ -107,7 +109,6 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 			CaptureComponent->PostProcessSettings = ViewInfo.PostProcessSettings;
 			CaptureComponent->PostProcessSettings.WeightedBlendables = Blendables;
 			CaptureComponent->PostProcessBlendWeight = Camera->PostProcessBlendWeight;
-			CaptureComponent->LODDistanceFactor = 0;
 						
 			CaptureComponent->CaptureScene();
 			
@@ -152,8 +153,8 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation, bool bInDoR
 	NewController->PlayerCameraManager->UnlockFOV();
 	
 	if (bDoRender) {
-		RenderTarget->InitCustomFormat(Animation->ResolutionWidth, Animation->ResolutionHeight, EPixelFormat::PF_R8G8B8A8, false);
-		RenderTarget->TargetGamma = GEngine->GetDisplayGamma();
+		RenderTarget->InitCustomFormat(Animation->ResolutionWidth, Animation->ResolutionHeight, EPixelFormat::PF_B8G8R8A8, false);
+		//RenderTarget->TargetGamma = 2.2;
 	}
 	if (Camera) Camera->DestroyComponent();
 	if (Animation->bUseCinematic) {
