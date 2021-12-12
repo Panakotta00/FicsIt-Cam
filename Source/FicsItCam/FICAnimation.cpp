@@ -301,10 +301,6 @@ AFICAnimation::AFICAnimation() {
 }
 
 void AFICAnimation::OnConstruction(const FTransform& Transform) {
-	FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
-	ResolutionWidth = Resolution.X;
-	ResolutionHeight = Resolution.Y;
-	
 	Super::OnConstruction(Transform);
 }
 

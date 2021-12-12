@@ -15,7 +15,7 @@ AFICTimelapseCamera::AFICTimelapseCamera() {
 	CaptureComponent->SetupAttachment(RootComponent);
 	CaptureComponent->bCaptureEveryFrame = false;
 	CaptureComponent->bCaptureOnMovement = false;
-	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorHDR;
+	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 	CaptureComponent->bUseRayTracingIfEnabled = true;
 	CaptureComponent->ShowFlags.SetTemporalAA(true);
 	CaptureComponent->TextureTarget = RenderTarget;
@@ -26,6 +26,7 @@ void AFICTimelapseCamera::OnConstruction(const FTransform& Transform) {
 
 	FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
 	RenderTarget->InitCustomFormat(Resolution.X, Resolution.Y, EPixelFormat::PF_R8G8B8A8, false);
+	RenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
 	RenderTarget->bGPUSharedFlag = true;
 }
 

@@ -6,6 +6,7 @@
 #include "FGSaveInterface.h"
 #include "FICCameraCharacter.h"
 #include "FICTimelapseCamera.h"
+#include "IImageWrapper.h"
 #include "UI/FICEditorContext.h"
 #include "FICSubsystem.generated.h"
 
@@ -19,6 +20,24 @@ struct FFICRenderRequest{
 
 	UPROPERTY()
 	UTextureRenderTarget2D* RenderTarget = nullptr;
+};
+
+class FFICAsyncImageCompressAndSave : public FNonAbandonableTask{
+public:
+	FFICAsyncImageCompressAndSave(TSharedPtr<IImageWrapper> Image, FString Path);
+	~FFICAsyncImageCompressAndSave();
+
+	// Required by UE4!
+	FORCEINLINE TStatId GetStatId() const{
+		RETURN_QUICK_DECLARE_CYCLE_STAT(AsyncSaveImageToDiskTask, STATGROUP_ThreadPoolAsyncTasks);
+	}
+
+protected:
+	TSharedPtr<IImageWrapper> Image;
+	FString Path = "";
+
+public:
+	void DoWork();
 };
 
 UCLASS()

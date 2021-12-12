@@ -8,6 +8,19 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/World.h"
 
+FFICAsyncImageCompressAndSave::FFICAsyncImageCompressAndSave(TSharedPtr<IImageWrapper> Image, FString Path) : Image(Image), Path(Path) {}
+
+FFICAsyncImageCompressAndSave::~FFICAsyncImageCompressAndSave() {}
+
+void FFICAsyncImageCompressAndSave::DoWork() {
+	double start = FPlatformTime::Seconds();
+	TArray64<uint8> CompressedData = Image->GetCompressed(100);
+	UE_LOG(LogTemp, Warning, TEXT("Compress in %f seconds."), FPlatformTime::Seconds()-start);
+	start = FPlatformTime::Seconds();
+	FFileHelper::SaveArrayToFile(CompressedData, *Path);
+	UE_LOG(LogTemp, Warning, TEXT("Save in %f seconds."), FPlatformTime::Seconds()-start);
+}
+
 AFICSubsystem::AFICSubsystem() {
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorTickEnabled(true);
@@ -24,15 +37,15 @@ void AFICSubsystem::Tick(float DeltaSeconds) {
 		TSharedPtr<FFICRenderRequest> NextRequest = *RenderRequestQueue.Peek();
 		if (NextRequest) {
 			if (NextRequest->RenderFence.IsFenceComplete()) {
+				double start = FPlatformTime::Seconds();
 				IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
 				TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
 	
 				bool bRaw = ImageWrapper->SetRaw(NextRequest->Image.GetData(), NextRequest->Image.GetTypeSize() * NextRequest->Image.Num(), NextRequest->RenderTarget->SizeX, NextRequest->RenderTarget->SizeY, ERGBFormat::BGRA, 8);
 				if (!bRaw) return;
-	
-				TArray64<uint8> CompressedData = ImageWrapper->GetCompressed();
-				FFileHelper::SaveArrayToFile(CompressedData, *NextRequest->Path);
 				RenderRequestQueue.Pop();
+	
+				(new FAutoDeleteAsyncTask<FFICAsyncImageCompressAndSave>(ImageWrapper, NextRequest->Path))->StartBackgroundTask();
 			}
 		}
 	}
@@ -93,6 +106,8 @@ void AFICSubsystem::CreateCamera() {
 }
 
 void AFICSubsystem::SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget) {
+	double start = FPlatformTime::Seconds();
+	
 	FRenderTarget* RenderTargetResource = RenderTarget->GameThread_GetRenderTargetResource();
 	struct FReadSurfaceContext{
 		FRenderTarget* SrcRenderTarget;
@@ -124,15 +139,4 @@ void AFICSubsystem::SaveRenderTargetAsJPG(const FString& FilePath, UTextureRende
 
 	RenderRequestQueue.Enqueue(RenderRequest);
 	RenderRequest->RenderFence.BeginFence();
-		
-	//if (!RenderTargetResource || !ImageWrapper.IsValid()) return;
-
-	//TArray<FColor> RawData;
-	//bool bReadPixels = RenderTargetResource->ReadPixels(RawData);
-	//if (!bReadPixels) return;
-
-	/*AsyncTask(ENamedThreads::ActualRenderingThread, [RenderTarget, FilePath, OutData]() {
-			
-			delete OutData;
-		});*/
 }

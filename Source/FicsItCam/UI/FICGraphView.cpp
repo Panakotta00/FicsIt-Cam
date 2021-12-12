@@ -248,12 +248,14 @@ void SFICGraphView::Update() {
 }
 
 void SFICGraphView::FitAll() {
-	int64 FrameMin = TNumericLimits<int64>::Max();
-	int64 FrameMax = TNumericLimits<int64>::Min();
+	int64 FrameMin = AnimationStart.Get();
+	int64 FrameMax = AnimationEnd.Get();
 	float ValueMin = TNumericLimits<float>::Max();
 	float ValueMax = TNumericLimits<float>::Min();
+	int MaxKeyframeCountOfAnyAttribute = 0;
 	for (FFICEditorAttributeBase* Attribute : Attributes) {
-		for (TTuple<int64, TSharedPtr<FFICKeyframeRef>> Keyframe : Attribute->GetAttribute()->GetKeyframes()) {
+		TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = Attribute->GetAttribute()->GetKeyframes();
+		for (TTuple<int64, TSharedPtr<FFICKeyframeRef>> Keyframe : Keyframes) {
 			FFICKeyframe* KF = Keyframe.Value->Get();
 			float Value = KF->GetValueAsFloat();
 			int64 Frame = Keyframe.Key;
@@ -265,17 +267,25 @@ void SFICGraphView::FitAll() {
 			ValueMin = FMath::Min3(ValueMin, Value, FMath::Min(Value - InValue, Value + OutValue));
 			ValueMax = FMath::Max3(ValueMax, Value, FMath::Max(Value - InValue, Value + OutValue));
 		}
+		MaxKeyframeCountOfAnyAttribute = FMath::Max(MaxKeyframeCountOfAnyAttribute, Keyframes.Num());
 	}
 	int64 FrameSpan = FMath::Max(FMath::Abs(FrameMax - FrameMin), 10ll);
 	float ValueSpan = FMath::Max(FMath::Abs(ValueMax - ValueMin), 1.0f);
 	FrameSpan = FrameSpan/10;
 	ValueSpan = ValueSpan/10.0;
-	FrameMin -= FrameSpan;
-	FrameMax += FrameSpan;
-	ValueMin -= ValueSpan;
-	ValueMax += ValueSpan;
-	OnValueRangeChanged.Execute(ValueMin, ValueMax);
+	if (MaxKeyframeCountOfAnyAttribute > 1) {
+		FrameMin -= FrameSpan;
+		FrameMax += FrameSpan;
+	}
 	OnTimelineRangeChanged.Execute(FrameMin, FrameMax);
+	if (MaxKeyframeCountOfAnyAttribute > 0) {
+		ValueMin -= ValueSpan;
+		ValueMax += ValueSpan;
+	} else {
+		ValueMin = -1;
+		ValueMax = 1;
+	}
+	OnValueRangeChanged.Execute(ValueMin, ValueMax);
 }
 
 int64 SFICGraphView::LocalToFrame(float Local) const {

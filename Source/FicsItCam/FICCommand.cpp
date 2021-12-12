@@ -1,5 +1,6 @@
 ﻿#include "FICCommand.h"
 
+#include "FGGameUserSettings.h"
 #include "FICSubsystem.h"
 #include "Engine/World.h"
 #include "FGPlayerController.h"
@@ -49,6 +50,9 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			Anim->RotYaw.SetDefaultValue(Rot.Yaw);
 			Anim->RotRoll.SetDefaultValue(Rot.Roll);
 			Anim->FOV.SetDefaultValue(FOV);
+			FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
+			Anim->ResolutionWidth = Resolution.X;
+			Anim->ResolutionHeight = Resolution.Y;
 			SubSys->StoredAnimations.Add(Arguments[1], Anim);
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' created.");
 		}
