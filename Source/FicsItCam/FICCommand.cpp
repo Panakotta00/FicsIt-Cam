@@ -142,6 +142,7 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 					FActorSpawnParameters Params;
 					Params.Name = FName(CameraName);
 					AFICTimelapseCamera* Camera = GetWorld()->SpawnActor<AFICTimelapseCamera>(Pos, Rot, Params);
+					Camera->Frequency = Frequency;
 					SubSys->TimelapseCameras.Add(CameraName, Camera);
 					Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' created.");
 				}
