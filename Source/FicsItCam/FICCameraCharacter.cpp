@@ -116,7 +116,7 @@ void AFICCameraCharacter::Tick(float DeltaSeconds) {
 			FString FSP;
 			// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
 			if (FSP.IsEmpty()) {
-				FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/") TEXT("FicsItCam/"), Animation->GetName());
+				FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/") TEXT("FicsItCam/"), Animation->Name);
 			}
 
 			IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -163,13 +163,11 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation, bool bInDoR
 	if (Animation->bUseCinematic) {
 		UCineCameraComponent* CineCamera = NewObject<UCineCameraComponent>(this);
 		CineCamera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
-		CineCamera->bConstrainAspectRatio = true;
 		CineCamera->Filmback.SensorWidth = Animation->SensorWidth;
 		CineCamera->Filmback.SensorHeight = Animation->SensorHeight;
 		Camera = CineCamera;
 	} else {
 		Camera = NewObject<UCameraComponent>(this);
-		Camera->bConstrainAspectRatio = true;
 		Camera->SetAspectRatio(Animation->ResolutionHeight / Animation->ResolutionWidth);
 	}
 	Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);

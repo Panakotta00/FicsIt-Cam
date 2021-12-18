@@ -49,7 +49,7 @@ void AFICTimelapseCamera::CaptureTick() {
 		FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/"));
 	}
 
-	FSP = FPaths::Combine(FSP, TEXT("FicsItCam/"), GetName());
+	FSP = FPaths::Combine(FSP, TEXT("FicsItCam/"), Name);
 
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);

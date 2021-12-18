@@ -167,6 +167,9 @@ class AFICAnimation : public AActor, public IFGSaveInterface {
 
 public:
 	UPROPERTY(SaveGame)
+	FString Name;
+	
+	UPROPERTY(SaveGame)
 	FFICFloatAttribute PosX;
 	UPROPERTY(SaveGame)
 	FFICFloatAttribute PosY;

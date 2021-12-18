@@ -11,6 +11,9 @@ UCLASS()
 class FICSITCAM_API AFICTimelapseCamera : public AActor, public IFGSaveInterface {
 	GENERATED_BODY()
 public:
+	UPROPERTY(SaveGame)
+	FString Name;
+	
 	UPROPERTY()
 	UTextureRenderTarget2D* RenderTarget;
 

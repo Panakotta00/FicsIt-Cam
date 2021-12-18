@@ -40,9 +40,8 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			FVector Pos = Sender->GetPlayer()->PlayerCameraManager->GetCameraLocation();
 			FRotator Rot = Sender->GetPlayer()->PlayerCameraManager->GetCameraRotation();
 			float FOV = Sender->GetPlayer()->PlayerCameraManager->GetFOVAngle();
-			FActorSpawnParameters Params;
-			Params.Name = FName(Arguments[1]);
-			AFICAnimation* Anim = GetWorld()->SpawnActor<AFICAnimation>(Params);
+			AFICAnimation* Anim = GetWorld()->SpawnActor<AFICAnimation>();
+			Anim->Name = Arguments[1];
 			Anim->PosX.SetDefaultValue(Pos.X);
 			Anim->PosY.SetDefaultValue(Pos.Y);
 			Anim->PosZ.SetDefaultValue(Pos.Z);
@@ -139,9 +138,8 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 					if (!FDefaultValueHelper::ParseFloat(Arguments[3], Frequency)) return EExecutionStatus::BAD_ARGUMENTS;
 					FVector Pos = Sender->GetPlayer()->PlayerCameraManager->GetCameraLocation();
 					FRotator Rot = Sender->GetPlayer()->PlayerCameraManager->GetCameraRotation();
-					FActorSpawnParameters Params;
-					Params.Name = FName(CameraName);
-					AFICTimelapseCamera* Camera = GetWorld()->SpawnActor<AFICTimelapseCamera>(Pos, Rot, Params);
+					AFICTimelapseCamera* Camera = GetWorld()->SpawnActor<AFICTimelapseCamera>(Pos, Rot);
+					Camera->Name = Arguments[3];
 					Camera->Frequency = Frequency;
 					SubSys->TimelapseCameras.Add(CameraName, Camera);
 					Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' created.");

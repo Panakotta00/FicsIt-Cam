@@ -28,6 +28,14 @@ AFICSubsystem::AFICSubsystem() {
 
 void AFICSubsystem::BeginPlay() {
 	Super::BeginPlay();
+
+	for (TTuple<FString, AFICAnimation*> Anim : StoredAnimations) {
+		Anim.Value->Name = Anim.Key;
+	}
+
+	for (TTuple<FString, AFICTimelapseCamera*> Cam : TimelapseCameras) {
+		Cam.Value->Name = Cam.Key;
+	}
 }
 
 void AFICSubsystem::Tick(float DeltaSeconds) {

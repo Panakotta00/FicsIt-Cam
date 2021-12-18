@@ -74,7 +74,8 @@ void SFICEditor::Tick(const FGeometry& AllottedGeometry, const double InCurrentT
 	FVector2D GameSize = FVector2D(Context->GetAnimation()->ResolutionWidth, Context->GetAnimation()->ResolutionHeight);
 	FVector2D Size = Context->GetWorld()->GetGameViewport()->GetGameViewport()->GetSizeXY();
 	Size *= Scalability::GetResolutionScreenPercentage() / 100.0;
-	Size *= IConsoleManager::Get().FindConsoleVariable(TEXT("r.SecondaryScreenPercentage.GameViewport"), false)->GetFloat() / 100.0;
+	float SecondaryPercentage = IConsoleManager::Get().FindConsoleVariable(TEXT("r.SecondaryScreenPercentage.GameViewport"))->GetFloat();
+	if (SecondaryPercentage) Size *= SecondaryPercentage / 100.0;
 	Context->SensorWidthAdjust = GameSize.X / Size.X;
 }
 
