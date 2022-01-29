@@ -18,10 +18,13 @@ AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	bSimGravityDisabled = true;
 
 	SetActorEnableCollision(false);
+
+	bBlockInput = true;
 	
 	bUseControllerRotationPitch = true;
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = true;
+	
 }
 
 void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
@@ -150,10 +153,10 @@ void AFICEditorCameraCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason
 
 void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	
+
 	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
 	Settings->AddAxisMapping(FInputAxisKeyMapping("FicsItCam.Zoom", EKeys::MouseWheelAxis));
-
+	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AFICEditorCameraCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AFICEditorCameraCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("FicsItCam.MoveUp", this, &AFICEditorCameraCharacter::FlyUp);
@@ -184,12 +187,18 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 
 void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
 	Super::PossessedBy(NewController);
+	if (NewController && (EditorContext->IsEditorShown || EditorContext->IsEditorShowing)) NewController->DisableInput(Cast<APlayerController>(NewController));
 }
 
 void AFICEditorCameraCharacter::UnPossessed() {
+	AController* OldController = Controller;
 	Super::UnPossessed();
 	UGameplayStatics::SetGlobalTimeDilation(this, 1);
 	CustomTimeDilation = 1;
+	if (OldController) OldController->EnableInput(Cast<APlayerController>(OldController));
+	if (OldController && EditorContext && EditorContext->IsEditorShown && !EditorContext->IsEditorShowing) {
+		EditorContext->HideEditor();
+	}
 }
 
 void AFICEditorCameraCharacter::MoveForward(float Value) {

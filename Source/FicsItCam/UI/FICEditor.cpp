@@ -194,7 +194,7 @@ void SFICEditor::OnFocusChanging(const FWeakWidgetPath& PreviousFocusPath, const
 }
 
 FReply SFICEditor::OnPreviewKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) {
-	if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleCursor"))) {
+	if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleCursor")) || IsAction(Context, InKeyEvent, TEXT("PauseGame"))) {
 		if (GameWidget->HasUserFocusedDescendants(InKeyEvent.GetUserIndex())) {
 			FSlateApplication::Get().SetUserFocus(InKeyEvent.GetUserIndex(), SharedThis(this));
 			APlayerController* Controller = Context->GetWorld()->GetFirstPlayerController();
