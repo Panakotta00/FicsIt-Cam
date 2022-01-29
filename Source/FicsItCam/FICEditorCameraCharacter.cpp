@@ -183,6 +183,8 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleAutoKeyframe"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleAutoKeyframe);
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleShowPath"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleShowPath);
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleLockCamera"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleLockCamera);
+
+	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::RightMouseRelease);
 }
 
 void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
@@ -269,6 +271,14 @@ void AFICEditorCameraCharacter::ToggleShowPath() {
 
 void AFICEditorCameraCharacter::ToggleLockCamera() {
 	EditorContext->bMoveCamera = !EditorContext->bMoveCamera;
+}
+
+void AFICEditorCameraCharacter::RightMouseRelease() {
+	if (EditorContext->TempViewportFocus) {
+		EditorContext->TempViewportFocus = false;
+		EditorContext->EditorWidget->FocusUI(FSlateApplication::Get().GetUserIndexForKeyboard());
+		FSlateApplication::Get().SetCursorPos(EditorContext->TempCursorPos);
+	}
 }
 
 void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorContext) {

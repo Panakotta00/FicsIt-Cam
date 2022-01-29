@@ -12,6 +12,7 @@
 void UFICEditorContext::ShowEditor() {
 	HideEditor();
 
+	IsEditorShowing = true;
 	OriginalCharacter = GetWorld()->GetFirstPlayerController()->GetCharacter();
 	if (!CameraCharacter) CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(FVector(PosX.GetValue(), PosY.GetValue(), PosZ.GetValue()), FRotator(RotPitch.GetValue(), RotYaw.GetValue(), RotRoll.GetValue()));
 	CameraCharacter->SetEditorContext(this);
@@ -39,9 +40,12 @@ void UFICEditorContext::ShowEditor() {
 	GameOverlay->AddSlot()[
 		EditorWidget.ToSharedRef()
 	];
+
+	IsEditorShown = true;
 }
 
 void UFICEditorContext::HideEditor() {
+	IsEditorShowing = false;
 	if (CameraCharacter) {
 		GetWorld()->GetFirstPlayerController()->Possess(OriginalCharacter);
 		UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
@@ -61,6 +65,7 @@ void UFICEditorContext::HideEditor() {
 		UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 	}
 	UGameplayStatics::SetGamePaused(this, false);
+	IsEditorShown = false;
 }
 
 UFICEditorContext::UFICEditorContext() :
