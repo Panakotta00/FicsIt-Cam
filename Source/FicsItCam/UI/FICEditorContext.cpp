@@ -68,6 +68,13 @@ void UFICEditorContext::HideEditor() {
 	IsEditorShown = false;
 }
 
+void UFICEditorContext::SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState) {
+	if (AnimPlayerState != InAnimPlayerState) {
+		AnimPlayerState = InAnimPlayerState;
+		AnimPlayerDelta = 0;
+	}
+}
+
 UFICEditorContext::UFICEditorContext() :
 	PosX(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosX : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Red),
 	PosY(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosY : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Green),
@@ -84,6 +91,27 @@ UFICEditorContext::UFICEditorContext() :
 	PosX.bShowInGraph = true;
 	PosY.bShowInGraph = true;
 	PosZ.bShowInGraph = true;
+}
+
+void UFICEditorContext::Tick(float DeltaTime) {
+	if (Animation) {
+		AnimPlayerDelta += DeltaTime;
+		int32 FrameDelta = FMath::Floor(AnimPlayerDelta * Animation->FPS);
+		AnimPlayerDelta -= (float)FrameDelta / (float)Animation->FPS;
+		switch (AnimPlayerState) {
+		case FIC_PLAY_FORWARDS:
+			SetCurrentFrame(CurrentFrame + FrameDelta);
+			break;
+		case FIC_PLAY_BACKWARDS:
+			SetCurrentFrame(CurrentFrame - FrameDelta);
+			break;
+		default: ;
+		}
+	}
+}
+
+bool UFICEditorContext::IsTickable() const {
+	return !WITH_EDITOR;
 }
 
 void UFICEditorContext::SetAnimation(AFICAnimation* Anim) {

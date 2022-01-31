@@ -16,6 +16,9 @@ struct FFICEditorAttributeReference {
 
 class SFICTimelinePanel : public SCompoundWidget {
 	static FSlateColorBrush DefaultBackgroundBrush;
+	static FCheckBoxStyle DefaultToggleButtonStyle;
+	static FSlateBoxBrush DefaultToggleButtonChecked;
+	static FSlateBoxBrush DefaultToggleButtonUnchecked;
 	
 	SLATE_BEGIN_ARGS(SFICTimelinePanel) :
 		_Background(&DefaultBackgroundBrush) {}

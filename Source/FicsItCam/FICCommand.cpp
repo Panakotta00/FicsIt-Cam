@@ -189,6 +189,22 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 					Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' stopped.");
 					return EExecutionStatus::COMPLETED;
 				}
+			} else if (Arguments[1] == "tp") {
+				if (Arguments.Num() < 3) {
+					Sender->SendChatMessage(TEXT("Syntax: /fic timelapse stop <name>"), FColor::Red);
+					return EExecutionStatus::BAD_ARGUMENTS;
+				}
+				FString CameraName = FString::Printf(TEXT("%s-Timelapse"), *Arguments[2]);
+				if (!SubSys->TimelapseCameras.Contains(CameraName)) {
+					Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' doesn't exists.");
+					return EExecutionStatus::UNCOMPLETED;
+				} else {
+					AFICTimelapseCamera* timelapseCamera = SubSys->TimelapseCameras[CameraName];
+					Sender->GetPlayer()->GetCharacter()->SetActorLocation(timelapseCamera->CaptureComponent->GetComponentLocation());
+					Sender->GetPlayer()->SetControlRotation(timelapseCamera->CaptureComponent->GetComponentRotation());
+					Sender->SendChatMessage("Teleported to Timelapse-Camera '" + CameraName + "'.");
+					return EExecutionStatus::COMPLETED;
+				}
 			}
 		}
 		Sender->SendChatMessage(TEXT("No valid Sub-Subcommand!"), FColor::Red);
