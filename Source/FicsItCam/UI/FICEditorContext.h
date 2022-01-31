@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "FICChangeList.h"
 #include "FicsItCam/FICAnimation.h"
 #include "FicsItCam/FICEditorCameraCharacter.h"
 #include "FICEditor.h"
@@ -72,6 +73,8 @@ public:
 	bool TempViewportFocus = false;
 	FVector2D TempCursorPos;
 	TSharedPtr<SFICEditor> EditorWidget;
+
+	FFICChangeList ChangeList;
 
 	UFICEditorContext();
 

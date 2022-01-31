@@ -81,7 +81,17 @@ FVector2D FFICGraphKeyframeDragDrop::GetDecoratorPosition() const {
 	return FFICGraphDragDrop::GetDecoratorPosition();
 }
 
-FFICGraphKeyframeHandleDragDrop::FFICGraphKeyframeHandleDragDrop(TSharedPtr<SFICKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent) : FFICGraphDragDrop(SharedThis(KeyframeHandle->KeyframeControl->GraphView), InitEvent), KeyframeHandle(KeyframeHandle) {}
+void FFICGraphKeyframeDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
+	FFICGraphDragDrop::OnDrop(bDropWasHandled, MouseEvent);
+	auto Change = MakeShared<FFICChange_Group>();
+	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(KeyframeControl->Context, TimelineStart, KeyframeControl->GetFrame()));
+	Change->PushChange(MakeShared<FFICChange_Attribute>(KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin));
+	KeyframeControl->Context->ChangeList.PushChange(Change);
+}
+
+FFICGraphKeyframeHandleDragDrop::FFICGraphKeyframeHandleDragDrop(TSharedPtr<SFICKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent) : FFICGraphDragDrop(SharedThis(KeyframeHandle->KeyframeControl->GraphView), InitEvent), KeyframeHandle(KeyframeHandle) {
+	AttribBegin = KeyframeHandle->KeyframeControl->GetAttribute()->GetAttribute()->Get();
+}
 
 void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FFICGraphDragDrop::OnDragged(DragDropEvent);
@@ -155,4 +165,12 @@ void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEv
 			Keyframe->KeyframeType = FIC_KF_CUSTOM;
 		}
 	}
+}
+
+void FFICGraphKeyframeHandleDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
+	FFICGraphDragDrop::OnDrop(bDropWasHandled, MouseEvent);
+	auto Change = MakeShared<FFICChange_Group>();
+	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(KeyframeHandle->KeyframeControl->Context, TimelineStart, KeyframeHandle->KeyframeControl->GetFrame()));
+	Change->PushChange(MakeShared<FFICChange_Attribute>(KeyframeHandle->KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin));
+	KeyframeHandle->KeyframeControl->Context->ChangeList.PushChange(Change);
 }

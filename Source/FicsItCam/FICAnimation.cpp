@@ -197,12 +197,25 @@ void FFICFloatAttribute::RecalculateKeyframe(int64 Time) {
 	}
 }
 
+void FFICFloatAttribute::Set(TSharedPtr<FFICAttribute> InAttrib) {
+	FOnUpdate OnUpdateBuf = OnUpdate;
+	if (InAttrib && InAttrib->GetAttributeType() == GetAttributeType()) {
+		*this = *StaticCastSharedPtr<FFICFloatAttribute>(InAttrib);
+	}
+	OnUpdate = OnUpdateBuf;
+	OnUpdate.Broadcast();
+}
+
+TSharedPtr<FFICAttribute> FFICFloatAttribute::Get() {
+	return MakeShared<FFICFloatAttribute>(*this);
+}
+
 FFICFloatKeyframe* FFICFloatAttribute::SetKeyframe(int64 Time, FFICFloatKeyframe Keyframe) {
 	FFICFloatKeyframe* KF = &Keyframes.FindOrAdd(Time);
 	*KF = Keyframe;
 	return KF;
 }
-#pragma optimize("", off)
+
 float FFICFloatAttribute::GetValue(float Time) {
 	float Time1 = TNumericLimits<float>::Lowest();
 	FFICFloatKeyframe KF1;
@@ -244,7 +257,6 @@ float FFICFloatAttribute::GetValue(float Time) {
 	}
 	return Interpolated;
 }
-#pragma optimize("", on)
 
 TMap<int64, TSharedPtr<FFICKeyframeRef>> FFICGroupAttribute::GetKeyframes() {
 	TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes;
@@ -317,9 +329,9 @@ void AFICAnimation::RecalculateAllKeyframes() {
 }
 
 float AFICAnimation::GetEndOfAnimation() {
-	return AnimationEnd / FPS;
+	return (float)AnimationEnd / (float)FPS;
 }
 
 float AFICAnimation::GetStartOfAnimation() {
-	return AnimationStart / FPS;
+	return (float)AnimationStart / (float)FPS;
 }

@@ -4,7 +4,7 @@
 
 FSlateColorBrush SFICGraphView::DefaultAnimationBrush = FSlateColorBrush(FColor::FromHex("050505"));
 
-void SFICGraphView::Construct(const FArguments& InArgs) {
+void SFICGraphView::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
 	AnimationBrush = InArgs._AnimationBrush;
 	ActiveFrame = InArgs._Frame;
 	TimelineRangeBegin = InArgs._TimelineRangeBegin;
@@ -15,6 +15,7 @@ void SFICGraphView::Construct(const FArguments& InArgs) {
 	AnimationEnd = InArgs._AnimationEnd;
 	OnTimelineRangeChanged = InArgs._OnTimelineRangedChanged;
 	OnValueRangeChanged = InArgs._OnValueRangeChanged;
+	Context = InContext;
 
 	if (!OnTimelineRangeChanged.IsBound()) OnTimelineRangeChanged.BindLambda([this](int64 Start, int64 End) {
 		if (!TimelineRangeBegin.IsBound()) TimelineRangeBegin.Set(Start);
@@ -126,8 +127,10 @@ FReply SFICGraphView::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointe
 				FVector2D PlotPoint = FrameAttributeToLocal(Attribute, Frame);
 				FVector2D Difference = PlotPoint - LocalMousePos;
 				if (Difference.Size() < 5) {
+					BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), TNumericLimits<int64>::Min(), Frame)
 					Attribute->SetKeyframeFromFloat(Frame, LocalToValue(LocalMousePos.Y));
 					Attribute->GetAttribute()->RecalculateAllKeyframes();
+					END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
 					return FReply::Handled();
 				}
 			}
@@ -237,7 +240,7 @@ void SFICGraphView::Update() {
 	for (FFICEditorAttributeBase* Attribute : Attributes) {
 		for (const TPair<int64, TSharedPtr<FFICKeyframeRef>>& Keyframe : Attribute->GetAttribute()->GetKeyframes()) {
 			TSharedRef<SFICKeyframeControl> Child =
-				SNew(SFICKeyframeControl)
+				SNew(SFICKeyframeControl, Context)
 				.Attribute(Attribute)
 				.Frame(Keyframe.Key)
 				.GraphView(this)
@@ -247,11 +250,12 @@ void SFICGraphView::Update() {
 	}
 }
 
+#pragma optimize("", off)
 void SFICGraphView::FitAll() {
 	int64 FrameMin = AnimationStart.Get();
 	int64 FrameMax = AnimationEnd.Get();
 	float ValueMin = TNumericLimits<float>::Max();
-	float ValueMax = TNumericLimits<float>::Min();
+	float ValueMax = TNumericLimits<float>::Lowest();
 	int MaxKeyframeCountOfAnyAttribute = 0;
 	for (FFICEditorAttributeBase* Attribute : Attributes) {
 		TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = Attribute->GetAttribute()->GetKeyframes();
@@ -287,6 +291,7 @@ void SFICGraphView::FitAll() {
 	}
 	OnValueRangeChanged.Execute(ValueMin, ValueMax);
 }
+#pragma optimize("", on)
 
 int64 SFICGraphView::LocalToFrame(float Local) const {
 	return (int64) FMath::Lerp(

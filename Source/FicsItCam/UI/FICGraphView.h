@@ -27,7 +27,7 @@ class SFICGraphView : public SPanel {
 	SLATE_END_ARGS()
 
 public:
-	void Construct(const FArguments& InArgs);
+	void Construct(const FArguments& InArgs, UFICEditorContext* Context);
 
 private:
 	static FSlateColorBrush DefaultAnimationBrush;
@@ -49,6 +49,8 @@ private:
 	TMap<FFICEditorAttributeBase*, FDelegateHandle> DelegateHandles;
 
 public:
+	UFICEditorContext* Context = nullptr;
+	
 	SFICGraphView();
 	virtual ~SFICGraphView() override;
 	

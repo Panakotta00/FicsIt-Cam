@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "FICEditorContext.h"
 #include "FicsItCam/FICEditorAttributeBase.h"
 
 class SFICGraphView;
@@ -61,7 +62,7 @@ class SFICKeyframeControl : public SPanel {
 public:
 	SFICKeyframeControl();
 	
-	void Construct(FArguments InArgs);
+	void Construct(FArguments InArgs, UFICEditorContext* Context);
 
 private:
 	TAttribute<TOptional<int64>> Frame;
@@ -75,8 +76,10 @@ private:
 
 	bool bWasDoubleClick = false;
 
+
 public:
 	SFICGraphView* GraphView = nullptr;
+	UFICEditorContext* Context = nullptr;
 	
 	// Begin SWidget
 	virtual int OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;

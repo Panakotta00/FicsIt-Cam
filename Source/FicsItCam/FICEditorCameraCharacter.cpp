@@ -185,6 +185,9 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleLockCamera"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleLockCamera);
 
 	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::RightMouseRelease);
+
+	PlayerInputComponent->BindKey(EKeys::Z, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::Undo);
+	PlayerInputComponent->BindKey(EKeys::Y, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::Redo);
 }
 
 void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
@@ -281,12 +284,33 @@ void AFICEditorCameraCharacter::RightMouseRelease() {
 	}
 }
 
+void AFICEditorCameraCharacter::Undo() {
+	TSharedPtr<FFICChange> Change = EditorContext->ChangeList.PopChange();
+	if (Change) Change->UndoChange();
+}
+
+void AFICEditorCameraCharacter::Redo() {
+	TSharedPtr<FFICChange> Change = EditorContext->ChangeList.PushChange();
+	if (Change) Change->RedoChange();
+}
+
 void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorContext) {
 	EditorContext = InEditorContext;
 	if (CameraActor) CameraActor->EditorContext = EditorContext;
 }
 
 void AFICEditorCameraCharacter::ChangedKeyframe() {
+	auto Change = MakeShared<FFICChange_Group>();
+	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(EditorContext, TNumericLimits<int64>::Min(), EditorContext->GetCurrentFrame()));
+	BEGIN_ATTRIB_CHANGE(EditorContext->PosX.GetAttribute())
+	BEGIN_ATTRIB_CHANGE(EditorContext->PosY.GetAttribute())
+	BEGIN_ATTRIB_CHANGE(EditorContext->PosZ.GetAttribute())
+	BEGIN_ATTRIB_CHANGE(EditorContext->RotPitch.GetAttribute())
+	BEGIN_ATTRIB_CHANGE(EditorContext->RotYaw.GetAttribute())
+	BEGIN_ATTRIB_CHANGE(EditorContext->RotRoll.GetAttribute())
+	BEGIN_ATTRIB_CHANGE(EditorContext->FOV.GetAttribute())
+	BEGIN_ATTRIB_CHANGE(EditorContext->FocusDistance.GetAttribute())
+	BEGIN_ATTRIB_CHANGE(EditorContext->Aperture.GetAttribute())
 	int64 Time = EditorContext->GetCurrentFrame();
 	if (EditorContext->PosX.GetKeyframe(Time) && EditorContext->PosY.GetKeyframe(Time) && EditorContext->PosZ.GetKeyframe(Time) && EditorContext->RotPitch.GetKeyframe(Time) && EditorContext->RotYaw.GetKeyframe(Time) && EditorContext->RotRoll.GetKeyframe(Time) && EditorContext->FOV.GetKeyframe(Time) &&
 		!EditorContext->PosX.HasChanged(Time) && !EditorContext->PosY.HasChanged(Time) && !EditorContext->PosZ.HasChanged(Time) && !EditorContext->RotPitch.HasChanged(Time) && !EditorContext->RotYaw.HasChanged(Time) && !EditorContext->RotRoll.HasChanged(Time) && !EditorContext->FOV.HasChanged(Time)) {
@@ -294,6 +318,16 @@ void AFICEditorCameraCharacter::ChangedKeyframe() {
 	} else {
 		EditorContext->All.SetKeyframe(Time);
 	}
+	END_ATTRIB_CHANGE(Change)
+	END_ATTRIB_CHANGE(Change)
+	END_ATTRIB_CHANGE(Change)
+	END_ATTRIB_CHANGE(Change)
+	END_ATTRIB_CHANGE(Change)
+	END_ATTRIB_CHANGE(Change)
+	END_ATTRIB_CHANGE(Change)
+	END_ATTRIB_CHANGE(Change)
+	END_ATTRIB_CHANGE(Change)
+	EditorContext->ChangeList.PushChange(Change);
 }
 
 void AFICEditorCameraCharacter::Zoom(float Value) {

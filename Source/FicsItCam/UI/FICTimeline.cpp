@@ -364,7 +364,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 			+SGridPanel::Slot(1, 2)
 			.HAlign(HAlign_Fill)
 			.VAlign(VAlign_Fill)[
-				SAssignNew(Graph, SFICGraphView)
+				SAssignNew(Graph, SFICGraphView, Context)
 				.Attributes({&Context->PosX, &Context->PosY, &Context->PosZ})
 				.AutoFit(true)
 				.Clipping(EWidgetClipping::ClipToBoundsAlways)

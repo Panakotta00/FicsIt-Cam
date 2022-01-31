@@ -69,12 +69,15 @@ struct FFICAttribute {
 	FOnUpdate OnUpdate;
 
 	virtual ~FFICAttribute() = default;
+	virtual FName GetAttributeType() { return FName(); }
 	virtual TMap<int64, TSharedPtr<FFICKeyframeRef>> GetKeyframes() { return TMap<int64, TSharedPtr<FFICKeyframeRef>>(); }
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const { return FIC_KF_NONE; }
 	virtual TSharedPtr<FFICKeyframeRef> AddKeyframe(int64 Time) { return nullptr; }
 	virtual void RemoveKeyframe(int64 Time) {}
 	virtual void MoveKeyframe(int64 From, int64 To) {}
 	virtual void RecalculateKeyframe(int64 Time) {}
+	virtual void Set(TSharedPtr<FFICAttribute> InAttrib) {}
+	virtual TSharedPtr<FFICAttribute> Get() { return nullptr; }
 
 	void RecalculateAllKeyframes();
 	bool GetNextKeyframe(int64 Time, int64& outTime, TSharedPtr<FFICKeyframeRef>& outKeyframe);
@@ -131,12 +134,15 @@ public:
 	float FallBackValue = 0.0f;
 	
 	// Begin FFICAttribute
+	virtual FName GetAttributeType() { return FName(TEXT("FloatAttribute")); }
 	virtual TMap<int64, TSharedPtr<FFICKeyframeRef>> GetKeyframes() override;
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const override;
 	virtual TSharedPtr<FFICKeyframeRef> AddKeyframe(int64 Time) override;
 	virtual void RemoveKeyframe(int64 Time) override;
 	virtual void MoveKeyframe(int64 From, int64 To) override;
 	virtual void RecalculateKeyframe(int64 Time) override;
+	virtual void Set(TSharedPtr<FFICAttribute> InAttrib) override;
+	virtual TSharedPtr<FFICAttribute> Get() override;
 	// End FFICAttribute
 	
 	FFICFloatKeyframe* SetKeyframe(int64 Time, FFICFloatKeyframe Keyframe);
@@ -152,6 +158,7 @@ public:
 	TMap<FString, TAttribute<FFICAttribute*>> Children;
 
 	// Begin FFICAttribute
+	virtual FName GetAttributeType() { return FName(TEXT("GroupAttribute")); }
 	virtual TMap<int64, TSharedPtr<FFICKeyframeRef>> GetKeyframes() override;
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const override;
 	virtual TSharedPtr<FFICKeyframeRef> AddKeyframe(int64 Time) override;

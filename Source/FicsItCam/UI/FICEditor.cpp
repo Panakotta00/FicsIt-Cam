@@ -106,13 +106,34 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 		return FReply::Handled();
 	} else /*if (!GameWidget->HasAnyUserFocusOrFocusedDescendants())*/ {
 		if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleAllKeyframes"))) {
+			auto Change = MakeShared<FFICChange_Group>();
+			Change->PushChange(MakeShared<FFICChange_ActiveFrame>(Context, TNumericLimits<int64>::Min(), Context->GetCurrentFrame()));
+			BEGIN_ATTRIB_CHANGE(Context->PosX.GetAttribute())
+			BEGIN_ATTRIB_CHANGE(Context->PosY.GetAttribute())
+			BEGIN_ATTRIB_CHANGE(Context->PosZ.GetAttribute())
+			BEGIN_ATTRIB_CHANGE(Context->RotPitch.GetAttribute())
+			BEGIN_ATTRIB_CHANGE(Context->RotYaw.GetAttribute())
+			BEGIN_ATTRIB_CHANGE(Context->RotRoll.GetAttribute())
+			BEGIN_ATTRIB_CHANGE(Context->FOV.GetAttribute())
+			BEGIN_ATTRIB_CHANGE(Context->Aperture.GetAttribute())
+			BEGIN_ATTRIB_CHANGE(Context->FocusDistance.GetAttribute())
 			int64 Time = Context->GetCurrentFrame();
 			if (Context->PosX.GetKeyframe(Time) && Context->PosY.GetKeyframe(Time) && Context->PosZ.GetKeyframe(Time) && Context->RotPitch.GetKeyframe(Time) && Context->RotYaw.GetKeyframe(Time) && Context->RotRoll.GetKeyframe(Time) && Context->FOV.GetKeyframe(Time) &&
                 !Context->PosX.HasChanged(Time) && !Context->PosY.HasChanged(Time) && !Context->PosZ.HasChanged(Time) && !Context->RotPitch.HasChanged(Time) && !Context->RotYaw.HasChanged(Time) && !Context->RotRoll.HasChanged(Time) && !Context->FOV.HasChanged(Time)) {
 				Context->All.RemoveKeyframe(Time);
-                } else {
-                	Context->All.SetKeyframe(Time);
-                }
+            } else {
+                Context->All.SetKeyframe(Time);
+            }
+			END_ATTRIB_CHANGE(Change)
+			END_ATTRIB_CHANGE(Change)
+			END_ATTRIB_CHANGE(Change)
+			END_ATTRIB_CHANGE(Change)
+			END_ATTRIB_CHANGE(Change)
+			END_ATTRIB_CHANGE(Change)
+			END_ATTRIB_CHANGE(Change)
+			END_ATTRIB_CHANGE(Change)
+			END_ATTRIB_CHANGE(Change)
+			Context->ChangeList.PushChange(Change);
 			return FReply::Handled();
 		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.PrevFrame"))) {
 			int64 Rate = 1;
@@ -146,6 +167,14 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			return FReply::Handled();
 		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleLockCamera"))) {
 			Context->bMoveCamera = !Context->bMoveCamera;
+			return FReply::Handled();
+		} else if (InKeyEvent.GetKey() == EKeys::Z && InKeyEvent.IsControlDown()) {
+			TSharedPtr<FFICChange> Change = Context->ChangeList.PopChange();
+			if (Change) Change->UndoChange();
+			return FReply::Handled();
+		} else if (InKeyEvent.GetKey() == EKeys::Y && InKeyEvent.IsControlDown()) {
+			TSharedPtr<FFICChange> Change = Context->ChangeList.PushChange();
+			if (Change) Change->RedoChange();
 			return FReply::Handled();
 		}
 	}

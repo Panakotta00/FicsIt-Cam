@@ -10,7 +10,7 @@ SFICVectorEditor::SFICVectorEditor() {
 	SpinBoxStyle.InactiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
 }
 
-void SFICVectorEditor::Construct(FArguments InArgs) {
+void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext) {
 	X = InArgs._X;
 	Y = InArgs._Y;
 	Z = InArgs._Z;
@@ -25,6 +25,7 @@ void SFICVectorEditor::Construct(FArguments InArgs) {
 	OnYChanged = InArgs._OnYChanged;
 	OnZChanged = InArgs._OnZChanged;
 	AutoKeyframe = InArgs._AutoKeyframe;
+	Context = InContext;
 
 	if (!X.IsSet() && !X.IsBound()) X = TAttribute<TOptional<float>>::Create([this]() {
         if (XAttr.Get()) return TOptional<float>(static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(XAttr.Get())->GetValue());
@@ -110,7 +111,7 @@ void SFICVectorEditor::Construct(FArguments InArgs) {
 	];
 	if (InArgs._ShowKeyframeControls) {
 		Holder->AddSlot().AutoWidth()[
-            SNew(SFICKeyframeControl)
+            SNew(SFICKeyframeControl, Context)
                 .Attribute(XAttr)
                 .Frame(Frame)
         ];
@@ -142,7 +143,7 @@ void SFICVectorEditor::Construct(FArguments InArgs) {
 	];
 	if (InArgs._ShowKeyframeControls) {
 		Holder->AddSlot().AutoWidth()[
-			SNew(SFICKeyframeControl)
+			SNew(SFICKeyframeControl, Context)
 			.Attribute(YAttr)
 			.Frame(Frame)
 		];
@@ -174,7 +175,7 @@ void SFICVectorEditor::Construct(FArguments InArgs) {
     ];
 	if (InArgs._ShowKeyframeControls) {
 		Holder->AddSlot().AutoWidth()[
-			SNew(SFICKeyframeControl)
+			SNew(SFICKeyframeControl, Context)
             .Attribute(ZAttr)
             .Frame(Frame)
 		];
