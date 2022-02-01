@@ -12,6 +12,7 @@
 void UFICEditorContext::ShowEditor() {
 	HideEditor();
 
+	IsEditorShowing = true;
 	OriginalCharacter = GetWorld()->GetFirstPlayerController()->GetCharacter();
 	if (!CameraCharacter) CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(FVector(PosX.GetValue(), PosY.GetValue(), PosZ.GetValue()), FRotator(RotPitch.GetValue(), RotYaw.GetValue(), RotRoll.GetValue()));
 	CameraCharacter->SetEditorContext(this);
@@ -39,9 +40,12 @@ void UFICEditorContext::ShowEditor() {
 	GameOverlay->AddSlot()[
 		EditorWidget.ToSharedRef()
 	];
+
+	IsEditorShown = true;
 }
 
 void UFICEditorContext::HideEditor() {
+	IsEditorShowing = false;
 	if (CameraCharacter) {
 		GetWorld()->GetFirstPlayerController()->Possess(OriginalCharacter);
 		UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
@@ -61,6 +65,15 @@ void UFICEditorContext::HideEditor() {
 		UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 	}
 	UGameplayStatics::SetGamePaused(this, false);
+	IsEditorShown = false;
+}
+
+void UFICEditorContext::SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor) {
+	AnimPlayerFactor = InAnimPlayerFactor;
+	if (AnimPlayerState != InAnimPlayerState) {
+		AnimPlayerState = InAnimPlayerState;
+		AnimPlayerDelta = 0;
+	}
 }
 
 UFICEditorContext::UFICEditorContext() :
@@ -79,6 +92,27 @@ UFICEditorContext::UFICEditorContext() :
 	PosX.bShowInGraph = true;
 	PosY.bShowInGraph = true;
 	PosZ.bShowInGraph = true;
+}
+
+void UFICEditorContext::Tick(float DeltaTime) {
+	if (Animation) {
+		AnimPlayerDelta += DeltaTime * AnimPlayerFactor;
+		int32 FrameDelta = FMath::Floor(AnimPlayerDelta * Animation->FPS);
+		AnimPlayerDelta -= (float)FrameDelta / (float)Animation->FPS;
+		switch (AnimPlayerState) {
+		case FIC_PLAY_FORWARDS:
+			SetCurrentFrame(CurrentFrame + FrameDelta);
+			break;
+		case FIC_PLAY_BACKWARDS:
+			SetCurrentFrame(CurrentFrame - FrameDelta);
+			break;
+		default: ;
+		}
+	}
+}
+
+bool UFICEditorContext::IsTickable() const {
+	return !WITH_EDITOR;
 }
 
 void UFICEditorContext::SetAnimation(AFICAnimation* Anim) {

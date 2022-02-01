@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "FICEditorContext.h"
 #include "SlateBasics.h"
 
 class FFICEditorAttributeBase;
@@ -29,9 +30,11 @@ class SFICVectorEditor : public SCompoundWidget {
 public:
 	SFICVectorEditor();
 	
-	void Construct(FArguments InArgs);
+	void Construct(FArguments InArgs, UFICEditorContext* Context);
 
 private:
+	UFICEditorContext* Context = nullptr;
+	
 	TAttribute<TOptional<float>> X;
 	TAttribute<TOptional<float>> Y;
 	TAttribute<TOptional<float>> Z;

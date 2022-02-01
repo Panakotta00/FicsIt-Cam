@@ -8,10 +8,22 @@
 
 FSlateColorBrush SFICTimelinePanel::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 
+FCheckBoxStyle SFICTimelinePanel::DefaultToggleButtonStyle = FCoreStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonStyle");
+FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonChecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.25f, 0.25f, 0.25f));
+FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonUnchecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.72f, 0.72f, 0.72f));
+
 void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context;
 	BackgroundBrush = InArgs._Background;
 
+	
+	DefaultToggleButtonStyle.CheckedImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
+	DefaultToggleButtonStyle.CheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
+	DefaultToggleButtonStyle.CheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
+	DefaultToggleButtonStyle.UncheckedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
+	DefaultToggleButtonStyle.UncheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
+	DefaultToggleButtonStyle.UncheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
+	
 	for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Attribute : Context->All.GetChildAttributes()) {
 		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, Attribute.Value.Get()));
 	}
@@ -92,11 +104,65 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                    .AllowSpin(true)
 	                ]
 	            ]
-	            +SGridPanel::Slot(2,0).Padding(5)[
+	            +SGridPanel::Slot(2, 1)
+	            .Padding(5)
+	            .HAlign(HAlign_Center)
+	            .VAlign(VAlign_Center)[
+					SNew(SCheckBox)
+					.Type(ESlateCheckBoxType::ToggleButton)
+					.Style(&DefaultToggleButtonStyle)
+					.Padding(5)
+					.Content()[
+						SNew(STextBlock)
+						.Text(FText::FromString("<"))
+						.ColorAndOpacity(FColor::Black)
+					]
+					.ToolTipText_Lambda([this]() {
+						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown() && Context->GetAnimPlayer() != FIC_PLAY_PAUSED;
+						float Factor = Context->GetAnimPlayerFactor();
+						if (Context->GetAnimPlayer() == FIC_PLAY_BACKWARDS) {
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Increate to %ix Reverse Play"), (int)Factor+1) : TEXT("Pause Play"));
+						} else {
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Decrease to %ix Play"), (int)Factor-1) : TEXT("Play Reverse"));
+						}
+					})
+					.IsChecked_Lambda([this]() {
+						return (Context->GetAnimPlayer() == FIC_PLAY_BACKWARDS) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+					})
+					.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
+						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown();
+						float Factor = Context->GetAnimPlayerFactor();
+						switch (Context->GetAnimPlayer()) {
+						case FIC_PLAY_PAUSED:
+							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_BACKWARDS, Factor = 1);
+							break;
+						case FIC_PLAY_FORWARDS:
+							if (Ctrl) {
+								Factor -= 1;
+							} else {
+								Factor = 0;
+							}
+							break;
+						case FIC_PLAY_BACKWARDS:
+							if (Ctrl) {
+								Factor += 1;
+							} else {
+								Factor = 0;
+							}
+							break;
+						}
+						if (FMath::Abs(Factor) < 0.1) {
+							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_PAUSED, 0);
+						} else {
+							Context->SetAnimPlayer(Context->GetAnimPlayer(), Factor);
+						}
+					})
+	            ]
+	            +SGridPanel::Slot(3,0).Padding(5)[
 	                SNew(STextBlock)
 	                .Text(FText::FromString("Current Frame:"))
 	            ]
-	            +SGridPanel::Slot(2, 1).Padding(5)[
+	            +SGridPanel::Slot(3, 1).Padding(5)[
 	                SNew(SBox)
 	                .WidthOverride(50)
 	                .Content()[
@@ -126,11 +192,65 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                    .AllowSpin(true)
 	                ]
 	            ]
-	            +SGridPanel::Slot(3,0).Padding(5)[
+	            +SGridPanel::Slot(4, 1)
+	            .Padding(5)
+	            .VAlign(VAlign_Center)
+	            .HAlign(HAlign_Center)[
+		            SNew(SCheckBox)
+		            .Type(ESlateCheckBoxType::ToggleButton)
+					.Style(&DefaultToggleButtonStyle)
+					.Padding(5)
+					.Content()[
+						SNew(STextBlock)
+						.Text(FText::FromString(">"))
+						.ColorAndOpacity(FColor::Black)
+					]
+					.ToolTipText_Lambda([this]() {
+						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown() && Context->GetAnimPlayer() != FIC_PLAY_PAUSED;
+						float Factor = Context->GetAnimPlayerFactor();
+						if (Context->GetAnimPlayer() == FIC_PLAY_FORWARDS) {
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Increate to %ix Play"), (int)Factor+1) : TEXT("Pause Play"));
+						} else {
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Decrease to %ix Reverse Play"), (int)Factor+1) : TEXT("Play"));
+						}
+					})
+					.IsChecked_Lambda([this]() {
+						return (Context->GetAnimPlayer() == FIC_PLAY_FORWARDS) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+					})
+					.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
+						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown();
+						float Factor = Context->GetAnimPlayerFactor();
+						switch (Context->GetAnimPlayer()) {
+						case FIC_PLAY_PAUSED:
+							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_FORWARDS, Factor = 1);
+							break;
+						case FIC_PLAY_BACKWARDS:
+							if (Ctrl) {
+								Factor -= 1;
+							} else {
+								Factor = 0;
+							}
+							break;
+						case FIC_PLAY_FORWARDS:
+							if (Ctrl) {
+								Factor += 1;
+							} else {
+								Factor = 0;
+							}
+							break;
+						}
+						if (FMath::Abs(Factor) < 0.1) {
+							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_PAUSED, 0);
+						} else {
+							Context->SetAnimPlayer(Context->GetAnimPlayer(), Factor);
+						}
+					})
+				]
+	            +SGridPanel::Slot(5,0).Padding(5)[
 	                SNew(STextBlock)
 	                .Text(FText::FromString("View End:"))
 	            ]
-	            +SGridPanel::Slot(3, 1).Padding(5)[
+	            +SGridPanel::Slot(5, 1).Padding(5)[
 	                SNew(SBox)
 	                .WidthOverride(50)
 	                .Content()[
@@ -160,11 +280,11 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                    .AllowSpin(true)
 	                ]
 	            ]
-	            +SGridPanel::Slot(4,0).Padding(5)[
+	            +SGridPanel::Slot(6,0).Padding(5)[
 	                SNew(STextBlock)
 	                .Text(FText::FromString("Animation End:"))
 	            ]
-	            +SGridPanel::Slot(4, 1).Padding(5)[
+	            +SGridPanel::Slot(6, 1).Padding(5)[
 	                SNew(SBox)
 	                .WidthOverride(50)
 	                .Content()[
@@ -290,7 +410,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 			+SGridPanel::Slot(1, 2)
 			.HAlign(HAlign_Fill)
 			.VAlign(VAlign_Fill)[
-				SAssignNew(Graph, SFICGraphView)
+				SAssignNew(Graph, SFICGraphView, Context)
 				.Attributes({&Context->PosX, &Context->PosY, &Context->PosZ})
 				.AutoFit(true)
 				.Clipping(EWidgetClipping::ClipToBoundsAlways)

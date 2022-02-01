@@ -40,7 +40,7 @@ TSharedRef<SWidget> ScalarAttribute(UFICEditorContext* Context, TFICEditorAttrib
 		.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 	]
 	+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-		SNew(SFICKeyframeControl)
+		SNew(SFICKeyframeControl, Context)
 		.Attribute_Lambda([&Attr]() -> FFICEditorAttributeBase* {
 			return &Attr;
 		})
@@ -74,7 +74,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					.ToolTipText(FText::FromString(FString::Printf(TEXT("Allows you to manipulate the keyframes of all attributes at the current frame.\n\nToggle All Keyframes: %s\nGo-To Next Keyframe: %s\nGo-To Previous Keyframe: %s"), *UFICUtils::KeymappingToString("FicsItCam.ToggleAllKeyframes"), *UFICUtils::KeymappingToString("FicsItCam.NextKeyframe"), *UFICUtils::KeymappingToString("FicsItCam.PrevKeyframe"))))
 				]
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(SFICKeyframeControl)
+					SNew(SFICKeyframeControl, Context)
 					.Attribute_Lambda([this]() -> FFICEditorAttributeBase* {
 						return &Context->All;
 					})
@@ -90,7 +90,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					.Text(FText::FromString("Position"))
 				]
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(SFICKeyframeControl)
+					SNew(SFICKeyframeControl, Context)
 					.Attribute_Lambda([this]() -> FFICEditorAttributeBase* {
 						return &Context->Pos;
 					})
@@ -103,7 +103,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					.Text(FText::FromString(":"))
 				]
 				+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
-					SNew(SFICVectorEditor)
+					SNew(SFICVectorEditor, Context)
 					.ShowKeyframeControls(true)
 					.XAttr_Lambda([this]() {
 						return &Context->PosX;
@@ -129,7 +129,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					.Text(FText::FromString("Rotation"))
 				]
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(SFICKeyframeControl)
+					SNew(SFICKeyframeControl, Context)
 					.Attribute_Lambda([this]() -> FFICEditorAttributeBase* {
 						return &Context->Rot;
 					})
@@ -142,7 +142,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					.Text(FText::FromString(":"))
 				]
 				+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
-					SNew(SFICVectorEditor)
+					SNew(SFICVectorEditor, Context)
 					.ShowKeyframeControls(true)
 					.XAttr_Lambda([this]() {
 						return &Context->RotPitch;
@@ -188,7 +188,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 				]
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(SFICKeyframeControl)
+					SNew(SFICKeyframeControl, Context)
 					.Attribute_Lambda([this]() {
 						return &Context->FOV;
 					})

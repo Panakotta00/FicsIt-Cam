@@ -103,11 +103,12 @@ FFICKeyframeControlStyle* SFICKeyframeControl::DefaultStyle() {
 
 SFICKeyframeControl::SFICKeyframeControl() : Children(this) {}
 
-void SFICKeyframeControl::Construct(FArguments InArgs) {
+void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InContext) {
 	Attribute = InArgs._Attribute;
 	Style = InArgs._Style;
 	Frame = InArgs._Frame;
 	GraphView = InArgs._GraphView;
+	Context = InContext;
 	
 	Children.Add(
 		SAssignNew(MainHandle, SBox)
@@ -265,9 +266,11 @@ FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const
 FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton && !bWasDoubleClick) {
 		FFICAttribute* Attrib = Attribute.Get()->GetAttribute();
+        BEGIN_QUICK_ATTRIB_CHANGE(Context, Attrib, GetFrame(), GetFrame())
 		if (Attribute.Get()->GetKeyframe(GetFrame()) && (ToHandle || FromHandle || !Attribute.Get()->HasChanged(GetFrame()))) Attribute.Get()->RemoveKeyframe(GetFrame());
 		else Attribute.Get()->SetKeyframe(GetFrame());
-		Attrib->OnUpdate.Broadcast();
+		Attrib->RecalculateAllKeyframes();
+		END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
 		return FReply::Handled();
 	} else 	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
         TSharedPtr<FFICKeyframeRef> KF = Attribute.Get()->GetKeyframe(GetFrame());
@@ -279,32 +282,40 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
+                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
                     Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_EASE, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
                 FText::FromString("Ease-In/Out"),
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
+                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
                     Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_EASEINOUT, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
                 FText::FromString("Linear"),
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
+                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
                     Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_LINEAR, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
                 FText::FromString("Step"),
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
+                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
                     Attribute.Get()->SetKeyframeFromFloat(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->Get()->GetValueAsFloat(), FIC_KF_STEP, false);
                 	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 		
 			FSlateApplication::Get().PushMenu(SharedThis(this), *Event.GetEventPath(), MenuBuilder.MakeWidget(), Event.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
@@ -321,8 +332,10 @@ FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry
 		FFICEditorAttributeBase* Attr = Attribute.Get();
 		TMap<int64, TSharedPtr<FFICKeyframeRef>> Keyframes = Attr->GetAttribute()->GetKeyframes();
 		if (Keyframes.Num() > 0) {
+			BEGIN_QUICK_ATTRIB_CHANGE(Context, Attr->GetAttribute(), GetFrame(), GetFrame())
 			for (const TPair<int64, TSharedPtr<FFICKeyframeRef>>& KF : Keyframes) Attr->RemoveKeyframe(KF.Key);
 			Attr->GetAttribute()->OnUpdate.Broadcast();
+			END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
 			return FReply::Handled();
 		}
 	}

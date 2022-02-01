@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "FICChangeList.h"
 #include "FicsItCam/FICAnimation.h"
 #include "FicsItCam/FICEditorCameraCharacter.h"
 #include "FICEditor.h"
@@ -16,8 +17,15 @@
 
 class ACharacter;
 
+UENUM()
+enum EFICAnimPlayerState {
+	FIC_PLAY_PAUSED,
+	FIC_PLAY_FORWARDS,
+	FIC_PLAY_BACKWARDS,
+};
+
 UCLASS()
-class UFICEditorContext : public UObject {
+class UFICEditorContext : public UObject, public FTickableGameObject {
 	GENERATED_BODY()
 
 private:
@@ -33,11 +41,14 @@ private:
 	UPROPERTY()
 	AFICEditorCameraCharacter* CameraCharacter = nullptr;
 
-	TSharedPtr<SFICEditor> EditorWidget;
 	TSharedPtr<SViewport> GameViewport;
 	TSharedPtr<SVerticalBox> GameViewportContainer;
 	TSharedPtr<SOverlay> GameOverlay;
 
+	EFICAnimPlayerState AnimPlayerState = FIC_PLAY_PAUSED;
+	float AnimPlayerDelta = 0.0f;
+	float AnimPlayerFactor = 1.0f;
+	
 public:
 	TFICEditorAttribute<FFICFloatAttribute> PosX;
 	TFICEditorAttribute<FFICFloatAttribute> PosY;
@@ -58,7 +69,21 @@ public:
 
 	float SensorWidthAdjust = 1.0f;
 
+	bool IsEditorShown = false;
+	bool IsEditorShowing = false;
+	bool TempViewportFocus = false;
+	FVector2D TempCursorPos;
+	TSharedPtr<SFICEditor> EditorWidget;
+
+	FFICChangeList ChangeList;
+
 	UFICEditorContext();
+
+	// Begin FTickableGameObject
+	virtual void Tick(float DeltaTime) override;
+	virtual bool IsTickable() const override;
+	virtual TStatId GetStatId() const override { return UObject::GetStatID(); }
+	// End FTickableGameObject
 	
 	void SetAnimation(AFICAnimation* Anim);
 	AFICAnimation* GetAnimation() const;
@@ -74,4 +99,8 @@ public:
 
 	void ShowEditor();
 	void HideEditor();
+
+	void SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor);
+	EFICAnimPlayerState GetAnimPlayer() { return AnimPlayerState; }
+	float GetAnimPlayerFactor() { return AnimPlayerFactor; }
 };

@@ -103,6 +103,14 @@ public:
 	void ToggleLockCamera();
 
 	UFUNCTION()
+	void RightMouseRelease();
+
+	UFUNCTION()
+	void Undo();
+	UFUNCTION()
+	void Redo();
+
+	UFUNCTION()
 	void SetEditorContext(UFICEditorContext* InEditorContext);
 
 	UFUNCTION()
