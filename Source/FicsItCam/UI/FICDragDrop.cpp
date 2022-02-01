@@ -6,11 +6,6 @@ FFICGraphDragDrop::FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPoint
 	ValueStart = GraphView->LocalToValue(LocalPos.Y);
 }
 
-void FFICGraphDragDrop::Construct() {
-	bCreateNewWindow = true;
-	FDragDropOperation::Construct();
-}
-
 void FFICGraphDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FDragDropOperation::OnDragged(DragDropEvent);
 
@@ -72,13 +67,13 @@ TSharedPtr<SWidget> FFICGraphKeyframeDragDrop::GetDefaultDecorator() const {
 			.ColorAndOpacity( FLinearColor::Black )
 			.WrapTextAt_Static( &SToolTip::GetToolTipWrapWidth )
 			.Text_Lambda([this]() {
-				return FText::FromString(FString::Printf(TEXT("Frame: %lld\nValue: %f\n\nShift: Fixed Frame\nCTRL: Fixed Value"), KeyframeControl->GetFrame(), KeyframeControl->GetAttribute()->GetValueAsFloat(KeyframeControl->GetFrame())));
+				return FText::FromString(FString::Printf(TEXT("Frame: %lld\nValue: %i\n\nShift: Fixed Frame\nCTRL: Fixed Value"), KeyframeControl->GetFrame(), static_cast<int>(KeyframeControl->GetAttribute()->GetValueAsFloat(KeyframeControl->GetFrame()))));
 			})
 		];
 }
 
 FVector2D FFICGraphKeyframeDragDrop::GetDecoratorPosition() const {
-	return FFICGraphDragDrop::GetDecoratorPosition();
+	return FSlateApplication::Get().GetCursorPos() + FVector2D(20, 20);
 }
 
 void FFICGraphKeyframeDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {

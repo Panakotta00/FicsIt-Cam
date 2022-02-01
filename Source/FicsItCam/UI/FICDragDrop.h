@@ -19,7 +19,6 @@ public:
 	FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent);
 	
 	// Begin FDragDropOperation
-	virtual void Construct() override;
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
 	// End FDragDropOperation
 };
@@ -45,6 +44,8 @@ public:
 
 	FFICGraphKeyframeDragDrop(TSharedRef<SFICGraphView> GraphView, TSharedRef<SFICKeyframeControl> KeyframeControl, FPointerEvent InitEvent) : FFICGraphDragDrop(GraphView, InitEvent), KeyframeControl(KeyframeControl) {
 		AttribBegin = KeyframeControl->GetAttribute()->GetAttribute()->Get();
+		FDragDropOperation::SetDecoratorVisibility(true);
+		bCreateNewWindow = false;
 	}
 	
 	// Begin FDragDropOperation

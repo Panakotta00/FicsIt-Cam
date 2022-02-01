@@ -68,7 +68,8 @@ void UFICEditorContext::HideEditor() {
 	IsEditorShown = false;
 }
 
-void UFICEditorContext::SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState) {
+void UFICEditorContext::SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor) {
+	AnimPlayerFactor = InAnimPlayerFactor;
 	if (AnimPlayerState != InAnimPlayerState) {
 		AnimPlayerState = InAnimPlayerState;
 		AnimPlayerDelta = 0;
@@ -95,7 +96,7 @@ UFICEditorContext::UFICEditorContext() :
 
 void UFICEditorContext::Tick(float DeltaTime) {
 	if (Animation) {
-		AnimPlayerDelta += DeltaTime;
+		AnimPlayerDelta += DeltaTime * AnimPlayerFactor;
 		int32 FrameDelta = FMath::Floor(AnimPlayerDelta * Animation->FPS);
 		AnimPlayerDelta -= (float)FrameDelta / (float)Animation->FPS;
 		switch (AnimPlayerState) {

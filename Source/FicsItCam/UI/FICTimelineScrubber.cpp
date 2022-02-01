@@ -36,7 +36,8 @@ int32 SFICTimelineScrubber::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	int64 End = RangeEnd.Get();
 	int64 Increment = 10;
 	while ((End - Start) / Increment > 30) Increment *= 10;
-	Start += Increment - (Start % Increment);
+	Start += Increment - Start % Increment;
+	if (Start <= 0) Start -= Increment;
 	FLinearColor IncColor = IncrementColor.Get();
 	for (int64 i = Start; i <= End; i += Increment) {
 		float IX = RangePosToLocalPos(AllottedGeometry, i);

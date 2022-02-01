@@ -47,6 +47,7 @@ private:
 
 	EFICAnimPlayerState AnimPlayerState = FIC_PLAY_PAUSED;
 	float AnimPlayerDelta = 0.0f;
+	float AnimPlayerFactor = 1.0f;
 	
 public:
 	TFICEditorAttribute<FFICFloatAttribute> PosX;
@@ -99,6 +100,7 @@ public:
 	void ShowEditor();
 	void HideEditor();
 
-	void SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState);
+	void SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor);
 	EFICAnimPlayerState GetAnimPlayer() { return AnimPlayerState; }
+	float GetAnimPlayerFactor() { return AnimPlayerFactor; }
 };

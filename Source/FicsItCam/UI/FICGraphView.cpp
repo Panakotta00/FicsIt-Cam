@@ -70,11 +70,15 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	int64 FrameStart = TimelineRangeBegin.Get();
 	int64 FrameEnd = TimelineRangeEnd.Get();
 	int64 Steps = 1;
+	int64 SafetyCounter = 0;
 	while (FMath::Abs(FrameEnd - FrameStart) / Steps > 30) Steps *= 10;
 	for (float x = FrameStart - FrameStart % Steps; x <= FrameEnd; x += Steps) {
+		if (SafetyCounter++ > 1000) break;
 		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), {FVector2D(FrameToLocal(x), 0), FVector2D(FrameToLocal(x), AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None, GridColor, true, 1);
 	}
+	SafetyCounter = 0;
 	for (float y = 0; y <= AllottedGeometry.GetLocalSize().Y; y += Distance.Y) {
+		if (SafetyCounter++ > 1000) break;
 		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), {FVector2D(0, y + RenderOffset.Y), FVector2D(AllottedGeometry.GetLocalSize().X, y + RenderOffset.Y)}, ESlateDrawEffect::None, GridColor, true, 1);
 	}
 	FLinearColor FrameColor = FLinearColor(FColor::FromHex("666600"));

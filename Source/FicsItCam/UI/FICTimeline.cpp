@@ -118,20 +118,43 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 						.ColorAndOpacity(FColor::Black)
 					]
 					.ToolTipText_Lambda([this]() {
+						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown() && Context->GetAnimPlayer() != FIC_PLAY_PAUSED;
+						float Factor = Context->GetAnimPlayerFactor();
 						if (Context->GetAnimPlayer() == FIC_PLAY_BACKWARDS) {
-							return FText::FromString(TEXT("Pause Play"));
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Increate to %ix Reverse Play"), (int)Factor+1) : TEXT("Pause Play"));
 						} else {
-							return FText::FromString(TEXT("Play Reverse"));
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Decrease to %ix Play"), (int)Factor-1) : TEXT("Play Reverse"));
 						}
 					})
 					.IsChecked_Lambda([this]() {
 						return (Context->GetAnimPlayer() == FIC_PLAY_BACKWARDS) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 					})
 					.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
-						if (Context->GetAnimPlayer() == FIC_PLAY_BACKWARDS) {
-							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_PAUSED);
+						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown();
+						float Factor = Context->GetAnimPlayerFactor();
+						switch (Context->GetAnimPlayer()) {
+						case FIC_PLAY_PAUSED:
+							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_BACKWARDS, Factor = 1);
+							break;
+						case FIC_PLAY_FORWARDS:
+							if (Ctrl) {
+								Factor -= 1;
+							} else {
+								Factor = 0;
+							}
+							break;
+						case FIC_PLAY_BACKWARDS:
+							if (Ctrl) {
+								Factor += 1;
+							} else {
+								Factor = 0;
+							}
+							break;
+						}
+						if (FMath::Abs(Factor) < 0.1) {
+							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_PAUSED, 0);
 						} else {
-							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_BACKWARDS);
+							Context->SetAnimPlayer(Context->GetAnimPlayer(), Factor);
 						}
 					})
 	            ]
@@ -183,20 +206,43 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 						.ColorAndOpacity(FColor::Black)
 					]
 					.ToolTipText_Lambda([this]() {
+						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown() && Context->GetAnimPlayer() != FIC_PLAY_PAUSED;
+						float Factor = Context->GetAnimPlayerFactor();
 						if (Context->GetAnimPlayer() == FIC_PLAY_FORWARDS) {
-							return FText::FromString(TEXT("Pause Play"));
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Increate to %ix Play"), (int)Factor+1) : TEXT("Pause Play"));
 						} else {
-							return FText::FromString(TEXT("Play"));
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Decrease to %ix Reverse Play"), (int)Factor+1) : TEXT("Play"));
 						}
 					})
 					.IsChecked_Lambda([this]() {
 						return (Context->GetAnimPlayer() == FIC_PLAY_FORWARDS) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 					})
 					.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
-						if (Context->GetAnimPlayer() == FIC_PLAY_FORWARDS) {
-							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_PAUSED);
+						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown();
+						float Factor = Context->GetAnimPlayerFactor();
+						switch (Context->GetAnimPlayer()) {
+						case FIC_PLAY_PAUSED:
+							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_FORWARDS, Factor = 1);
+							break;
+						case FIC_PLAY_BACKWARDS:
+							if (Ctrl) {
+								Factor -= 1;
+							} else {
+								Factor = 0;
+							}
+							break;
+						case FIC_PLAY_FORWARDS:
+							if (Ctrl) {
+								Factor += 1;
+							} else {
+								Factor = 0;
+							}
+							break;
+						}
+						if (FMath::Abs(Factor) < 0.1) {
+							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_PAUSED, 0);
 						} else {
-							Context->SetAnimPlayer(EFICAnimPlayerState::FIC_PLAY_FORWARDS);
+							Context->SetAnimPlayer(Context->GetAnimPlayer(), Factor);
 						}
 					})
 				]
