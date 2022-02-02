@@ -318,6 +318,8 @@ void AFICEditorCameraCharacter::ChangedKeyframe() {
 	} else {
 		EditorContext->All.SetKeyframe(Time);
 	}
+	EditorContext->All.GetAttribute()->RecalculateAllKeyframes();
+	EditorContext->All.GetAttribute()->OnUpdate.Broadcast();
 	END_ATTRIB_CHANGE(Change)
 	END_ATTRIB_CHANGE(Change)
 	END_ATTRIB_CHANGE(Change)
