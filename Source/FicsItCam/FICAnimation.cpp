@@ -159,23 +159,36 @@ void FFICFloatAttribute::RecalculateKeyframe(int64 Time) {
 		if (NK) {
 			float NKTimeDiff = NTime - Time;
 			float NKValueDiff = NK->Value - K->Value;
-			float KTimeDiff = (PKTimeDiff + NKTimeDiff) / 2.0;
-			KTimeDiff = FMath::Min(PKTimeDiff, NKTimeDiff);
 			float KValueDiff = (PKValueDiff + NKValueDiff) / 2.0;
+			float KTimeDiff = NTime - PTime;
 
-			K->OutTanTime = KTimeDiff * Factor;
-			K->InTanTime = KTimeDiff * Factor;
+			//FMath::Clamp(K->Value + PKValueDiff, FMath::Min(PK->Value, NK->Value), FMath::Max(PK->Value, NK->Value)) - K->Value;
+
+			K->OutTanTime = NKTimeDiff * Factor;
+			K->InTanTime = PKTimeDiff * Factor;
+
+			float Ratio = PKTimeDiff / KTimeDiff;
+			float Pitch = (PKValueDiff/PKTimeDiff) * (1-Ratio) + (NKValueDiff/NKTimeDiff) * Ratio;
 			
 			if (K->KeyframeType == FIC_KF_EASE) {
-				K->InTanValue = K->OutTanValue = KValueDiff * Factor;
+				if ((K->Value < PK->Value && K->Value < NK->Value) || (K->Value > PK->Value && K->Value > NK->Value)) {
+					K->InTanValue = K->OutTanValue = 0;
+				} else {
+					K->InTanValue = FMath::Clamp(K->Value - Pitch * K->InTanTime, FMath::Min(PK->Value, NK->Value), FMath::Max(PK->Value, NK->Value)) - K->Value;
+					K->OutTanValue = FMath::Clamp(K->Value + Pitch * K->OutTanTime, FMath::Min(PK->Value, NK->Value), FMath::Max(PK->Value, NK->Value)) - K->Value;
+					float InPitch = -K->InTanValue/K->InTanTime;
+					float OutPitch = K->OutTanValue/K->OutTanTime;
+					Pitch = FMath::Abs(InPitch) < FMath::Abs(OutPitch) ? InPitch : OutPitch;
+					K->InTanValue = Pitch * K->InTanTime;
+					K->OutTanValue = Pitch * K->OutTanTime;
+				}
 			} else if (K->KeyframeType == FIC_KF_EASEINOUT) {
 				K->OutTanValue = 0;
 				K->InTanValue = 0;
 			}
 		} else {
 			if (K->KeyframeType == FIC_KF_EASE) {
-				K->InTanTime = PKTimeDiff * Factor;
-				K->InTanValue = PKValueDiff * Factor;
+				K->InTanTime = K->InTanValue = 0;
 			} else if (K->KeyframeType == FIC_KF_EASEINOUT) {
 				K->InTanTime = PKTimeDiff * Factor;
 				K->InTanValue = 0;
@@ -187,8 +200,7 @@ void FFICFloatAttribute::RecalculateKeyframe(int64 Time) {
 			float NKValueDiff = NK->Value - K->Value;
 		
 			if (K->KeyframeType == FIC_KF_EASE) {
-				K->OutTanTime = NKTimeDiff * Factor;
-				K->OutTanValue = NKValueDiff * Factor;
+				K->OutTanTime = K->OutTanValue = 0;
 			} else if (K->KeyframeType == FIC_KF_EASEINOUT) {
 				K->OutTanTime = NKTimeDiff * Factor;
 				K->OutTanValue = 0;
