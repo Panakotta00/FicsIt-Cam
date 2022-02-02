@@ -139,7 +139,7 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 					FVector Pos = Sender->GetPlayer()->PlayerCameraManager->GetCameraLocation();
 					FRotator Rot = Sender->GetPlayer()->PlayerCameraManager->GetCameraRotation();
 					AFICTimelapseCamera* Camera = GetWorld()->SpawnActor<AFICTimelapseCamera>(Pos, Rot);
-					Camera->Name = Arguments[3];
+					Camera->Name = Arguments[2];
 					Camera->Frequency = Frequency;
 					SubSys->TimelapseCameras.Add(CameraName, Camera);
 					Sender->SendChatMessage("Timelapse-Camera '" + CameraName + "' created.");
