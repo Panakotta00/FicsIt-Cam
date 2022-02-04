@@ -59,8 +59,19 @@ void AFICCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAction("FicsItCam.StopAnimation", EInputEvent::IE_Pressed, this, &AFICCameraCharacter::StopAnimation);
 }
 
-void AFICCameraCharacter::PossessedBy(AController* NewController) {}
-void AFICCameraCharacter::UnPossessed() {}
+void AFICCameraCharacter::PossessedBy(AController* NewController) {
+	Super::PossessedBy(NewController);
+	if (NewController && Animation) NewController->DisableInput(Cast<APlayerController>(NewController));
+}
+
+void AFICCameraCharacter::UnPossessed() {
+	AController* OldController = Controller;
+	Super::UnPossessed();
+	if (OldController) OldController->EnableInput(Cast<APlayerController>(OldController));
+	if (bStartFinished) {
+		StopAnimation();
+	}
+}
 
 void AFICCameraCharacter::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
@@ -179,15 +190,18 @@ void AFICCameraCharacter::StartAnimation(AFICAnimation* inAnimation, bool bInDoR
 	Camera->SetActive(true);
 
 	if (Animation->bBulletTime) SetTimeDilation(0);
+
+	bStartFinished = true;
 }
 
 void AFICCameraCharacter::StopAnimation() {
 	if (Animation) {
+		bStartFinished = false;
+		Animation = nullptr;
 		AFGPlayerController* NewController = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
 		NewController->Possess(OriginalCharacter);
 		OriginalCharacter->SetActorHiddenInGame(false);
 		Cast<AFGHUD>(NewController->GetHUD())->SetPumpiMode(false);
-		Animation = nullptr;
 		Progress = 0.0f;
 		Cast<AFGCharacterPlayer>(OriginalCharacter)->CheatToggleGhostFly(true);
 		GetWorld()->GetTimerManager().SetTimer(WorldStreamTimer, this, &AFICCameraCharacter::OnTickWorldStreamTimer, 0.1f, true);

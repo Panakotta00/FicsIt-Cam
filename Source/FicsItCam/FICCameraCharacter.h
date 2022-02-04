@@ -21,6 +21,8 @@ private:
 
 	UPROPERTY()
 	ACharacter* OriginalCharacter = nullptr;
+
+	bool bStartFinished = false;
 	
 	UPROPERTY()
 	FTimerHandle WorldStreamTimer;
