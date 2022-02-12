@@ -1,8 +1,10 @@
 ﻿#pragma once
 
 #include "SlateBasics.h"
+#include "Data/FICTypes.h"
 
-DECLARE_DELEGATE_TwoParams(FFICRangeChanged, int64 /* Previous Value */, int64 /* New Value */)
+DECLARE_DELEGATE_OneParam(FFICRangeChanged, FFICFrameRange)
+DECLARE_DELEGATE_OneParam(FFICFrameChanged, FICFrame)
 
 class SFICRangeSelector : public SLeafWidget {
 	static FSlateColorBrush DefaultBackgroundBrush;
@@ -12,12 +14,7 @@ class SFICRangeSelector : public SLeafWidget {
 	static FLinearColor DefaultHighlightColor;
 	
 	SLATE_BEGIN_ARGS(SFICRangeSelector) :
-		_RangeStart(0),
-		_RangeEnd(100),
-		_SelectStart(25),
-		_SelectEnd(75),
-		_Highlight(50),
-		_HighlightEnabled(false),
+		_ActiveFrameEnabled(false),
 		_BackgroundBrush(&DefaultBackgroundBrush),
 		_RangeIncrementColor(DefaultRangeIncrementColor),
 		_SelectBrush(&DefaultSelectBrush),
@@ -25,15 +22,14 @@ class SFICRangeSelector : public SLeafWidget {
 		_HighlightColor(DefaultHighlightColor) {
 			Clipping(EWidgetClipping::ClipToBoundsAlways);
 		}
-		SLATE_ATTRIBUTE(int64, RangeStart)
-		SLATE_ATTRIBUTE(int64, RangeEnd)
-		SLATE_ATTRIBUTE(int64, SelectStart)
-		SLATE_ATTRIBUTE(int64, SelectEnd)
-		SLATE_ATTRIBUTE(int64, Highlight)
-		SLATE_ATTRIBUTE(bool, HighlightEnabled)
-		SLATE_EVENT(FFICRangeChanged, SelectStartChanged)
-		SLATE_EVENT(FFICRangeChanged, SelectEndChanged)
-		SLATE_EVENT(FFICRangeChanged, HighlightChanged)
+		SLATE_ATTRIBUTE(FFICFrameRange, FullRange)
+		SLATE_ATTRIBUTE(FFICFrameRange, ActiveRange)
+		SLATE_ATTRIBUTE(FICFrame, ActiveFrame)
+		SLATE_ATTRIBUTE(bool, ActiveFrameEnabled)
+	
+		SLATE_EVENT(FFICRangeChanged, OnActiveRangeChanged)
+		SLATE_EVENT(FFICFrameChanged, OnActiveFrameChanged)
+
 		SLATE_ATTRIBUTE(const FSlateBrush*, BackgroundBrush)
 		SLATE_ATTRIBUTE(FLinearColor, RangeIncrementColor)
 		SLATE_ATTRIBUTE(const FSlateBrush*, SelectBrush)
@@ -45,60 +41,79 @@ public:
 	void Construct(const FArguments& InArgs);
 
 private:
-	TAttribute<int64> RangeStart;
-	TAttribute<int64> RangeEnd;
-	TAttribute<int64> SelectStartAttr;
-	TAttribute<int64> SelectEndAttr;
-	TAttribute<int64> HighlightAttr;
-	TAttribute<bool> HighlightEnabled;
-	FFICRangeChanged SelectStartChanged;
-	FFICRangeChanged SelectEndChanged;
-	FFICRangeChanged HighlightChanged;
+	TAttribute<FFICFrameRange> FullRange;
+	TAttribute<FFICFrameRange> ActiveRange;
+	TAttribute<FICFrame> ActiveFrame;
+	TAttribute<bool> ActiveFrameEnabled;
+	
+	FFICRangeChanged OnActiveRangeChanged;
+	FFICFrameChanged OnActiveFrameChanged;
+	
 	TAttribute<const FSlateBrush*> BackgroundBrush;
 	TAttribute<FLinearColor> RangeIncrementColor;
 	TAttribute<const FSlateBrush*> SelectBrush;
 	TAttribute<FLinearColor> SelectHandleColor;
 	TAttribute<FLinearColor> HighlightColor;
 
-	int64 SelectStart = 0;
-	int64 SelectEnd = 0;
-	int64 PrevSelectStart = 0;
-	int64 PrevSelectEnd = 0;
-	int64 Highlight = 0;
-
-	bool bStartDrag = false;
-	bool bEndDrag = false;
-	bool bSelectDrag = false;
-	bool bHighlightDrag = false;
-	int64 SelectDragStart  = 0;
-	int64 SelectDragEnd = 0;
-	int64 DragStartPos = 0;
-	int64 LastDragPos = 0;
-	int64 DragDelta = 0;
+	FFICFrameRange PrevActiveRange;
 
 public:
 	// Begin SWidget
-	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 	virtual FVector2D ComputeDesiredSize(float) const override;
 	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
-	virtual FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	virtual FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	virtual FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	virtual FReply OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FCursorReply OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const override;
 	virtual bool IsInteractable() const override;
 	virtual TSharedPtr<IToolTip> GetToolTip() override;
 	virtual void OnToolTipClosing() override;
 	// End SWidget
 
-	float RangePosToLocalPos(const FGeometry& MyGeometry, int64 RangePos) const;
-	int64 LocalPosToRangePos(const FGeometry& MyGeometry, float LocalPos) const;
-	bool IsLocalPosNearRangePos(const FGeometry& MyGeometry, float LocalPos, int64 RangePos) const;
+	float FrameToLocalPos(FICFrame Frame) const;
+	FICFrame LocalPosToFrame(float LocalPos) const;
+	bool IsLocalPosNearFrame(float LocalPos, FICFrame Frame) const;
+
+	FFICFrameRange GetActiveRange() const { return ActiveRange.Get(); }
+	void SetActiveRange(const FFICFrameRange& InRange, bool bStoreAsPrev = true) {
+		bool _ = OnActiveRangeChanged.ExecuteIfBound(InRange);
+		if (bStoreAsPrev) PrevActiveRange = InRange;
+	}
+
+	FICFrame GetActiveFrame() const { return ActiveFrame.Get(); }
+	void SetActiveFrame(FICFrame Frame) {
+		bool _ = OnActiveFrameChanged.ExecuteIfBound(Frame);
+	}
+};
+
+enum EFICRangeSelectorDragDropType {
+	FIC_RangeSelect_None,
+	FIC_RangeSelect_Begin,
+	FIC_RangeSelect_End,
+	FIC_RangeSelect_Both,
+	FIC_RangeSelect_Frame,
+};
+
+class FFICRangeSelectorDragDrop : public FDragDropOperation {
+public:
+	DRAG_DROP_OPERATOR_TYPE(FFICRangeSelectorDragDrop, FDragDropOperation)
+
+	TSharedRef<SFICRangeSelector> RangeSelector;
+
+	FFICFrameRange InitRange;
+	FICFrame InitFrame;
+	EFICRangeSelectorDragDropType ChangeType;
 	
-	void SetSelectStart(int64 Start);
-	void SetSelectEnd(int64 End);
-	void SetHighlight(int64 Highlight);
-	int64 GetSelectStart() const;
-	int64 GetSelectEnd() const;
-	int64 GetHighlight() const;
+	FFICRangeSelectorDragDrop(FPointerEvent InitEvent, TSharedRef<SFICRangeSelector> InRangeSelector, EFICRangeSelectorDragDropType InType) : RangeSelector(InRangeSelector), ChangeType(InType) {
+		InitFrame = RangeSelector->LocalPosToFrame(RangeSelector->GetCachedGeometry().AbsoluteToLocal(InitEvent.GetScreenSpacePosition()).X);
+		InitRange = RangeSelector->GetActiveRange();
+	}
+	
+	// Begin FDragDropOperation
+	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual void OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) override;
+	virtual FCursorReply OnCursorQuery() { return FCursorReply::Cursor(EMouseCursor::ResizeLeftRight); }
+	// End FDragDropOperation
 };

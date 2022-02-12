@@ -361,27 +361,22 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 			]
 			+SGridPanel::Slot(1, 0)[
 				SAssignNew(VisibleRange, SFICRangeSelector)
-				.HighlightEnabled(true)
-				.Highlight_Lambda([this]() {
+				.ActiveFrameEnabled(true)
+				.ActiveFrame_Lambda([this]() {
 					return Context->GetCurrentFrame();
 				})
-				.HighlightChanged_Lambda([this](int64 Prev, int64 Cur) {
-					Context->SetCurrentFrame(Cur);
+				.OnActiveFrameChanged_Lambda([this](FICFrame Frame) {
+					Context->SetCurrentFrame(Frame);
 				})
-				.RangeStart_Lambda([this]() {
-					return Context->GetAnimation()->AnimationStart;
+				.FullRange_Lambda([this]() {
+					return Context->GetAnimation()->GetAnimationRange();
 				})
-				.RangeEnd_Lambda([this]() {
-					return Context->GetAnimation()->AnimationEnd;
+				.ActiveRange_Lambda([this]() {
+					return Context->GetActiveRange();
 				})
-				.SelectStart_Lambda([this]() {
-					return ActiveRangeStart;
+				.OnActiveRangeChanged_Lambda([this](FFICFrameRange Range) {
+					Context->SetActiveRange(Range);
 				})
-				.SelectEnd_Lambda([this]() {
-					return ActiveRangeEnd;
-				})
-				.SelectStartChanged(this, &SFICTimelinePanel::ActiveRangeStartChanged)
-				.SelectEndChanged(this, &SFICTimelinePanel::ActiveRangeEndChanged)
 			]
 			+SGridPanel::Slot(1, 1)[
 				SAssignNew(Scrubber, SFICTimelineScrubber)

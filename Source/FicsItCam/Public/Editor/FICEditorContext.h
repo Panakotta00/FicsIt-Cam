@@ -33,8 +33,9 @@ private:
 	UPROPERTY()
 	AFICAnimation* Animation = nullptr;
 
-	UPROPERTY()
-	int64 CurrentFrame = 0;
+	FICFrame CurrentFrame = 0;
+
+	FFICFrameRange ActiveRange;
 
 	UPROPERTY()
 	ACharacter* OriginalCharacter = nullptr;
@@ -91,6 +92,9 @@ public:
 	
 	void SetCurrentFrame(int64 inFrame);
 	int64 GetCurrentFrame() const;
+
+	void SetActiveRange(const FFICFrameRange& InActiveRange);
+	FFICFrameRange GetActiveRange();
 
 	void SetFlySpeed(float Speed);
 	float GetFlySpeed();

@@ -141,6 +141,14 @@ int64 UFICEditorContext::GetCurrentFrame() const {
 	return CurrentFrame;
 }
 
+void UFICEditorContext::SetActiveRange(const FFICFrameRange& InActiveRange) {
+	ActiveRange = InActiveRange;
+}
+
+FFICFrameRange UFICEditorContext::GetActiveRange() {
+	return ActiveRange;
+}
+
 void UFICEditorContext::SetFlySpeed(float Speed) {
 	CameraCharacter->MaxFlySpeed = FMath::Clamp(Speed, 0.0f, 10000.0f);
 }

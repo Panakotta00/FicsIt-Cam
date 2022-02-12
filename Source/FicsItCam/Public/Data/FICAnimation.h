@@ -73,4 +73,8 @@ public:
 
 	float GetEndOfAnimation();
 	float GetStartOfAnimation();
+
+	FFICFrameRange GetAnimationRange() {
+		return FFICFrameRange(AnimationStart, AnimationEnd);
+	}
 };

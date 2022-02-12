@@ -7,6 +7,12 @@ struct FFICFrameRange {
 	FICFrame Begin;
 	FICFrame End;
 
+	FFICFrameRange() : Begin(0), End(1) {}
+	
+	FFICFrameRange(FICFrame InBegin, FICFrame InEnd) {
+		SetRange(InBegin, InEnd);
+	}
+
 	void SetRange(FICFrame InBegin, FICFrame InEnd) {
 		Begin = FMath::Min(InBegin, InEnd);
 		End = FMath::Max(InBegin, InEnd);
@@ -22,6 +28,10 @@ struct FFICFrameRange {
 
 	FICFrame Length() {
 		return FMath::Abs(End - Begin);
+	}
+
+	bool IsInRange(FICFrame Frame) {
+		return Begin <= Frame && Frame <= End;
 	}
 };
 
