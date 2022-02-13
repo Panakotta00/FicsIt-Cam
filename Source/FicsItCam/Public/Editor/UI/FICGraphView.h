@@ -2,28 +2,25 @@
 
 #include "FICKeyframeControl.h"
 #include "Brushes/SlateColorBrush.h"
-
-DECLARE_DELEGATE_TwoParams(FFICGraphViewTimelineRangeChanged, int64 /* New Min Value */, int64 /* New Max Value */)
-DECLARE_DELEGATE_TwoParams(FFICGraphViewValueRangeChanged, float /* New Min Value */, float /* New Max Value */)
+#include "Data/FICTypes.h"
+#include "FICEvents.h"
 
 class SFICGraphView : public SPanel {
 	SLATE_BEGIN_ARGS(SFICGraphView) :
 	_AnimationBrush(&DefaultAnimationBrush),
-	_AutoFit(true),
-	_ValueRangeBegin(-1),
-	_ValueRangeEnd(1) {}
-		SLATE_ATTRIBUTE(int64, Frame)
-		SLATE_ATTRIBUTE(int64, TimelineRangeBegin)
-		SLATE_ATTRIBUTE(int64, TimelineRangeEnd)
-		SLATE_ATTRIBUTE(float, ValueRangeBegin)
-		SLATE_ATTRIBUTE(float, ValueRangeEnd)
-		SLATE_ATTRIBUTE(int64, AnimationStart)
-		SLATE_ATTRIBUTE(int64, AnimationEnd)
-		SLATE_ATTRIBUTE(const FSlateBrush*, AnimationBrush)
+	_AutoFit(true) {}
+		SLATE_ATTRIBUTE(FICFrame, Frame)
+		SLATE_ATTRIBUTE(FFICFrameRange, FrameRange)
+		SLATE_ATTRIBUTE(FFICFrameRange, FrameHighlightRange)
+		SLATE_ATTRIBUTE(FFICValueRange, ValueRange)
+
 		SLATE_ARGUMENT_DEFAULT(bool, AutoFit) = false;
 		SLATE_ARGUMENT(TArray<FFICEditorAttributeBase*>, Attributes)
-		SLATE_EVENT(FFICGraphViewTimelineRangeChanged, OnTimelineRangedChanged)
-		SLATE_EVENT(FFICGraphViewValueRangeChanged, OnValueRangeChanged)
+
+		SLATE_EVENT(FFICFrameRangeChanged, OnFrameRangeChanged)
+		SLATE_EVENT(FFICValueRangeChanged, OnValueRangeChanged)
+	
+		SLATE_ATTRIBUTE(const FSlateBrush*, AnimationBrush)
 	SLATE_END_ARGS()
 
 public:
@@ -34,16 +31,15 @@ private:
 	
 	TSlotlessChildren<SFICKeyframeControl> Children;
 
-	TAttribute<int64> ActiveFrame;
-	TAttribute<int64> TimelineRangeBegin;
-	TAttribute<int64> TimelineRangeEnd;
-	TAttribute<float> ValueRangeBegin;
-	TAttribute<float> ValueRangeEnd;
-	TAttribute<int64> AnimationStart;
-	TAttribute<int64> AnimationEnd;
+	TAttribute<FICFrame> ActiveFrame;
+	TAttribute<FFICFrameRange> FrameRange;
+	TAttribute<FFICFrameRange> FrameHighlightRange;
+	TAttribute<FFICValueRange> ValueRange;
+	
 	TAttribute<const FSlateBrush*> AnimationBrush;
-	FFICGraphViewTimelineRangeChanged OnTimelineRangeChanged;
-	FFICGraphViewValueRangeChanged OnValueRangeChanged;
+
+	FFICFrameRangeChanged OnFrameRangeChanged;
+	FFICValueRangeChanged OnValueRangeChanged;
 
 	TArray<FFICEditorAttributeBase*> Attributes;
 	TMap<FFICEditorAttributeBase*, FDelegateHandle> DelegateHandles;
@@ -74,18 +70,26 @@ public:
 	void Update();
 	void FitAll();
 
-	void SetValueRange(float InBegin, float InEnd) { OnValueRangeChanged.ExecuteIfBound(InBegin, InEnd); }
-	void GetValueRange(float& OutBegin, float& OutEnd) { OutBegin = ValueRangeBegin.IsSet() ? ValueRangeBegin.Get() : 0; OutEnd = ValueRangeEnd.IsSet() ? ValueRangeEnd.Get() : 0; }
-	void SetTimeRange(int64 InBegin, int64 InEnd) { OnTimelineRangeChanged.ExecuteIfBound(InBegin, InEnd); }
-	void GetTimeRange(int64& OutBegin, int64& OutEnd) { OutBegin = TimelineRangeBegin.IsSet() ? TimelineRangeBegin.Get() : 0; OutEnd = TimelineRangeEnd.IsSet() ? TimelineRangeEnd.Get() : 0; }
+	void SetValueRange(const FFICValueRange& InRange) {
+		bool _ = OnValueRangeChanged.ExecuteIfBound(InRange);
+	}
+	FFICValueRange GetValueRange() {
+		return ValueRange.Get();
+	}
+	void SetFrameRange(const FFICFrameRange& InRange) {
+		bool _ = OnFrameRangeChanged.ExecuteIfBound(InRange);
+	}
+	FFICFrameRange GetFrameRange() {
+		return FrameRange.Get();
+	}
 
-	int64 LocalToFrame(float Local) const;
-	float LocalToValue(float Local) const;
-	float FrameToLocal(int64 InFrame) const;
-	float ValueToLocal(float Value) const;
+	FICFrame LocalToFrame(float Local) const;
+	FICValue LocalToValue(float Local) const;
+	float FrameToLocal(FICFrame InFrame) const;
+	float ValueToLocal(FICValue Value) const;
 	float GetFramePerLocal() const;
 	float GetValuePerLocal() const;
-	FVector2D FrameAttributeToLocal(const FFICEditorAttributeBase* InAttribute, int64 InFrame) const;
+	FVector2D FrameAttributeToLocal(const FFICEditorAttributeBase* InAttribute, FICFrame InFrame) const;
 
-	TSharedPtr<SFICKeyframeControl> FindKeyframeControl(const FFICEditorAttributeBase* InAttribute, int64 InFrame);
+	TSharedPtr<SFICKeyframeControl> FindKeyframeControl(const FFICEditorAttributeBase* InAttribute, FICFrame InFrame);
 };

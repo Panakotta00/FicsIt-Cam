@@ -8,14 +8,14 @@ class FFICGraphDragDrop : public FDragDropOperation {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICGraphDragDrop, FDragDropOperation)
 
-	TSharedRef<SFICGraphView> GraphView;
-	FVector2D KommulativeDelta;
+	TSharedPtr<SFICGraphView> GraphView;
+	FVector2D KommulativeDelta = FVector2D::ZeroVector;
 
 	int64 TimelineStart;
 	float ValueStart;
 	
-	int64 TimelineDiff;
-	float ValueDiff;
+	int64 TimelineDiff = 0;
+	float ValueDiff = 0.0f;
 
 
 	FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent);
@@ -41,8 +41,8 @@ class FFICGraphKeyframeDragDrop : public FFICGraphDragDrop {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICGraphKeyframeDragDrop, FFICGraphDragDrop)
 
-	TSharedRef<SFICKeyframeControl> KeyframeControl;
-	TSharedRef<FFICAttribute> AttribBegin;
+	TSharedPtr<SFICKeyframeControl> KeyframeControl;
+	TSharedPtr<FFICAttribute> AttribBegin;
 
 	FFICGraphKeyframeDragDrop(TSharedRef<SFICGraphView> GraphView, TSharedRef<SFICKeyframeControl> KeyframeControl, FPointerEvent InitEvent) : FFICGraphDragDrop(GraphView, InitEvent), KeyframeControl(KeyframeControl) {
 		AttribBegin = KeyframeControl->GetAttribute()->GetAttribute()->Get();
@@ -62,8 +62,8 @@ class FFICGraphKeyframeHandleDragDrop : public FFICGraphDragDrop {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICGraphKeyframeHandleDragDrop, FFICGraphDragDrop)
 
-	TSharedRef<SFICKeyframeHandle> KeyframeHandle;
-	TSharedRef<FFICAttribute> AttribBegin;
+	TSharedPtr<SFICKeyframeHandle> KeyframeHandle;
+	TSharedPtr<FFICAttribute> AttribBegin;
 
 	FFICGraphKeyframeHandleDragDrop(TSharedRef<SFICKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent);
 

@@ -1,5 +1,7 @@
 ﻿#include "Editor/UI/FICTimelineScrubber.h"
 
+#include "FicsItCamModule.h"
+
 FSlateColorBrush SFICTimelineScrubber::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 FSlateColorBrush SFICTimelineScrubber::DefaultAnimationBrush = FSlateColorBrush(FColor::FromHex("050505"));
 FLinearColor SFICTimelineScrubber::DefaultIncrementColor = FLinearColor(FColor::FromHex("404040"));
@@ -34,7 +36,12 @@ int32 SFICTimelineScrubber::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	Active.Begin += Increment - Active.Begin % Increment;
 	if (Active.Begin <= 0) Active.Begin -= Increment;
 	FLinearColor IncColor = IncrementColor.Get();
+	int SafetyIncrement = 0;
 	for (int64 i = Active.Begin; i <= Active.End; i += Increment) {
+		if (++SafetyIncrement > 100) {
+			UE_LOG(LogFicsItCam, Error, TEXT("Safety Increment of TimelineScrubber reached!"));
+			break;
+		}
 		float IX = FrameToLocalPos(i);
 		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(IX, 0), FVector2D(IX, AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None,  IncColor, true, 5);
 	}

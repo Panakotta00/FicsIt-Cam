@@ -220,13 +220,11 @@ void SFICKeyframeControl::OnArrangeChildren(const FGeometry& AllottedGeometry, F
 	ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(MainHandle.ToSharedRef(), (FromHandle || ToHandle) ? -MainHandle->GetDesiredSize()/2.0f : FVector2D::ZeroVector, MainHandle->GetDesiredSize(), 1));
 	if (FromHandle || ToHandle) {
 		float TimelinePerLocal, ValuePerLocal;
-		FFICFrameRange TimelineRange;
-		GraphView->GetTimeRange(TimelineRange.Begin, TimelineRange.End);
-		FFICValueRange ValueRange;
-		GraphView->GetValueRange(ValueRange.Begin, ValueRange.End);
-
-		ValuePerLocal = (float)(TimelineRange.Length()) / GraphView->GetCachedGeometry().Size.Y;
-		TimelinePerLocal = (float)(TimelineRange.Length()) / GraphView->GetCachedGeometry().Size.X;
+		FFICFrameRange FrameRange = GraphView->GetFrameRange();
+		FFICValueRange ValueRange = GraphView->GetValueRange();
+		
+		ValuePerLocal = (float)(ValueRange.Length()) / GraphView->GetCachedGeometry().Size.Y;
+		TimelinePerLocal = (float)(FrameRange.Length()) / GraphView->GetCachedGeometry().Size.X;
 
 		TSharedPtr<FFICKeyframe> Keyframe = Attribute.Get()->GetKeyframe(Frame.Get().GetValue());
 

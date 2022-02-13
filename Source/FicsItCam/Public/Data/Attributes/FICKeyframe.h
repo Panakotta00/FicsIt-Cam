@@ -32,10 +32,11 @@ public:
 	virtual FICValue GetValue() const { checkf(false, TEXT("Not Implemented!")); return FICValue(); }
 	virtual FFICValueTimeFloat GetInControl() { checkf(false, TEXT("Not Implemented!")); return FFICValueTimeFloat(); }
 	virtual FFICValueTimeFloat GetOutControl() { checkf(false, TEXT("Not Implemented!")); return FFICValueTimeFloat(); }
+	virtual EFICKeyframeType GetType() { return KeyframeType; }
 	virtual void SetValue(FICValue InValue) { checkf(false, TEXT("Not Implemented!")); }
 	virtual void SetInControl(const FFICValueTimeFloat& InInControl) { checkf(false, TEXT("Not Implemented!")); }
 	virtual void SetOutControl(const FFICValueTimeFloat& InOutControl) { checkf(false, TEXT("Not Implemented!")); }
-	
+	virtual void SetType(EFICKeyframeType Type) { KeyframeType = Type; }
 
 	UPROPERTY(SaveGame)
 	TEnumAsByte<EFICKeyframeType> KeyframeType = FIC_KF_EASE;

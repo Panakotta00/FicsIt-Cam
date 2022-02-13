@@ -21,7 +21,7 @@ class SFICTimelineScrubber : public SLeafWidget {
 	    SLATE_ATTRIBUTE(FFICFrameRange, ActiveRange)
 		SLATE_ATTRIBUTE(FICFrame, ActiveFrame)
 	
-		SLATE_EVENT(FFICRangeChanged, OnActiveRangeChanged)
+		SLATE_EVENT(FFICFrameRangeChanged, OnActiveRangeChanged)
 		SLATE_EVENT(FFICFrameChanged, OnActiveFrameChanged)
 		
 		SLATE_ATTRIBUTE(const FSlateBrush*, BackgroundBrush)
@@ -38,7 +38,7 @@ private:
 	TAttribute<FFICFrameRange> ActiveRange;
 	TAttribute<FICFrame> ActiveFrame;
 
-	FFICRangeChanged OnActiveRangeChanged;
+	FFICFrameRangeChanged OnActiveRangeChanged;
 	FFICFrameChanged OnActiveFrameChanged;
 	
 	TAttribute<const FSlateBrush*> BackgroundBrush;

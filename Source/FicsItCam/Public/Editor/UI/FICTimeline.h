@@ -37,16 +37,12 @@ private:
 	TSharedPtr<SFICTimelineScrubber> Scrubber;
 	TSharedPtr<STreeView<TSharedPtr<FFICEditorAttributeReference>>> AttributeTree;
 	TSharedPtr<SFICGraphView> Graph;
-
-	int64 ActiveRangeStart = 0;
-	int64 ActiveRangeEnd = 0;
-
+	
 	TArray<TSharedPtr<FFICEditorAttributeReference>> Attributes;
 	TArray<FFICEditorAttributeBase*> SelectedLeafAttributes;
 
-	void ActiveRangeStartChanged(int64 Prev, int64 Cur);
-	void ActiveRangeEndChanged(int64 Prev, int64 Cur);
-
+	FFICValueRange ActiveValueRange;
+	
 	void UpdateLeafAttributes();
 
 public:

@@ -12,7 +12,6 @@ FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonUnchecked = FSlateBoxBrush(
 void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context;
 	BackgroundBrush = InArgs._Background;
-
 	
 	DefaultToggleButtonStyle.CheckedImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
 	DefaultToggleButtonStyle.CheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
@@ -24,9 +23,6 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Attribute : Context->All.GetChildAttributes()) {
 		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, Attribute.Value.Get()));
 	}
-
-	ActiveRangeStart = Context->GetAnimation()->AnimationStart;
-	ActiveRangeEnd = Context->GetAnimation()->AnimationEnd;
 
 	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TDefaultNumericTypeInterface<int64>>();
 
@@ -78,10 +74,10 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                SNew(SNumericEntryBox<int64>)
 	                    .TypeInterface(Interface)
 	                    .MaxValue_Lambda([this]() {
-	                        return ActiveRangeEnd-1;
+	                        return Context->GetActiveRange().End-1;
 	                    })
 	                    .MaxSliderValue_Lambda([this]() {
-	                        return ActiveRangeEnd-1;
+	                        return Context->GetActiveRange().End-1;
 	                    })
 	                    .MinValue_Lambda([this]() {
 	                        return Context->GetAnimation()->AnimationStart;
@@ -90,13 +86,17 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                        return Context->GetAnimation()->AnimationStart;
 	                    })
 	                    .Value_Lambda([this]() {
-	                        return ActiveRangeStart;
+	                        return Context->GetActiveRange().Begin;
 	                    })
-	                    .OnValueChanged_Lambda([this](int64 Value) {
-	                        ActiveRangeStart = FMath::Clamp(Value, Context->GetAnimation()->AnimationStart, ActiveRangeEnd-1);
+	                    .OnValueChanged_Lambda([this](FICFrame Value) {
+	                    	FFICFrameRange Range = Context->GetActiveRange();
+	                    	Range.Begin = FMath::Clamp(Value, Context->GetAnimation()->AnimationStart, Context->GetActiveRange().End-1);
+	                        Context->SetActiveRange(Range);
 	                    })
-	                    .OnValueCommitted_Lambda([this](int64 Value, ETextCommit::Type) {
-	                        ActiveRangeStart = FMath::Clamp(Value, Context->GetAnimation()->AnimationStart, ActiveRangeEnd-1);
+	                    .OnValueCommitted_Lambda([this](FICFrame Value, ETextCommit::Type) {
+	                    	FFICFrameRange Range = Context->GetActiveRange();
+	                    	Range.Begin = FMath::Clamp(Value, Context->GetAnimation()->AnimationStart, Context->GetActiveRange().End-1);
+	                        Context->SetActiveRange(Range);
 	                    })
 	                    .AllowSpin(true)
 	                ]
@@ -260,19 +260,23 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                        return Context->GetAnimation()->AnimationEnd;
 	                    })
 	                    .MinValue_Lambda([this]() {
-	                        return ActiveRangeStart+1;
+	                        return Context->GetActiveRange().Begin+1;
 	                    })
 	                    .MinSliderValue_Lambda([this]() {
-	                        return ActiveRangeStart+1;
+	                        return Context->GetActiveRange().Begin+1;
 	                    })
 	                    .Value_Lambda([this]() {
-	                        return ActiveRangeEnd;
+	                        return Context->GetActiveRange().End;
 	                    })
-	                    .OnValueChanged_Lambda([this](int64 Value) {
-	                        ActiveRangeEnd = FMath::Clamp(Value, ActiveRangeStart+1, Context->GetAnimation()->AnimationEnd);
+	                    .OnValueChanged_Lambda([this](FICFrame Value) {
+	                    	FFICFrameRange Range = Context->GetActiveRange();
+	                        Range.End = FMath::Clamp(Value, Range.Begin+1, Context->GetAnimation()->AnimationEnd);
+	                    	Context->SetActiveRange(Range);
 	                    })
-	                    .OnValueCommitted_Lambda([this](int64 Value, ETextCommit::Type) {
-	                        ActiveRangeEnd = FMath::Clamp(Value, ActiveRangeStart+1, Context->GetAnimation()->AnimationEnd);
+	                    .OnValueCommitted_Lambda([this](FICFrame Value, ETextCommit::Type) {
+	                    	FFICFrameRange Range = Context->GetActiveRange();
+	                        Range.End = FMath::Clamp(Value, Range.Begin+1, Context->GetAnimation()->AnimationEnd);
+	                    	Context->SetActiveRange(Range);
 	                    })
 	                    .AllowSpin(true)
 	                ]
@@ -403,21 +407,20 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 				.Frame_Lambda([this]() {
 					return Context->GetCurrentFrame();
 				})
-				.TimelineRangeBegin_Lambda([this]() {
-					return ActiveRangeStart;
+				.FrameRange_Lambda([this]() {
+					return Context->GetActiveRange();
 				})
-				.TimelineRangeEnd_Lambda([this]() {
-					return ActiveRangeEnd;
+				.FrameHighlightRange_Lambda([this]() {
+					return Context->GetAnimation()->GetAnimationRange();
 				})
-				.AnimationStart_Lambda([this]() {
-				return Context->GetAnimation()->AnimationStart;
+				.ValueRange_Lambda([this]() {
+					return ActiveValueRange;
 				})
-				.AnimationEnd_Lambda([this]() {
-					return Context->GetAnimation()->AnimationEnd;
+				.OnFrameRangeChanged_Lambda([this](FFICFrameRange Range) {
+					Context->SetActiveRange(Range);
 				})
-				.OnTimelineRangedChanged_Lambda([this](int64 Begin, int64 End) {
-					ActiveRangeStartChanged(ActiveRangeStart, Begin);
-					ActiveRangeEndChanged(ActiveRangeEnd, End);
+				.OnValueRangeChanged_Lambda([this](FFICValueRange Range) {
+					ActiveValueRange = Range;
 				})
 			]
 		]
@@ -426,14 +429,6 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	// TArray<FFICEditorAttributeBase*> Attributes;
 	// Attributes.Add(Context->All.GetAttributes()["X"].Get());
 	// Graph->SetAttributes(Attributes);
-}
-
-void SFICTimelinePanel::ActiveRangeStartChanged(int64 Prev, int64 Cur) {
-	ActiveRangeStart = Cur;
-}
-
-void SFICTimelinePanel::ActiveRangeEndChanged(int64 Prev, int64 Cur) {
-	ActiveRangeEnd = Cur;
 }
 
 void SFICTimelinePanel::UpdateLeafAttributes() {

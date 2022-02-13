@@ -30,3 +30,4 @@ struct FFICAttribute {
 	TSharedPtr<FFICKeyframe> GetNextKeyframe(FICFrame Time, FICFrame& OutTime);
 	TSharedPtr<FFICKeyframe> GetPrevKeyframe(FICFrame Time, FICFrame& OutTime);
 };
+

@@ -25,7 +25,7 @@ class SFICRangeSelector : public SLeafWidget {
 		SLATE_ATTRIBUTE(FICFrame, ActiveFrame)
 		SLATE_ATTRIBUTE(bool, ActiveFrameEnabled)
 	
-		SLATE_EVENT(FFICRangeChanged, OnActiveRangeChanged)
+		SLATE_EVENT(FFICFrameRangeChanged, OnActiveRangeChanged)
 		SLATE_EVENT(FFICFrameChanged, OnActiveFrameChanged)
 
 		SLATE_ATTRIBUTE(const FSlateBrush*, BackgroundBrush)
@@ -44,7 +44,7 @@ private:
 	TAttribute<FICFrame> ActiveFrame;
 	TAttribute<bool> ActiveFrameEnabled;
 	
-	FFICRangeChanged OnActiveRangeChanged;
+	FFICFrameRangeChanged OnActiveRangeChanged;
 	FFICFrameChanged OnActiveFrameChanged;
 	
 	TAttribute<const FSlateBrush*> BackgroundBrush;

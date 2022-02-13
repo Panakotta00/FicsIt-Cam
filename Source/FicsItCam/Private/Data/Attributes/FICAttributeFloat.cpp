@@ -4,7 +4,7 @@
 
 TMap<FICFrame, TSharedRef<FFICKeyframe>> FFICFloatAttribute::GetKeyframes() {
 	TMap<FICFrame, TSharedRef<FFICKeyframe>> OutKeyframes;
-	for (TTuple<long long, FFICFloatKeyframe> Keyframe : Keyframes) OutKeyframes.Add(Keyframe.Key, MakeShared<FFICFloatKeyframe>(Keyframe.Value));
+	for (const TTuple<FICFrame, FFICFloatKeyframe>& Keyframe : Keyframes) OutKeyframes.Add(Keyframe.Key, MakeShared<FFICFloatKeyframeTrampoline>(this, Keyframe.Key));
 	return OutKeyframes;
 }
 
@@ -13,11 +13,12 @@ EFICKeyframeType FFICFloatAttribute::GetAllowedKeyframeTypes() const {
 }
 
 TSharedRef<FFICKeyframe> FFICFloatAttribute::AddKeyframe(FICFrame Time) {
-	if (Keyframes.Contains(Time)) return MakeShared<FFICFloatKeyframe>(Keyframes[Time]);
+	if (Keyframes.Contains(Time)) return MakeShared<FFICFloatKeyframeTrampoline>(this, Time);
 	FFICFloatKeyframe Keyframe;
 	Keyframe.KeyframeType = FIC_KF_EASE;
 	Keyframe.Value = GetValue(Time);
-	return MakeShared<FFICFloatKeyframe>(*SetKeyframe(Time, Keyframe));
+	SetKeyframe(Time, Keyframe);
+	return MakeShared<FFICFloatKeyframeTrampoline>(this, Time);
 }
 
 void FFICFloatAttribute::RemoveKeyframe(FICFrame Time) {
@@ -37,9 +38,9 @@ void FFICFloatAttribute::RecalculateKeyframe(FICFrame Time) {
 	if (!CurrentKeyframe) return;
 
 	FICFrame PTime;
-	FFICFloatKeyframe* PK = StaticCastSharedPtr<FFICFloatKeyframe>(GetPrevKeyframe(Time, PTime)).Get();
+	FFICFloatKeyframe* PK = StaticCastSharedPtr<FFICFloatKeyframeTrampoline>(GetPrevKeyframe(Time, PTime)).Get()->GetKeyframe();
 	int64 NTime;
-	FFICFloatKeyframe* NK = StaticCastSharedPtr<FFICFloatKeyframe>(GetNextKeyframe(Time, NTime)).Get();
+	FFICFloatKeyframe* NK = StaticCastSharedPtr<FFICFloatKeyframeTrampoline>(GetNextKeyframe(Time, NTime)).Get()->GetKeyframe();
 	
 	if (!CurrentKeyframe) return;
 	if (CurrentKeyframe->KeyframeType & (FIC_KF_CUSTOM | FIC_KF_LINEAR | FIC_KF_MIRROR | FIC_KF_STEP) & ~FIC_KF_HANDLES) return;

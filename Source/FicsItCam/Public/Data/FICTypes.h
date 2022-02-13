@@ -3,6 +3,31 @@
 typedef int64 FICFrame;
 typedef float FICFrameFloat;
 
+struct FFICFrameRangeIterator {
+	FICFrame Frame;
+
+	FFICFrameRangeIterator(FICFrame Frame) : Frame(Frame) {}
+
+	FICFrame operator*() { return Frame; }
+	
+	FFICFrameRangeIterator& operator++() {
+		Frame++;
+		return *this;
+	}
+	FFICFrameRangeIterator operator++(int) {
+		FFICFrameRangeIterator tmp = *this;
+		++(*this);
+		return tmp;
+	}
+
+	bool operator==(FFICFrameRangeIterator& Other) {
+		return Frame == Other.Frame;
+	}
+	bool operator!=(FFICFrameRangeIterator& Other) {
+		return Frame != Other.Frame;
+	}
+};
+
 struct FFICFrameRange {
 	FICFrame Begin;
 	FICFrame End;
@@ -41,6 +66,21 @@ struct FFICFrameRange {
 	bool operator!=(const FFICFrameRange& Other) const {
 		return !(*this == Other);
 	}
+
+	FFICFrameRange operator+(FICFrame Frame) const {
+		return FFICFrameRange(Begin + Frame, End + Frame);
+	}
+
+	FFICFrameRange operator-(FICFrame Frame) const {
+		return FFICFrameRange(Begin - Frame, End - Frame);
+	}
+
+	FFICFrameRangeIterator begin() const {
+		return FFICFrameRangeIterator(Begin);
+	}
+	FFICFrameRangeIterator end() const {
+		return FFICFrameRangeIterator(End);
+	}
 };
 
 typedef float FICValue;
@@ -48,6 +88,11 @@ typedef float FICValue;
 struct FFICValueRange {
 	FICValue Begin;
 	FICValue End;
+
+	FFICValueRange() : Begin(-1), End(1) {} 
+	FFICValueRange(FICValue InBegin, FICValue InEnd) {
+		SetRange(InBegin, InEnd);
+	}
 
 	void SetRange(FICValue InBegin, FICValue InEnd) {
 		Begin = FMath::Min(InBegin, InEnd);
@@ -64,6 +109,14 @@ struct FFICValueRange {
 
 	FICValue Length() const {
 		return FMath::Abs(End - Begin);
+	}
+
+	FFICValueRange operator+(FICValue Value) const {
+		return FFICValueRange(Begin + Value, End + Value);
+	}
+
+	FFICValueRange operator-(FICValue Value) const {
+		return FFICValueRange(Begin - Value, End - Value);
 	}
 };
 

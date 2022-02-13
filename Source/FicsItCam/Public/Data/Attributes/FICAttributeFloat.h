@@ -38,6 +38,8 @@ struct FFICFloatKeyframe : public FFICKeyframe {
 USTRUCT(BlueprintType)
 struct FFICFloatAttribute : public FFICAttribute {
 	GENERATED_BODY()
+
+	friend class FFICFloatKeyframeTrampoline;
 public:
 	typedef FFICFloatKeyframe KeyframeType;
 	typedef float ValueType;
@@ -67,4 +69,32 @@ public:
 	FFICFloatKeyframe* SetKeyframe(FICFrame Time, FFICFloatKeyframe Keyframe);
 	float GetValue(FICFrameFloat Time);
 	void SetDefaultValue(float Value) { FallBackValue = Value; }
+};
+
+class FFICFloatKeyframeTrampoline : public FFICKeyframe {
+private:
+	FFICFloatAttribute* Attribute;
+	FICFrame Frame;
+
+public:
+	FFICFloatKeyframeTrampoline(FFICFloatAttribute* Attribute, FICFrame Frame) : Attribute(Attribute), Frame(Frame) {}
+
+	FFICFloatKeyframe* GetKeyframe() const { if (this) return &Attribute->Keyframes[Frame]; return nullptr; }
+	
+	virtual FICValue GetValue() const override { return GetKeyframe()->GetValue(); }
+	virtual void SetValue(FICValue InValue) override { GetKeyframe()->SetValue(InValue); }
+	virtual FFICValueTimeFloat GetInControl() override {
+		return GetKeyframe()->GetInControl();
+	}
+	virtual void SetInControl(const FFICValueTimeFloat& InInControl) override {
+		GetKeyframe()->SetInControl(InInControl);
+	}
+	virtual FFICValueTimeFloat GetOutControl() {
+		return GetKeyframe()->GetOutControl();
+	}
+	virtual void SetOutControl(const FFICValueTimeFloat& InOutControl) override {
+		GetKeyframe()->SetOutControl(InOutControl);
+	}
+	virtual EFICKeyframeType GetType() override { return GetKeyframe()->GetType(); }
+	virtual void SetType(EFICKeyframeType InType) override { return GetKeyframe()->SetType(InType); }
 };

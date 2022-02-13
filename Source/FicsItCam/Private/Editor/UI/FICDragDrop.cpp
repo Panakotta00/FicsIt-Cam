@@ -22,14 +22,12 @@ void FFICGraphDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	KommulativeDelta += CursorDelta;
 	
 	float TimelinePerLocal, ValuePerLocal;
-	int64 TimelineBegin, TimelineEnd;
-	float ValueBegin, ValueEnd;
-	GraphView->GetTimeRange(TimelineBegin, TimelineEnd);
-	GraphView->GetValueRange(ValueBegin, ValueEnd);
+	FFICFrameRange FrameRange = GraphView->GetFrameRange();
+	FFICValueRange ValueRange = GraphView->GetValueRange();
 
-	ValuePerLocal = (float)(ValueEnd - ValueBegin) / GraphView->GetCachedGeometry().Size.Y;
+	ValuePerLocal = (float)ValueRange.Length() / GraphView->GetCachedGeometry().Size.Y;
 	ValueDiff = ValuePerLocal * CursorDelta.Y;
-	TimelinePerLocal = (float)(TimelineEnd - TimelineBegin) / GraphView->GetCachedGeometry().Size.X;
+	TimelinePerLocal = (float)FrameRange.Length() / GraphView->GetCachedGeometry().Size.X;
 	TimelineDiff = TimelinePerLocal * KommulativeDelta.X;
 	KommulativeDelta.X -= (int64)TimelineDiff / TimelinePerLocal;
 }
@@ -37,24 +35,22 @@ void FFICGraphDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 void FFICGraphPanDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FFICGraphDragDrop::OnDragged(DragDropEvent);
 
-	int64 TimelineBegin, TimelineEnd;
-	float ValueBegin, ValueEnd;
-	GraphView->GetTimeRange(TimelineBegin, TimelineEnd);
-	GraphView->GetValueRange(ValueBegin, ValueEnd);
+	FFICFrameRange FrameRange = GraphView->GetFrameRange();
+	FFICValueRange ValueRange = GraphView->GetValueRange();
 
-	GraphView->SetTimeRange(TimelineBegin - TimelineDiff, TimelineEnd - TimelineDiff);
-	GraphView->SetValueRange(ValueBegin + ValueDiff, ValueEnd + ValueDiff);
+	GraphView->SetFrameRange(FrameRange - TimelineDiff);
+	GraphView->SetValueRange(ValueRange + ValueDiff);
 }
 
 void FFICGraphKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FFICGraphDragDrop::OnDragged(DragDropEvent);
 
 	TSharedPtr<FFICKeyframe> Keyframe = KeyframeControl->GetAttribute()->GetKeyframe(KeyframeControl->GetFrame());
-	float NewValue = Keyframe->GetValue() - ValueDiff;
+	FICValue NewValue = Keyframe->GetValue() - ValueDiff;
 	if (DragDropEvent.IsControlDown()) NewValue = ValueStart;
 	Keyframe->SetValue(NewValue);
 	
-	int64 NewFrame = KeyframeControl->GetFrame() + TimelineDiff;
+	FICFrame NewFrame = KeyframeControl->GetFrame() + TimelineDiff;
 	if (DragDropEvent.IsShiftDown()) NewFrame = TimelineStart;
 	FFICAttribute* Attribute = KeyframeControl->GetAttribute()->GetAttribute();
 	Attribute->MoveKeyframe(KeyframeControl->GetFrame(), NewFrame);
@@ -76,14 +72,14 @@ TSharedPtr<SWidget> FFICGraphKeyframeDragDrop::GetDefaultDecorator() const {
 }
 
 FVector2D FFICGraphKeyframeDragDrop::GetDecoratorPosition() const {
-	return FSlateApplication::Get().GetCursorPos() + FVector2D(20, 20);
+                                                    	return FSlateApplication::Get().GetCursorPos() + FVector2D(20, 20);
 }
 
 void FFICGraphKeyframeDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
 	FFICGraphDragDrop::OnDrop(bDropWasHandled, MouseEvent);
 	auto Change = MakeShared<FFICChange_Group>();
 	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(KeyframeControl->Context, TimelineStart, KeyframeControl->GetFrame()));
-	Change->PushChange(MakeShared<FFICChange_Attribute>(KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin));
+	Change->PushChange(MakeShared<FFICChange_Attribute>(KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin.ToSharedRef()));
 	KeyframeControl->Context->ChangeList.PushChange(Change);
 }
 
@@ -95,68 +91,52 @@ void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEv
 	FFICGraphDragDrop::OnDragged(DragDropEvent);
 
 	TSharedPtr<FFICKeyframe> Keyframe = KeyframeHandle->KeyframeControl->GetAttribute()->GetKeyframe(KeyframeHandle->KeyframeControl->GetFrame());
+	FFICValueTimeFloat OldControl;
+	FFICValueTimeFloat NewControl;
 	if (KeyframeHandle->bIsOutHandle) {
-		FFICValueTimeFloat OldControl = Keyframe->GetOutControl();
-		FFICValueTimeFloat NewControl = OldControl;
+		NewControl = OldControl = Keyframe->GetOutControl();
 		NewControl.Frame += TimelineDiff;
 		NewControl.Value -= ValueDiff;
 		Keyframe->SetOutControl(NewControl);
-
-		float TimelinePerLocal = GraphView->GetFramePerLocal();
-		float ValuePerLocal = GraphView->GetValuePerLocal();
-
-		switch (Keyframe->KeyframeType) {
-		case FIC_KF_EASE:
-			Keyframe->KeyframeType = FIC_KF_MIRROR;
-		case FIC_KF_MIRROR: {
-			FVector2D OldVector(OldControl.Frame/TimelinePerLocal, OldControl.Value/ValuePerLocal);
-			FVector2D NewVector(NewControl.Frame/TimelinePerLocal, NewControl.Value/ValuePerLocal);
-			OldVector.Normalize();
-			NewVector.Normalize();
-			float Angle = FMath::RadiansToDegrees(FMath::Atan2(OldVector.Y, OldVector.X) - FMath::Atan2(NewVector.Y, NewVector.X));
-			if (FMath::IsNaN(Angle)) break;
-			Keyframe->GetInControl().Get(OldVector.X, OldVector.Y);
-			OldVector.X /= TimelinePerLocal;
-			OldVector.Y /= ValuePerLocal;
-			NewVector = OldVector.GetRotated(-Angle);
-			if (FMath::IsNaN(NewVector.X) || FMath::IsNaN(NewVector.Y)) break;
-			Keyframe->SetInControl(FFICValueTimeFloat(NewVector.X*TimelinePerLocal, NewVector.Y*ValuePerLocal));
-			break;
-		}
-		case FIC_KF_EASEINOUT:
-			Keyframe->KeyframeType = FIC_KF_CUSTOM;
-		}
 	} else {
-		FFICValueTimeFloat OldControl = Keyframe->GetInControl();
-		FFICValueTimeFloat NewControl = OldControl;
-		float Ratio = OldControl.Frame/OldControl.Value;
+		NewControl = OldControl = Keyframe->GetInControl();
 		NewControl.Frame -= TimelineDiff;
 		NewControl.Value += ValueDiff;
 		Keyframe->SetInControl(NewControl);
+	}
+	
+	float TimelinePerLocal = GraphView->GetFramePerLocal();
+	float ValuePerLocal = GraphView->GetValuePerLocal();
 
-		float TimelinePerLocal = GraphView->GetFramePerLocal();
-		float ValuePerLocal = GraphView->GetValuePerLocal();
+	FVector2D NewVector = FVector2D(NewControl.Frame/TimelinePerLocal, NewControl.Value/ValuePerLocal);
+	bool bNewVector = false;
 
-		switch (Keyframe->KeyframeType) {
-		case FIC_KF_EASE:
-			Keyframe->KeyframeType = FIC_KF_MIRROR;
-		case FIC_KF_MIRROR: {
-			FVector2D OldVector(OldControl.Frame/TimelinePerLocal, OldControl.Value/ValuePerLocal);
-			FVector2D NewVector(NewControl.Frame/TimelinePerLocal, NewControl.Value/ValuePerLocal);
-			OldVector.Normalize();
-			NewVector.Normalize();
-			float Angle = FMath::RadiansToDegrees(FMath::Atan2(OldVector.Y, OldVector.X) - FMath::Atan2(NewVector.Y, NewVector.X));
-			if (FMath::IsNaN(Angle)) break;
-			Keyframe->GetOutControl().Get(OldVector.X, OldVector.Y);
-			OldVector.X /= TimelinePerLocal;
-			OldVector.Y /= ValuePerLocal;
-			NewVector = OldVector.GetRotated(-Angle);
-			if (FMath::IsNaN(NewVector.X) || FMath::IsNaN(NewVector.Y)) break;
+	switch (Keyframe->GetType()) {
+	case FIC_KF_EASE:
+		Keyframe->SetType(FIC_KF_MIRROR);
+	case FIC_KF_MIRROR: {
+		FVector2D OldVector(OldControl.Frame/TimelinePerLocal, OldControl.Value/ValuePerLocal);
+		OldVector.Normalize();
+		NewVector.Normalize();
+		float Angle = FMath::RadiansToDegrees(FMath::Atan2(OldVector.Y, OldVector.X) - FMath::Atan2(NewVector.Y, NewVector.X));
+		if (FMath::IsNaN(Angle)) break;
+		Keyframe->GetInControl().Get(OldVector.X, OldVector.Y);
+		OldVector.X /= TimelinePerLocal;
+		OldVector.Y /= ValuePerLocal;
+		NewVector = OldVector.GetRotated(-Angle);
+		if (FMath::IsNaN(NewVector.X) || FMath::IsNaN(NewVector.Y)) break;
+		bNewVector = true;
+		break;
+	}
+	case FIC_KF_EASEINOUT:
+		Keyframe->SetType(FIC_KF_CUSTOM);
+	default: ;
+	}
+	if (bNewVector) {
+		if (KeyframeHandle->bIsOutHandle) {
+			Keyframe->SetInControl(FFICValueTimeFloat(NewVector.X*TimelinePerLocal, NewVector.Y*ValuePerLocal));
+		} else {
 			Keyframe->SetOutControl(FFICValueTimeFloat(NewVector.X*TimelinePerLocal, NewVector.Y*ValuePerLocal));
-			break;
-		}
-		case FIC_KF_EASEINOUT:
-			Keyframe->KeyframeType = FIC_KF_CUSTOM;
 		}
 	}
 }
@@ -165,6 +145,6 @@ void FFICGraphKeyframeHandleDragDrop::OnDrop(bool bDropWasHandled, const FPointe
 	FFICGraphDragDrop::OnDrop(bDropWasHandled, MouseEvent);
 	auto Change = MakeShared<FFICChange_Group>();
 	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(KeyframeHandle->KeyframeControl->Context, TimelineStart, KeyframeHandle->KeyframeControl->GetFrame()));
-	Change->PushChange(MakeShared<FFICChange_Attribute>(KeyframeHandle->KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin));
+	Change->PushChange(MakeShared<FFICChange_Attribute>(KeyframeHandle->KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin.ToSharedRef()));
 	KeyframeHandle->KeyframeControl->Context->ChangeList.PushChange(Change);
 }
