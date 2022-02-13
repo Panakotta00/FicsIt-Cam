@@ -1,10 +1,8 @@
 ﻿#pragma once
 
+#include "FICEvents.h"
 #include "SlateBasics.h"
 #include "Data/FICTypes.h"
-
-DECLARE_DELEGATE_OneParam(FFICRangeChanged, FFICFrameRange)
-DECLARE_DELEGATE_OneParam(FFICFrameChanged, FICFrame)
 
 class SFICRangeSelector : public SLeafWidget {
 	static FSlateColorBrush DefaultBackgroundBrush;
@@ -113,7 +111,6 @@ public:
 	
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
-	virtual void OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) override;
-	virtual FCursorReply OnCursorQuery() { return FCursorReply::Cursor(EMouseCursor::ResizeLeftRight); }
+	virtual FCursorReply OnCursorQuery() override { return FCursorReply::Cursor(EMouseCursor::ResizeLeftRight); }
 	// End FDragDropOperation
 };

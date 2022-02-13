@@ -26,12 +26,20 @@ struct FFICFrameRange {
 		OutEnd = End;
 	}
 
-	FICFrame Length() {
+	FICFrame Length() const {
 		return FMath::Abs(End - Begin);
 	}
 
-	bool IsInRange(FICFrame Frame) {
+	bool IsInRange(FICFrame Frame) const {
 		return Begin <= Frame && Frame <= End;
+	}
+
+	bool operator==(const FFICFrameRange& Other) const {
+		return Begin == Other.Begin && End == Other.End;
+	}
+
+	bool operator!=(const FFICFrameRange& Other) const {
+		return !(*this == Other);
 	}
 };
 
@@ -49,12 +57,12 @@ struct FFICValueRange {
 		}
 	}
 
-	void GetRange(FICValue& OutBegin, FICValue& OutEnd) {
+	void GetRange(FICValue& OutBegin, FICValue& OutEnd) const {
 		OutBegin = Begin;
 		OutEnd = End;
 	}
 
-	FICValue Length() {
+	FICValue Length() const {
 		return FMath::Abs(End - Begin);
 	}
 };
@@ -74,7 +82,7 @@ struct FFICValueTimeFloat {
 	FFICValueTimeFloat() = default;
 	FFICValueTimeFloat(FICFrameFloat InFrame, FICValue InValue) : Frame(InFrame), Value(InValue) {}
 	
-	void Get(FICFrameFloat& OutFrame, FICValue& OutValue) {
+	void Get(FICFrameFloat& OutFrame, FICValue& OutValue) const {
 		OutFrame = Frame;
 		OutValue = Value;
 	}

@@ -380,23 +380,17 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 			]
 			+SGridPanel::Slot(1, 1)[
 				SAssignNew(Scrubber, SFICTimelineScrubber)
-				.Frame_Lambda([this]() {
+				.ActiveFrame_Lambda([this]() {
 					return Context->GetCurrentFrame();
 				})
-				.FrameChanged_Lambda([this](int64 Prev, int64 Cur) {
+				.OnActiveFrameChanged_Lambda([this](FICFrame Cur) {
 					Context->SetCurrentFrame(Cur);
 				})
-				.RangeStart_Lambda([this]() {
-		            return ActiveRangeStart;
+				.ActiveRange_Lambda([this]() {
+		            return Context->GetActiveRange();
 		        })
-		        .RangeEnd_Lambda([this]() {
-		            return ActiveRangeEnd;
-		        })
-		        .AnimationStart_Lambda([this]() {
-			        return Context->GetAnimation()->AnimationStart;
-		        })
-		        .AnimationEnd_Lambda([this]() {
-			        return Context->GetAnimation()->AnimationEnd;
+		        .FullRange_Lambda([this]() {
+		            return Context->GetAnimation()->GetAnimationRange();
 		        })
 			]
 			+SGridPanel::Slot(1, 2)

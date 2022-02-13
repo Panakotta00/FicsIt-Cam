@@ -64,7 +64,8 @@ FReply SFICRangeSelector::OnMouseButtonDown(const FGeometry& MyGeometry, const F
 }
 
 FReply SFICRangeSelector::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	FICFrame Frame = LocalPosToFrame(MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).X);
+	float LocalPos = MyGeometry.AbsoluteToLocal(MouseEvent.GetLastScreenSpacePosition()).X;
+	FICFrame Frame = LocalPosToFrame(LocalPos);
 	SetActiveFrame(Frame);
 	return FReply::Handled();
 }
@@ -101,31 +102,23 @@ FCursorReply SFICRangeSelector::OnCursorQuery(const FGeometry& MyGeometry, const
 }
 
 FReply SFICRangeSelector::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	/*float Delta = MouseEvent.GetWheelDelta();
+	float Delta = MouseEvent.GetWheelDelta();
 	if (!MouseEvent.GetModifierKeys().IsControlDown()) {
-		int64 Range = FullRange.Get().End - FullRange.Get().Begin;
+		int64 Range = FullRange.Get().Length();
 		while (Range > 300) {
 			Range /= 10;
 			Delta *= 10;
 		}
 	}
-	int64 NewEnd = ;
-	int64 NewStart = SelectStart;
-	NewEnd += MouseEvent.GetWheelDelta();
+
+	FFICFrameRange NewRange = ActiveRange.Get();
+	NewRange.End += MouseEvent.GetWheelDelta();
 	if (MouseEvent.GetModifierKeys().IsControlDown()) {
-		NewStart -= Delta;
+		NewRange.Begin -= Delta;
 	} else {
-		NewStart += Delta;
+		NewRange.Begin += Delta;
 	}
-	if (Delta > 0) {
-		SetSelectEnd(NewEnd);
-		SetSelectStart(NewStart);
-	} else {
-		SetSelectStart(NewStart);
-		SetSelectEnd(NewEnd);
-	}
-	return FReply::Handled();*/
-	// TODO: Mouse Wheel Support!
+	SetActiveRange(NewRange);
 	return FReply::Handled();
 }
 
@@ -196,10 +189,6 @@ void FFICRangeSelectorDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 		break;
 	default: ;
 	}
-	if (bNewRange) RangeSelector->SetActiveRange(FFICFrameRange(NewRange.Begin, NewRange.End));
-	if (bNewFrame) RangeSelector->SetActiveFrame(NewFrame);
-}
-
-void FFICRangeSelectorDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
-	FDragDropOperation::OnDrop(bDropWasHandled, MouseEvent);
+	if (bNewRange && NewRange != RangeSelector->GetActiveRange()) RangeSelector->SetActiveRange(FFICFrameRange(NewRange.Begin, NewRange.End));
+	if (bNewFrame && NewFrame != RangeSelector->GetActiveFrame()) RangeSelector->SetActiveFrame(NewFrame);
 }
