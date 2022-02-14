@@ -47,3 +47,19 @@ void FFICGroupAttribute::RecalculateKeyframe(FICFrame Time) {
 		if (Attrib) Attrib->RecalculateKeyframe(Time);
 	}
 }
+
+void FFICGroupAttribute::Set(TSharedRef<FFICAttribute> InAttrib) {
+	TSharedRef<FFICGroupAttribute> Attrib = StaticCastSharedRef<FFICGroupAttribute>(InAttrib);
+	for (const TPair<FString, TAttribute<FFICAttribute*>>& Attr : Children) {
+		TSharedRef<FFICAttribute>* Attribute = Attrib->AttributeCache.Find(Attr.Key);
+		if (Attribute) Attr.Value.Get()->Set(*Attribute);
+	}
+}
+
+TSharedRef<FFICAttribute> FFICGroupAttribute::Get() {
+	TSharedRef<FFICGroupAttribute> Attrib = MakeShared<FFICGroupAttribute>();
+	for (const TPair<FString, TAttribute<FFICAttribute*>>& Attr : Children) {
+		Attrib->AttributeCache.Add(Attr.Key, Attr.Value.Get()->Get());
+	}
+	return Attrib;
+}

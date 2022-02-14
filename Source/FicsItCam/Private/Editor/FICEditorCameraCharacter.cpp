@@ -139,7 +139,7 @@ void AFICEditorCameraCharacter::BeginPlay() {
 	UCharacterMovementComponent* Mov = GetCharacterMovement();
 	Mov->GravityScale = 0;
 	Mov->bUseSeparateBrakingFriction = true;
-	Mov->BrakingFriction = 10;
+	Mov->BrakingFriction = 1000000;
 
 	CameraActor = GetWorld()->SpawnActor<AFICEditorCameraActor>();
 	CameraActor->SetActorTransform(GetActorTransform());

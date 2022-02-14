@@ -120,8 +120,10 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			if (Context->PosX.GetKeyframe(Time) && Context->PosY.GetKeyframe(Time) && Context->PosZ.GetKeyframe(Time) && Context->RotPitch.GetKeyframe(Time) && Context->RotYaw.GetKeyframe(Time) && Context->RotRoll.GetKeyframe(Time) && Context->FOV.GetKeyframe(Time) &&
                 !Context->PosX.HasChanged(Time) && !Context->PosY.HasChanged(Time) && !Context->PosZ.HasChanged(Time) && !Context->RotPitch.HasChanged(Time) && !Context->RotYaw.HasChanged(Time) && !Context->RotRoll.HasChanged(Time) && !Context->FOV.HasChanged(Time)) {
 				Context->All.RemoveKeyframe(Time);
+            	Context->All.UpdateValue(Time);
             } else {
                 Context->All.SetKeyframe(Time);
+            	Context->All.UpdateValue(Time);
             }
 			END_ATTRIB_CHANGE(Change)
 			END_ATTRIB_CHANGE(Change)

@@ -6,6 +6,8 @@
 USTRUCT(BlueprintType)
 struct FFICGroupAttribute : public FFICAttribute {
 	GENERATED_BODY()
+private:
+	TMap<FString, TSharedRef<FFICAttribute>> AttributeCache;
 
 public:
 	TMap<FString, TAttribute<FFICAttribute*>> Children;
@@ -19,5 +21,8 @@ public:
 	virtual void RemoveKeyframe(FICFrame Time) override;
 	virtual void MoveKeyframe(FICFrame From, FICFrame To) override;
 	virtual void RecalculateKeyframe(FICFrame Time) override;
+
+	virtual void Set(TSharedRef<FFICAttribute> InAttrib) override;
+	virtual TSharedRef<FFICAttribute> Get() override;
 	// End FFICAttribute
 };

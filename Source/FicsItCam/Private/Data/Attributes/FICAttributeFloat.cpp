@@ -23,6 +23,7 @@ TSharedRef<FFICKeyframe> FFICFloatAttribute::AddKeyframe(FICFrame Time) {
 
 void FFICFloatAttribute::RemoveKeyframe(FICFrame Time) {
 	Keyframes.Remove(Time);
+	OnUpdate.Broadcast();
 }
 
 void FFICFloatAttribute::MoveKeyframe(FICFrame From, FICFrame To) {
@@ -100,6 +101,7 @@ void FFICFloatAttribute::RecalculateKeyframe(FICFrame Time) {
 			}
 		}
 	}
+	OnUpdate.Broadcast();
 }
 
 void FFICFloatAttribute::Set(TSharedRef<FFICAttribute> InAttrib) {
@@ -118,6 +120,7 @@ TSharedRef<FFICAttribute> FFICFloatAttribute::Get() {
 FFICFloatKeyframe* FFICFloatAttribute::SetKeyframe(FICFrame Time, FFICFloatKeyframe Keyframe) {
 	FFICFloatKeyframe* KF = &Keyframes.FindOrAdd(Time);
 	*KF = Keyframe;
+	OnUpdate.Broadcast();
 	return KF;
 }
 

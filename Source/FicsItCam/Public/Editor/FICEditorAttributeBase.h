@@ -88,13 +88,16 @@ private:
 public:
 	TFICEditorAttribute(TAttribute<AttribType*> inAttribute = nullptr, FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged(), FLinearColor GraphColor = FColor::White) : FFICEditorAttributeBase(OnValueChanged, GraphColor) {
 		Attribute = inAttribute;
-		if (Attribute.Get()) CurrentValue = Attribute.Get()->GetValue(0);
+		if (Attribute.Get()) {
+			CurrentValue = Attribute.Get()->GetValue(0);
+		}
 	}
 	
 	// Begin FFICEditorAttributeBase
 	virtual void SetKeyframe(int64 Time) override {
 		if (!Attribute.Get()) return;
-		typename AttribType::KeyframeType& KF = StaticCastSharedRef<AttribType::KeyframeType>(Attribute.Get()->AddKeyframe(Time)).Get();
+		Attribute.Get()->AddKeyframe(Time);
+		typename AttribType::KeyframeType& KF = *Attribute.Get()->GetKeyframe(Time);
 		KF.Value = CurrentValue;
 		Attribute.Get()->RecalculateAllKeyframes();
 	}
@@ -119,11 +122,11 @@ public:
 	}
 
 	virtual void SetKeyframe(FFICValueTime InValueFrame, EFICKeyframeType InType = FIC_KF_EASE, bool bCreate = true) override {
-		TSharedPtr<FFICKeyframe> Keyframe = GetKeyframe(InValueFrame.Frame);
+		typename AttribType::KeyframeType* Keyframe = Attribute.Get()->GetKeyframe(InValueFrame.Frame);
 		if (!bCreate && !Keyframe) return;
-		AttribType::KeyframeType NewKeyframe;
+		typename AttribType::KeyframeType NewKeyframe;
 		if (Keyframe) {
-			NewKeyframe = *StaticCastSharedPtr<AttribType::KeyframeType>(Keyframe);
+			NewKeyframe = *Keyframe;
 			NewKeyframe.Value = InValueFrame.Value;
 			NewKeyframe.KeyframeType = InType;
 		} else {

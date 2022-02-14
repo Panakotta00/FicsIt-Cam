@@ -65,6 +65,8 @@ public:
 	virtual void Set(TSharedRef<FFICAttribute> InAttrib) override;
 	virtual TSharedRef<FFICAttribute> Get() override;
 	// End FFICAttribute
+
+	virtual FFICFloatKeyframe* GetKeyframe(FICFrame Time) { return Keyframes.Find(Time); }
 	
 	FFICFloatKeyframe* SetKeyframe(FICFrame Time, FFICFloatKeyframe Keyframe);
 	float GetValue(FICFrameFloat Time);
