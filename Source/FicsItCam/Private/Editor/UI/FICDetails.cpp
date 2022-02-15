@@ -2,11 +2,12 @@
 
 #include "FICUtils.h"
 #include "Data/Attributes/FICAttributeFloat.h"
-#include "Editor/FICEditorAttributeBase.h"
+#include "Data/Objects/FICSceneObject.h"
 #include "Editor/FICEditorContext.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Editor/UI/FICKeyframeControl.h"
 #include "Editor/UI/FICVectorEditor.h"
+#include "Widgets/Layout/SExpandableArea.h"
 
 FSlateColorBrush SFICDetails::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 
@@ -55,6 +56,8 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context;
 	BackgroundBrush = InArgs._Background;
 
+	TSharedPtr<SVerticalBox> Outliner;
+
 	ChildSlot[
 		SNew(SOverlay)
 		+SOverlay::Slot()[
@@ -63,146 +66,8 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 		]
 		+SOverlay::Slot()[
 			SNew(SVerticalBox)
-			+SVerticalBox::Slot().Padding(5).AutoHeight()[
-				SNew(STextBlock)
-				.Text(FText::FromString("Details:"))
-			]
-			+SVerticalBox::Slot().Padding(5).AutoHeight()[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(STextBlock)
-					.Text(FText::FromString(TEXT("All Keyframe:")))
-					.ToolTipText(FText::FromString(FString::Printf(TEXT("Allows you to manipulate the keyframes of all attributes at the current frame.\n\nToggle All Keyframes: %s\nGo-To Next Keyframe: %s\nGo-To Previous Keyframe: %s"), *UFICUtils::KeymappingToString("FicsItCam.ToggleAllKeyframes"), *UFICUtils::KeymappingToString("FicsItCam.NextKeyframe"), *UFICUtils::KeymappingToString("FicsItCam.PrevKeyframe"))))
-				]
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(SFICKeyframeControl, Context)
-					.Attribute_Lambda([this]() -> FFICEditorAttributeBase* {
-						return &Context->All;
-					})
-					.Frame_Lambda([this]() {
-						return Context->GetCurrentFrame();
-					})
-				]
-			]
-			+SVerticalBox::Slot().Padding(5).AutoHeight()[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(STextBlock)
-					.Text(FText::FromString("Position"))
-				]
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(SFICKeyframeControl, Context)
-					.Attribute_Lambda([this]() -> FFICEditorAttributeBase* {
-						return &Context->Pos;
-					})
-					.Frame_Lambda([this]() {
-						return Context->GetCurrentFrame();
-					})
-				]
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(STextBlock)
-					.Text(FText::FromString(":"))
-				]
-				+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
-					SNew(SFICVectorEditor, Context)
-					.ShowKeyframeControls(true)
-					.XAttr_Lambda([this]() {
-						return &Context->PosX;
-					})
-					.YAttr_Lambda([this]() {
-						return &Context->PosY;
-					})
-					.ZAttr_Lambda([this]() {
-						return &Context->PosZ;
-					})
-					.Frame_Lambda([this]() {
-						return Context->GetCurrentFrame();
-					})
-					.AutoKeyframe_Lambda([this]() {
-						return Context->bAutoKeyframe;
-					})
-				]
-			]
-			+SVerticalBox::Slot().Padding(5).AutoHeight()[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(STextBlock)
-					.Text(FText::FromString("Rotation"))
-				]
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(SFICKeyframeControl, Context)
-					.Attribute_Lambda([this]() -> FFICEditorAttributeBase* {
-						return &Context->Rot;
-					})
-					.Frame_Lambda([this]() {
-						return Context->GetCurrentFrame();
-					})
-				]
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(STextBlock)
-					.Text(FText::FromString(":"))
-				]
-				+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
-					SNew(SFICVectorEditor, Context)
-					.ShowKeyframeControls(true)
-					.XAttr_Lambda([this]() {
-						return &Context->RotPitch;
-					})
-					.YAttr_Lambda([this]() {
-						return &Context->RotYaw;
-					})
-					.ZAttr_Lambda([this]() {
-						return &Context->RotRoll;
-					})
-					.AutoKeyframe_Lambda([this]() {
-						return Context->bAutoKeyframe;
-					})
-				]
-			]
-			+SVerticalBox::Slot().Padding(5).AutoHeight()[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(STextBlock)
-					.Text(FText::FromString("FOV:"))
-				]
-				+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
-					SNew(SNumericEntryBox<float>)
-					.Value_Lambda([this]() {
-						return Context->FOV.GetValue();
-					})
-					.SupportDynamicSliderMaxValue(true)
-					.SupportDynamicSliderMinValue(true)
-					.SliderExponent(1)
-					.Delta(1)
-					.MinValue(TOptional<float>())
-					.MaxValue(TOptional<float>())
-					.MinSliderValue(TOptional<float>())
-					.MaxSliderValue(TOptional<float>())
-					.LinearDeltaSensitivity(10)
-					.AllowSpin(true)
-					.OnValueChanged_Lambda([this](float Val) {
-						Context->FOV.SetValue(Val);
-					})
-					.OnValueCommitted_Lambda([this](float Val, auto) {
-						Context->FOV.SetValue(Val);
-					})
-					.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
-				]
-				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-					SNew(SFICKeyframeControl, Context)
-					.Attribute_Lambda([this]() {
-						return &Context->FOV;
-					})
-					.Frame_Lambda([this]() {
-						return Context->GetCurrentFrame();
-					})
-				]
-			]
-			+SVerticalBox::Slot().Padding(5).AutoHeight()[
-				ScalarAttribute(Context, Context->Aperture, TEXT("Aperture:"))
-			]
-			+SVerticalBox::Slot().Padding(5).AutoHeight()[
-				ScalarAttribute(Context, Context->FocusDistance, TEXT("Focus Distance:"))
+			+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Fill)[
+				SAssignNew(Outliner, SVerticalBox)
 			]
 			+SVerticalBox::Slot().Padding(5).AutoHeight()[
 				SNew(SHorizontalBox)
@@ -216,10 +81,10 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						SNew(SCheckBox)
 						.Content()[SNew(STextBlock).Text(FText::FromString("Use Cinematic Camera"))]
 						.IsChecked_Lambda([this]() {
-							return Context->GetAnimation()->bUseCinematic ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+							return Context->GetScene()->bUseCinematic ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 						})
 						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
-							Context->GetAnimation()->bUseCinematic = State == ECheckBoxState::Checked;
+							Context->GetScene()->bUseCinematic = State == ECheckBoxState::Checked;
 						})
 						.ToolTipText(FText::FromString(TEXT("If enabled, tries to use a more fancy camera which f.e. can do Depth-Of-Field,\ntho it will require more performance hence using it in combination with the play command is not reccomended.")))
 					]
@@ -227,10 +92,10 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						SNew(SCheckBox)
 						.Content()[SNew(STextBlock).Text(FText::FromString("Bullet Time"))]
 						.IsChecked_Lambda([this]() {
-							return Context->GetAnimation()->bBulletTime ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+							return Context->GetScene()->bBulletTime ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 						})
 						.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
-							Context->GetAnimation()->bBulletTime = State == ECheckBoxState::Checked;
+							Context->GetScene()->bBulletTime = State == ECheckBoxState::Checked;
 						})
 						.ToolTipText(FText::FromString(TEXT("If enabled, game simulation will pause allowing you to have a bullet time effect.")))
 					]
@@ -242,7 +107,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						+SHorizontalBox::Slot().FillWidth(1)[
 							SNew(SNumericEntryBox<int>)
 							.Value_Lambda([this]() {
-								return Context->GetAnimation()->FPS;
+								return Context->GetScene()->FPS;
 							})
 							.SupportDynamicSliderMaxValue(true)
 							.SliderExponent(1)
@@ -251,7 +116,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 							.LinearDeltaSensitivity(10)
 							.AllowSpin(false)
 							.OnValueCommitted_Lambda([this](int Val, auto) {
-								Context->GetAnimation()->FPS = FMath::Max(1, Val);
+								Context->GetScene()->FPS = FMath::Max(1, Val);
 							})
 							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
 						]
@@ -265,7 +130,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						+SHorizontalBox::Slot().FillWidth(1)[
 							SNew(SNumericEntryBox<int>)
 							.Value_Lambda([this]() {
-								return Context->GetAnimation()->ResolutionWidth;
+								return Context->GetScene()->ResolutionWidth;
 							})
 							.SupportDynamicSliderMaxValue(true)
 							.SliderExponent(1)
@@ -274,7 +139,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 							.LinearDeltaSensitivity(10)
 							.AllowSpin(false)
 							.OnValueCommitted_Lambda([this](int Val, auto) {
-								Context->GetAnimation()->ResolutionWidth = FMath::Max(1, Val);
+								Context->GetScene()->ResolutionWidth = FMath::Max(1, Val);
 							})
 							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
 							.ToolTipText(FText::FromString(TEXT("Resolution Width")))
@@ -285,7 +150,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						+SHorizontalBox::Slot().FillWidth(1)[
 							SNew(SNumericEntryBox<int>)
 							.Value_Lambda([this]() {
-								return Context->GetAnimation()->ResolutionHeight;
+								return Context->GetScene()->ResolutionHeight;
 							})
 							.SupportDynamicSliderMaxValue(true)
 							.SliderExponent(1)
@@ -294,7 +159,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 							.LinearDeltaSensitivity(10)
 							.AllowSpin(false)
 							.OnValueCommitted_Lambda([this](int Val, auto) {
-								Context->GetAnimation()->ResolutionHeight = FMath::Max(1, Val);
+								Context->GetScene()->ResolutionHeight = FMath::Max(1, Val);
 							})
 							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
 							.ToolTipText(FText::FromString(TEXT("Resolution Height")))
@@ -309,7 +174,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						+SHorizontalBox::Slot().FillWidth(1)[
 							SNew(SNumericEntryBox<float>)
 							.Value_Lambda([this]() {
-								return Context->GetAnimation()->SensorWidth;
+								return Context->GetScene()->SensorDimension.X;
 							})
 							.SupportDynamicSliderMaxValue(true)
 							.SliderExponent(1)
@@ -318,7 +183,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 							.LinearDeltaSensitivity(10)
 							.AllowSpin(false)
 							.OnValueCommitted_Lambda([this](float Val, auto) {
-								Context->GetAnimation()->SensorWidth = FMath::Max(0.0f, Val);
+								Context->GetScene()->SensorDimension.X = FMath::Max(0.0f, Val);
 							})
 							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 							.ToolTipText(FText::FromString(TEXT("Sensor Width")))
@@ -329,7 +194,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						+SHorizontalBox::Slot().FillWidth(1)[
 							SNew(SNumericEntryBox<float>)
 							.Value_Lambda([this]() {
-								return Context->GetAnimation()->SensorHeight;
+								return Context->GetScene()->SensorDimension.Y;
 							})
 							.SupportDynamicSliderMaxValue(true)
 							.SliderExponent(1)
@@ -338,7 +203,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 							.LinearDeltaSensitivity(10)
 							.AllowSpin(false)
 							.OnValueCommitted_Lambda([this](float Val, auto) {
-								Context->GetAnimation()->SensorHeight = FMath::Max(0.0f, Val);
+								Context->GetScene()->SensorDimension.Y = FMath::Max(0.0f, Val);
 							})
 							.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 							.ToolTipText(FText::FromString(TEXT("Sensor Height")))
@@ -405,4 +270,31 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 			]
 		]
 	];
+	
+	for (UObject* Object : Context->GetScene()->GetSceneObjects()) {
+		Outliner->AddSlot().HAlign(HAlign_Fill).AutoHeight()[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Fuck You!")))
+		];
+		Outliner->AddSlot().HAlign(HAlign_Fill).AutoHeight()[
+			SNew(SExpandableArea)
+			.HeaderContent()[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot().FillWidth(1).HAlign(HAlign_Center).VAlign(VAlign_Center)[
+					SNew(STextBlock)
+					.Text(Cast<IFICSceneObject>(Object)->GetSceneObjectName())
+				]
+				+SHorizontalBox::Slot().AutoWidth().HAlign(HAlign_Center).VAlign(VAlign_Center).Padding(5)[
+					SNew(SFICKeyframeControl, Context)
+					.Attribute(&*Context->GetEditorAttributes()[Object])
+					.Frame_Lambda([this]() {
+						return Context->GetCurrentFrame();
+					})
+				]
+			]
+			.BodyContent()[
+				Context->GetEditorAttributes()[Object]->CreateDetailsWidget(Context)
+			]
+		];
+	}
 }

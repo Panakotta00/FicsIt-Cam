@@ -3,6 +3,8 @@
 #include "FGInputLibrary.h"
 #include "StereoRenderTargetManager.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Data/Objects/FICCamera.h"
+#include "Data/Objects/FICSceneObject.h"
 #include "Engine/GameEngine.h"
 #include "Slate/SceneViewport.h"
 
@@ -11,7 +13,7 @@ void UFICEditorContext::ShowEditor() {
 
 	IsEditorShowing = true;
 	OriginalCharacter = GetWorld()->GetFirstPlayerController()->GetCharacter();
-	if (!CameraCharacter) CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(FVector(PosX.GetValue(), PosY.GetValue(), PosZ.GetValue()), FRotator(RotPitch.GetValue(), RotYaw.GetValue(), RotRoll.GetValue()));
+	if (!CameraCharacter) CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(GetCamera()->Position.Get(0), GetCamera()->Rotation.Get(0));
 	CameraCharacter->SetEditorContext(this);
 	GetWorld()->GetFirstPlayerController()->Possess(CameraCharacter);
 	UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
@@ -73,29 +75,13 @@ void UFICEditorContext::SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, flo
 	}
 }
 
-UFICEditorContext::UFICEditorContext() :
-	PosX(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosX : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Red),
-	PosY(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosY : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Green),
-	PosZ(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->PosZ : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Blue),
-	RotPitch(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotPitch : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Red),
-	RotYaw(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotYaw : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Green),
-	RotRoll(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->RotRoll : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Blue),
-	FOV(TAttribute<FFICFloatAttribute*>::Create([this](){ return Animation ? &Animation->FOV : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Yellow),
-	Aperture(TAttribute<FFICFloatAttribute*>::Create([this]() { return Animation ? &Animation->Aperture : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Orange),
-	FocusDistance(TAttribute<FFICFloatAttribute*>::Create([this]() { return Animation ? &Animation->FocusDistance : nullptr; }), FFICAttributeValueChanged::CreateUObject(this, &UFICEditorContext::UpdateCharacterValues), FColor::Purple),
-	Pos({{"X", &PosX }, {"Y", &PosY}, {"Z", &PosZ}}),
-	Rot({{"Pitch", &RotPitch}, {"Yaw", &RotYaw}, {"Roll", &RotRoll}}),
-	All({{"Pos", &Pos}, {"Rot", &Rot}, {"FOV", &FOV}, {"Aperture", &Aperture}, {"Focus Distance", &FocusDistance}}) {
-	PosX.bShowInGraph = true;
-	PosY.bShowInGraph = true;
-	PosZ.bShowInGraph = true;
-}
+UFICEditorContext::UFICEditorContext() {}
 
 void UFICEditorContext::Tick(float DeltaTime) {
-	if (Animation) {
+	if (Scene) {
 		AnimPlayerDelta += DeltaTime * AnimPlayerFactor;
-		int32 FrameDelta = FMath::Floor(AnimPlayerDelta * Animation->FPS);
-		AnimPlayerDelta -= (float)FrameDelta / (float)Animation->FPS;
+		int32 FrameDelta = FMath::Floor(AnimPlayerDelta * Scene->FPS);
+		AnimPlayerDelta -= (float)FrameDelta / (float)Scene->FPS;
 		switch (AnimPlayerState) {
 		case FIC_PLAY_FORWARDS:
 			SetCurrentFrame(CurrentFrame + FrameDelta);
@@ -112,27 +98,41 @@ bool UFICEditorContext::IsTickable() const {
 	return !WITH_EDITOR;
 }
 
-void UFICEditorContext::SetAnimation(AFICAnimation* Anim) {
-	Animation = Anim;
-	SetCurrentFrame(Animation->AnimationStart);
+void UFICEditorContext::SetScene(AFICScene* InScene) {
+	Scene = InScene;
+	SetCurrentFrame(Scene->AnimationRange.Begin);
+	AllAttributes = MakeShared<FFICEditorAttributeGroupDynamic>();
+	for (UObject* SceneObject : Scene->GetSceneObjects()) {
+		TSharedRef<FFICEditorAttributeBase> Attribute = Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().CreateEditorAttribute();
+		AllAttributes->AddAttribute(Cast<IFICSceneObject>(SceneObject)->GetSceneObjectName().ToString(), Attribute);
+		EditorAttributes.Add(SceneObject, Attribute);
+	}
 }
 
-AFICAnimation* UFICEditorContext::GetAnimation() const {
-	return Animation;
+AFICScene* UFICEditorContext::GetScene() const {
+	return Scene;
 }
 
-void UFICEditorContext::SetCurrentFrame(int64 inFrame) {
+UFICCamera* UFICEditorContext::GetCamera() {
+	for (UObject* Object : Scene->GetSceneObjects()) {
+		if (Object->IsA<UFICCamera>()) return Cast<UFICCamera>(Object);
+	}
+	return nullptr;
+}
+
+TSharedPtr<FFICEditorAttributeBase> UFICEditorContext::GetCameraEditor() {
+	for (TTuple<UObject*, TSharedPtr<FFICEditorAttributeBase>> Attribute : EditorAttributes) {
+		if (Attribute.Key->IsA<UFICCamera>()) return Attribute.Value;
+	}
+	return nullptr;
+}
+
+void UFICEditorContext::SetCurrentFrame(FICFrame inFrame) {
 	CurrentFrame = inFrame;
 
-	PosX.UpdateValue(CurrentFrame);
-	PosY.UpdateValue(CurrentFrame);
-	PosZ.UpdateValue(CurrentFrame);
-	RotPitch.UpdateValue(CurrentFrame);
-	RotYaw.UpdateValue(CurrentFrame);
-	RotRoll.UpdateValue(CurrentFrame);
-	FOV.UpdateValue(CurrentFrame);
-	Aperture.UpdateValue(CurrentFrame);
-	FocusDistance.UpdateValue(CurrentFrame);
+	for (TTuple<UObject*, TSharedPtr<FFICEditorAttributeBase>> Attribute : EditorAttributes) {
+		Attribute.Value->UpdateValue(inFrame);
+	}
 	
 	UpdateCharacterValues();
 }

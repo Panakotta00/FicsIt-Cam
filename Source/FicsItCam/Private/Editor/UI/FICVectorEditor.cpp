@@ -1,7 +1,6 @@
 ﻿#include "Editor/UI/FICVectorEditor.h"
 
 #include "Data/Attributes/FICAttributeFloat.h"
-#include "Editor/FICEditorAttributeBase.h"
 #include "Editor/FICEditorContext.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Editor/UI/FICKeyframeControl.h"

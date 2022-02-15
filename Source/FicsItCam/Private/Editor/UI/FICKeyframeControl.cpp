@@ -178,8 +178,8 @@ void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InCont
 		TSharedPtr<FFICKeyframe> Keyframe = GetAttribute()->GetKeyframe(GetFrame());
 		TSharedPtr<FFICKeyframe> NextKeyframe, PrevKeyframe;
 		int64 NextKeyframeTime, PrevKeyframeTime;
-		NextKeyframe = Attribute.Get()->GetAttribute()->GetNextKeyframe(Frame.Get().GetValue(), NextKeyframeTime);
-		PrevKeyframe = Attribute.Get()->GetAttribute()->GetPrevKeyframe(Frame.Get().GetValue(), PrevKeyframeTime);
+		NextKeyframe = Attribute.Get()->GetAttribute().GetNextKeyframe(Frame.Get().GetValue(), NextKeyframeTime);
+		PrevKeyframe = Attribute.Get()->GetAttribute().GetPrevKeyframe(Frame.Get().GetValue(), PrevKeyframeTime);
 		if (PrevKeyframe && PrevKeyframe->KeyframeType & FIC_KF_HANDLES) {
 			FromHandle = SNew(SFICKeyframeHandle, this).Style(Style);
 			Children.Add(FromHandle.ToSharedRef());
@@ -251,16 +251,16 @@ void SFICKeyframeControl::OnArrangeChildren(const FGeometry& AllottedGeometry, F
 FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	bWasDoubleClick = false;
 	if (GraphView) return FReply::Handled().DetectDrag(AsShared(), EKeys::LeftMouseButton);
-	else return FReply::Unhandled();
+	return FReply::Handled();
 }
 
 FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton && !bWasDoubleClick) {
-		FFICAttribute* Attrib = Attribute.Get()->GetAttribute();
+		FFICAttribute& Attrib = Attribute.Get()->GetAttribute();
         BEGIN_QUICK_ATTRIB_CHANGE(Context, Attrib, GetFrame(), GetFrame())
 		if (Attribute.Get()->GetKeyframe(GetFrame()) && (ToHandle || FromHandle || !Attribute.Get()->HasChanged(GetFrame()))) Attribute.Get()->RemoveKeyframe(GetFrame());
 		else Attribute.Get()->SetKeyframe(GetFrame());
-		Attrib->RecalculateAllKeyframes();
+		Attrib.RecalculateAllKeyframes();
 		END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
 		return FReply::Handled();
 	} else 	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
@@ -275,7 +275,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                 	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
                     Attribute.Get()->SetKeyframe(FFICValueTime(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASE, false);
-                	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	Attribute.Get()->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
@@ -285,7 +285,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                 	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
                     Attribute.Get()->SetKeyframe(FFICValueTime(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASEINOUT, false);
-                	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	Attribute.Get()->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
@@ -295,7 +295,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                 	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
                     Attribute.Get()->SetKeyframe(FFICValueTime(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->GetValue()), FIC_KF_LINEAR, false);
-                	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	Attribute.Get()->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
@@ -305,7 +305,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                 	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
                     Attribute.Get()->SetKeyframe(FFICValueTime(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->GetValue()), FIC_KF_STEP, false);
-                	Attribute.Get()->GetAttribute()->RecalculateAllKeyframes();
+                	Attribute.Get()->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 		
@@ -313,7 +313,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
 		}
 		return FReply::Handled();
 	}
-	return SPanel::OnMouseButtonUp(MyGeometry, Event);
+	return FReply::Handled();
 }
 
 FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& Event) {
@@ -321,16 +321,15 @@ FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry
 
 	if (!GraphView) {
 		FFICEditorAttributeBase* Attr = Attribute.Get();
-		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attr->GetAttribute()->GetKeyframes();
+		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attr->GetAttribute().GetKeyframes();
 		if (Keyframes.Num() > 0) {
 			BEGIN_QUICK_ATTRIB_CHANGE(Context, Attr->GetAttribute(), GetFrame(), GetFrame())
 			for (const TPair<FICFrame, TSharedRef<FFICKeyframe>>& KF : Keyframes) Attr->RemoveKeyframe(KF.Key);
-			Attr->GetAttribute()->OnUpdate.Broadcast();
+			Attr->GetAttribute().OnUpdate.Broadcast();
 			END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
-			return FReply::Handled();
 		}
 	}
-	return SPanel::OnMouseButtonDoubleClick(MyGeometry, Event);
+	return FReply::Handled();
 }
 
 FReply SFICKeyframeControl::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
@@ -340,7 +339,7 @@ FReply SFICKeyframeControl::OnDragDetected(const FGeometry& MyGeometry, const FP
 		}
 	}
 	
-	return SPanel::OnDragDetected(MyGeometry, MouseEvent);
+	return FReply::Handled();
 }
 
 FCursorReply SFICKeyframeControl::OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const {

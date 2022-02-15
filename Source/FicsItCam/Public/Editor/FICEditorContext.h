@@ -1,10 +1,10 @@
 ﻿#pragma once
 
 #include "FICChangeList.h"
-#include "FICEditorAttributeBase.h"
 #include "FICEditorCameraCharacter.h"
 #include "Data/FICAnimation.h"
-#include "Data/Attributes/FICAttributeFloat.h"
+#include "Data/FICEditorAttributeGroupDynamic.h"
+#include "Data/FICScene.h"
 #include "UI/FICEditor.h"
 #include "FICEditorContext.generated.h"
 
@@ -16,6 +16,7 @@
 	} \
     float Get ## Name () const { return Name; }
 
+class UFICCamera;
 class ACharacter;
 
 UENUM()
@@ -31,11 +32,13 @@ class UFICEditorContext : public UObject, public FTickableGameObject {
 
 private:
 	UPROPERTY()
-	AFICAnimation* Animation = nullptr;
+	AFICScene* Scene = nullptr;
 
 	FICFrame CurrentFrame = 0;
-
 	FFICFrameRange ActiveRange;
+
+	TSharedPtr<FFICEditorAttributeGroupDynamic> AllAttributes;
+	TMap<UObject*, TSharedRef<FFICEditorAttributeBase>> EditorAttributes;
 
 	UPROPERTY()
 	ACharacter* OriginalCharacter = nullptr;
@@ -52,18 +55,6 @@ private:
 	float AnimPlayerFactor = 1.0f;
 	
 public:
-	TFICEditorAttribute<FFICFloatAttribute> PosX;
-	TFICEditorAttribute<FFICFloatAttribute> PosY;
-	TFICEditorAttribute<FFICFloatAttribute> PosZ;
-	TFICEditorAttribute<FFICFloatAttribute> RotPitch;
-	TFICEditorAttribute<FFICFloatAttribute> RotYaw;
-	TFICEditorAttribute<FFICFloatAttribute> RotRoll;
-	TFICEditorAttribute<FFICFloatAttribute> FOV;
-	TFICEditorAttribute<FFICFloatAttribute> Aperture;
-	TFICEditorAttribute<FFICFloatAttribute> FocusDistance;
-	FFICEditorGroupAttribute Pos;
-	FFICEditorGroupAttribute Rot;
-	FFICEditorGroupAttribute All;
 	bool bMoveCamera = true;
 	bool bShowPath = true;
 	bool bAutoKeyframe = false;
@@ -75,6 +66,7 @@ public:
 	bool IsEditorShowing = false;
 	bool TempViewportFocus = false;
 	FVector2D TempCursorPos;
+	
 	TSharedPtr<SFICEditor> EditorWidget;
 
 	FFICChangeList ChangeList;
@@ -87,8 +79,10 @@ public:
 	virtual TStatId GetStatId() const override { return UObject::GetStatID(); }
 	// End FTickableGameObject
 	
-	void SetAnimation(AFICAnimation* Anim);
-	AFICAnimation* GetAnimation() const;
+	void SetScene(AFICScene* Scene);
+	AFICScene* GetScene() const;
+	UFICCamera* GetCamera();
+	TSharedPtr<FFICEditorAttributeBase> GetCameraEditor();
 	
 	void SetCurrentFrame(int64 inFrame);
 	int64 GetCurrentFrame() const;
@@ -108,4 +102,7 @@ public:
 	void SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor);
 	EFICAnimPlayerState GetAnimPlayer() { return AnimPlayerState; }
 	float GetAnimPlayerFactor() { return AnimPlayerFactor; }
+
+	TSharedPtr<FFICEditorAttributeGroupDynamic> GetAllAttributes() { return AllAttributes; }
+	const TMap<UObject*, TSharedRef<FFICEditorAttributeBase>>& GetEditorAttributes() { return EditorAttributes; }
 };

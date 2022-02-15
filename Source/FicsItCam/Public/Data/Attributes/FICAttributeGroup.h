@@ -6,12 +6,15 @@
 USTRUCT(BlueprintType)
 struct FFICGroupAttribute : public FFICAttribute {
 	GENERATED_BODY()
-private:
+	friend class FFICEditorAttributeGroup;
+	
+protected:
 	TMap<FString, TSharedRef<FFICAttribute>> AttributeCache;
+	TMap<FString, FFICAttribute*> Children;
 
 public:
-	TMap<FString, TAttribute<FFICAttribute*>> Children;
-
+	virtual ~FFICGroupAttribute() override;
+	
 	// Begin FFICAttribute
 	virtual FName GetAttributeType() { return FName(TEXT("GroupAttribute")); }
 	
@@ -24,5 +27,9 @@ public:
 
 	virtual void Set(TSharedRef<FFICAttribute> InAttrib) override;
 	virtual TSharedRef<FFICAttribute> Get() override;
+
+	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute() override;
 	// End FFICAttribute
+
+	void AddChildAttribute(FString Name, FFICAttribute* Attribute);
 };

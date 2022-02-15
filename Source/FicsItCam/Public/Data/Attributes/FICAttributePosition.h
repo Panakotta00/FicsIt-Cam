@@ -1,0 +1,43 @@
+#pragma once
+
+#include "FICAttribute.h"
+#include "FICAttributeFloat.h"
+#include "FICAttributeGroup.h"
+#include "FICAttributePosition.generated.h"
+
+class FFICEditorAttributeGroup;
+USTRUCT(BlueprintType)
+struct FFICAttributePosition : public FFICGroupAttribute {
+	GENERATED_BODY()
+public:
+	UPROPERTY(SaveGame)
+	FFICFloatAttribute X;
+	
+	UPROPERTY(SaveGame)
+	FFICFloatAttribute Y;
+
+	UPROPERTY(SaveGame)
+	FFICFloatAttribute Z;
+
+	FFICAttributePosition() {
+		AddChildAttribute("X", &X);
+		AddChildAttribute("Y", &Y);
+		AddChildAttribute("Z", &Z);
+	}
+
+	// Begin FFICAttribute
+	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute() override;
+	// End FFICAttribute
+
+	FVector Get(FICFrame Frame) {
+		return FVector(
+			X.GetValue(Frame),
+			Y.GetValue(Frame),
+			Z.GetValue(Frame)
+		);
+	}
+
+	static FVector FromEditorAttribute(FFICEditorAttributeGroup& Attribute);
+	static FVector FromEditorAttribute(FFICEditorAttributeGroup& Attribute, FICFrameFloat Time);
+	static void ToEditorAttribute(const FVector& Vector, FFICEditorAttributeGroup& Attribute);
+};

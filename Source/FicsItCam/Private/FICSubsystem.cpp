@@ -103,7 +103,7 @@ void AFICSubsystem::SetActiveAnimation(AFICAnimation* inActiveAnimation) {
 	ActiveAnimation = inActiveAnimation;
 	if (ActiveAnimation) {
 		EditorContext = NewObject<UFICEditorContext>(this);
-		EditorContext->SetAnimation(ActiveAnimation);
+		EditorContext->SetScene(ActiveAnimation->CreateScene());
 		EditorContext->ShowEditor();
 	}
 }

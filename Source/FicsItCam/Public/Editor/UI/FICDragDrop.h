@@ -2,7 +2,6 @@
 
 #include "FICGraphView.h"
 #include "Data/Attributes/FICAttribute.h"
-#include "Editor/FICEditorAttributeBase.h"
 
 class FFICGraphDragDrop : public FDragDropOperation {
 public:
@@ -45,7 +44,7 @@ public:
 	TSharedPtr<FFICAttribute> AttribBegin;
 
 	FFICGraphKeyframeDragDrop(TSharedRef<SFICGraphView> GraphView, TSharedRef<SFICKeyframeControl> KeyframeControl, FPointerEvent InitEvent) : FFICGraphDragDrop(GraphView, InitEvent), KeyframeControl(KeyframeControl) {
-		AttribBegin = KeyframeControl->GetAttribute()->GetAttribute()->Get();
+		AttribBegin = KeyframeControl->GetAttribute()->GetAttribute().Get();
 		FDragDropOperation::SetDecoratorVisibility(true);
 		bCreateNewWindow = false;
 	}

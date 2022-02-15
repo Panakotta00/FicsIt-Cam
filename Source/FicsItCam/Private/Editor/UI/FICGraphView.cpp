@@ -1,7 +1,6 @@
 #include "Editor/UI/FICGraphView.h"
 
 #include "Editor/FICChangeList.h"
-#include "Editor/FICEditorAttributeBase.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICDragDrop.h"
 
@@ -31,7 +30,7 @@ SFICGraphView::SFICGraphView() : Children(this) {
 
 SFICGraphView::~SFICGraphView() {
 	for (FFICEditorAttributeBase* Attribute : Attributes) {
-		Attribute->GetAttribute()->OnUpdate.Remove(DelegateHandles[Attribute]);
+		Attribute->GetAttribute().OnUpdate.Remove(DelegateHandles[Attribute]);
 	}
 }
 
@@ -117,7 +116,7 @@ FReply SFICGraphView::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointe
 				if (Difference.Size() < 5) {
 					BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), TNumericLimits<int64>::Min(), Frame)
 					Attribute->SetKeyframe(FFICValueTime(Frame, LocalToValue(LocalMousePos.Y)));
-					Attribute->GetAttribute()->RecalculateAllKeyframes();
+					Attribute->GetAttribute().RecalculateAllKeyframes();
 					END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
 					return FReply::Handled();
 				}
@@ -207,13 +206,13 @@ void SFICGraphView::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrang
 
 void SFICGraphView::SetAttributes(const TArray<FFICEditorAttributeBase*>& InAttributes) {
 	for (FFICEditorAttributeBase* Attribute : Attributes) {
-		Attribute->GetAttribute()->OnUpdate.Remove(DelegateHandles[Attribute]);
+		Attribute->GetAttribute().OnUpdate.Remove(DelegateHandles[Attribute]);
 	}
 	
 	Attributes = InAttributes;
 
 	for (FFICEditorAttributeBase* Attribute : Attributes) {
-		DelegateHandles.Add(Attribute, Attribute->GetAttribute()->OnUpdate.AddRaw(this, &SFICGraphView::Update));
+		DelegateHandles.Add(Attribute, Attribute->GetAttribute().OnUpdate.AddRaw(this, &SFICGraphView::Update));
 	}
 	
 	Update();
@@ -224,7 +223,7 @@ void SFICGraphView::Update() {
 	Children.Empty();
 	
 	for (FFICEditorAttributeBase* Attribute : Attributes) {
-		for (const TPair<FICFrame, TSharedRef<FFICKeyframe>>& Keyframe : Attribute->GetAttribute()->GetKeyframes()) {
+		for (const TPair<FICFrame, TSharedRef<FFICKeyframe>>& Keyframe : Attribute->GetAttribute().GetKeyframes()) {
 			TSharedRef<SFICKeyframeControl> Child =
 				SNew(SFICKeyframeControl, Context)
 				.Attribute(Attribute)
@@ -244,7 +243,7 @@ void SFICGraphView::FitAll() {
 	Values.End = TNumericLimits<FICValue>::Lowest();
 	int MaxKeyframeCountOfAnyAttribute = 0;
 	for (FFICEditorAttributeBase* Attribute : Attributes) {
-		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attribute->GetAttribute()->GetKeyframes();
+		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attribute->GetAttribute().GetKeyframes();
 		for (TTuple<FICFrame, TSharedRef<FFICKeyframe>> Keyframe : Keyframes) {
 			TSharedRef<FFICKeyframe> KF = Keyframe.Value;
 			FICValue Value = KF->GetValue();

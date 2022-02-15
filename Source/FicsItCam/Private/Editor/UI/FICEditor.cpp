@@ -70,7 +70,7 @@ void SFICEditor::Tick(const FGeometry& AllottedGeometry, const double InCurrentT
 	}
 
 	FVector2D ViewportSize = GameWidget->GetCachedGeometry().GetAbsoluteSize();
-	FVector2D GameSize = FVector2D(Context->GetAnimation()->ResolutionWidth, Context->GetAnimation()->ResolutionHeight);
+	FVector2D GameSize = FVector2D(Context->GetScene()->ResolutionWidth, Context->GetScene()->ResolutionHeight);
 	FVector2D Size = Context->GetWorld()->GetGameViewport()->GetGameViewport()->GetSizeXY();
 	Size *= Scalability::GetResolutionScreenPercentage() / 100.0;
 	float SecondaryPercentage = IConsoleManager::Get().FindConsoleVariable(TEXT("r.SecondaryScreenPercentage.GameViewport"))->GetFloat();
@@ -107,32 +107,8 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 		if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleAllKeyframes"))) {
 			auto Change = MakeShared<FFICChange_Group>();
 			Change->PushChange(MakeShared<FFICChange_ActiveFrame>(Context, TNumericLimits<int64>::Min(), Context->GetCurrentFrame()));
-			BEGIN_ATTRIB_CHANGE(Context->PosX.GetAttribute())
-			BEGIN_ATTRIB_CHANGE(Context->PosY.GetAttribute())
-			BEGIN_ATTRIB_CHANGE(Context->PosZ.GetAttribute())
-			BEGIN_ATTRIB_CHANGE(Context->RotPitch.GetAttribute())
-			BEGIN_ATTRIB_CHANGE(Context->RotYaw.GetAttribute())
-			BEGIN_ATTRIB_CHANGE(Context->RotRoll.GetAttribute())
-			BEGIN_ATTRIB_CHANGE(Context->FOV.GetAttribute())
-			BEGIN_ATTRIB_CHANGE(Context->Aperture.GetAttribute())
-			BEGIN_ATTRIB_CHANGE(Context->FocusDistance.GetAttribute())
-			int64 Time = Context->GetCurrentFrame();
-			if (Context->PosX.GetKeyframe(Time) && Context->PosY.GetKeyframe(Time) && Context->PosZ.GetKeyframe(Time) && Context->RotPitch.GetKeyframe(Time) && Context->RotYaw.GetKeyframe(Time) && Context->RotRoll.GetKeyframe(Time) && Context->FOV.GetKeyframe(Time) &&
-                !Context->PosX.HasChanged(Time) && !Context->PosY.HasChanged(Time) && !Context->PosZ.HasChanged(Time) && !Context->RotPitch.HasChanged(Time) && !Context->RotYaw.HasChanged(Time) && !Context->RotRoll.HasChanged(Time) && !Context->FOV.HasChanged(Time)) {
-				Context->All.RemoveKeyframe(Time);
-            	Context->All.UpdateValue(Time);
-            } else {
-                Context->All.SetKeyframe(Time);
-            	Context->All.UpdateValue(Time);
-            }
-			END_ATTRIB_CHANGE(Change)
-			END_ATTRIB_CHANGE(Change)
-			END_ATTRIB_CHANGE(Change)
-			END_ATTRIB_CHANGE(Change)
-			END_ATTRIB_CHANGE(Change)
-			END_ATTRIB_CHANGE(Change)
-			END_ATTRIB_CHANGE(Change)
-			END_ATTRIB_CHANGE(Change)
+			BEGIN_ATTRIB_CHANGE(Context->GetAllAttributes()->GetAttribute())
+			// TODO: Toggle All keyframes (dynamic check if all attributes have keyframe and if is different from current value
 			END_ATTRIB_CHANGE(Change)
 			Context->ChangeList.PushChange(Change);
 			return FReply::Handled();
@@ -152,12 +128,12 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			return FReply::Handled();
 		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.PrevKeyframe"))) {
 			int64 Time;
-			TSharedPtr<FFICKeyframe> KF = Context->All.GetAttribute()->GetPrevKeyframe(Context->GetCurrentFrame(), Time);
+			TSharedPtr<FFICKeyframe> KF = Context->GetAllAttributes()->GetAttribute().GetPrevKeyframe(Context->GetCurrentFrame(), Time);
 			if (KF) Context->SetCurrentFrame(Time);
 			return FReply::Handled();
 		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.NextKeyframe"))) {
 			int64 Time;
-			TSharedPtr<FFICKeyframe> KF = Context->All.GetAttribute()->GetNextKeyframe(Context->GetCurrentFrame(), Time);
+			TSharedPtr<FFICKeyframe> KF = Context->GetAllAttributes()->GetAttribute().GetNextKeyframe(Context->GetCurrentFrame(), Time);
 			if (KF) Context->SetCurrentFrame(Time);
 			return FReply::Handled();
 		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleAutoKeyframe"))) {
@@ -196,7 +172,7 @@ FReply SFICEditor::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& InKeyEv
 FReply SFICEditor::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	if (MouseEvent.GetModifierKeys().IsControlDown()) {
 		float Delta = MouseEvent.GetWheelDelta() * 3;
-		int64 Range = Context->GetAnimation()->AnimationEnd - Context->GetAnimation()->AnimationStart;
+		int64 Range = Context->GetScene()->AnimationRange.Length();
 		while (Range > 300) {
 			Range /= 10;
 			Delta *= 10;

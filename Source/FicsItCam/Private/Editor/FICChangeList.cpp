@@ -24,7 +24,7 @@ FFICChange_ActiveFrame::FFICChange_ActiveFrame(UFICEditorContext* InEditorContex
 			return false;
 		};
 		if (!DoChange(EditorContext->ChangeList.PeakChange())) {
-			FromFrame = EditorContext->GetAnimation()->AnimationStart;
+			FromFrame = EditorContext->GetScene()->AnimationRange.Begin;
 		}
 	}
 }

@@ -2,7 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "FGSaveInterface.h"
+#include "FICScene.h"
 #include "Attributes/FICAttributeFloat.h"
+#include "Objects/FICCamera.h"
 #include "FICAnimation.generated.h"
 
 UCLASS(BlueprintType)
@@ -76,5 +78,36 @@ public:
 
 	FFICFrameRange GetAnimationRange() {
 		return FFICFrameRange(AnimationStart, AnimationEnd);
+	}
+
+	AFICScene* CreateScene() {
+		UFICCamera* Camera = NewObject<UFICCamera>();
+		Camera->Position.X = PosX;
+		Camera->Position.Y = PosY;
+		Camera->Position.Z = PosZ;
+
+		Camera->Rotation.Pitch = RotPitch;
+		Camera->Rotation.Yaw = RotYaw;
+		Camera->Rotation.Roll = RotRoll;
+
+		Camera->FOV = FOV;
+		Camera->Aperture = Aperture;
+		Camera->FocusDistance = FocusDistance;
+		
+		AFICScene* Scene = GetWorld()->SpawnActor<AFICScene>();
+		Scene->AddSceneObject(Camera);
+
+		Scene->AnimationRange.Begin = AnimationStart;
+		Scene->AnimationRange.End = AnimationEnd;
+
+		Scene->SensorDimension.X = SensorWidth;
+		Scene->SensorDimension.Y = SensorHeight;
+		Scene->ResolutionHeight = ResolutionHeight;
+		Scene->ResolutionWidth = ResolutionWidth;
+		Scene->FPS = FPS;
+		Scene->bUseCinematic = bUseCinematic;
+		Scene->bBulletTime = bBulletTime;
+
+		return Scene;
 	}
 };

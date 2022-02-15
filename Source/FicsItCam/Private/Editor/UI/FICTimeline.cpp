@@ -20,8 +20,8 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	DefaultToggleButtonStyle.UncheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
 	DefaultToggleButtonStyle.UncheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
 	
-	for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Attribute : Context->All.GetChildAttributes()) {
-		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, Attribute.Value.Get()));
+	for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attribute : Context->GetAllAttributes()->GetChildAttributes()) {
+		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, &*Attribute.Value));
 	}
 
 	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TDefaultNumericTypeInterface<int64>>();
@@ -52,14 +52,14 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                SNew(SNumericEntryBox<int64>)
 	                    .TypeInterface(Interface)
 	                    .Value_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationStart;
+	                        return Context->GetScene()->AnimationRange.Begin;
 	                    })
 	                    .MaxValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationEnd-1;
+	                        return Context->GetScene()->AnimationRange.End-1;
 	                    })
 	                    .MinValue(TNumericLimits<int64>::Min())
 	                    .OnValueCommitted_Lambda([this](int64 Value, ETextCommit::Type) {
-	                        Context->GetAnimation()->AnimationStart = Value;
+	                        Context->GetScene()->AnimationRange.Begin = Value;
 	                    })
 	                ]
 	            ]
@@ -80,22 +80,22 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                        return Context->GetActiveRange().End-1;
 	                    })
 	                    .MinValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationStart;
+	                        return Context->GetScene()->AnimationRange.Begin;
 	                    })
 	                    .MinSliderValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationStart;
+	                        return Context->GetScene()->AnimationRange.Begin;
 	                    })
 	                    .Value_Lambda([this]() {
 	                        return Context->GetActiveRange().Begin;
 	                    })
 	                    .OnValueChanged_Lambda([this](FICFrame Value) {
 	                    	FFICFrameRange Range = Context->GetActiveRange();
-	                    	Range.Begin = FMath::Clamp(Value, Context->GetAnimation()->AnimationStart, Context->GetActiveRange().End-1);
+	                    	Range.Begin = FMath::Clamp(Value, Context->GetScene()->AnimationRange.Begin, Context->GetActiveRange().End-1);
 	                        Context->SetActiveRange(Range);
 	                    })
 	                    .OnValueCommitted_Lambda([this](FICFrame Value, ETextCommit::Type) {
 	                    	FFICFrameRange Range = Context->GetActiveRange();
-	                    	Range.Begin = FMath::Clamp(Value, Context->GetAnimation()->AnimationStart, Context->GetActiveRange().End-1);
+	                    	Range.Begin = FMath::Clamp(Value, Context->GetScene()->AnimationRange.Begin, Context->GetActiveRange().End-1);
 	                        Context->SetActiveRange(Range);
 	                    })
 	                    .AllowSpin(true)
@@ -166,16 +166,16 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                SNew(SNumericEntryBox<int64>)
 	                    .TypeInterface(Interface)
 	                    .MaxValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationEnd;
+	                        return Context->GetScene()->AnimationRange.End;
 	                    })
 	                    .MaxSliderValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationEnd;
+	                        return Context->GetScene()->AnimationRange.End;
 	                    })
 	                    .MinValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationStart;
+	                        return Context->GetScene()->AnimationRange.Begin;
 	                    })
 	                    .MinSliderValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationStart;
+	                        return Context->GetScene()->AnimationRange.Begin;
 	                    })
 	                    .Value_Lambda([this]() {
 	                        return Context->GetCurrentFrame();
@@ -254,10 +254,10 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                SNew(SNumericEntryBox<int64>)
 	                    .TypeInterface(Interface)
 	                    .MaxValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationEnd;
+	                        return Context->GetScene()->AnimationRange.End;
 	                    })
 	                    .MaxSliderValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationEnd;
+	                        return Context->GetScene()->AnimationRange.End;
 	                    })
 	                    .MinValue_Lambda([this]() {
 	                        return Context->GetActiveRange().Begin+1;
@@ -270,12 +270,12 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	                    })
 	                    .OnValueChanged_Lambda([this](FICFrame Value) {
 	                    	FFICFrameRange Range = Context->GetActiveRange();
-	                        Range.End = FMath::Clamp(Value, Range.Begin+1, Context->GetAnimation()->AnimationEnd);
+	                        Range.End = FMath::Clamp(Value, Range.Begin+1, Context->GetScene()->AnimationRange.End);
 	                    	Context->SetActiveRange(Range);
 	                    })
 	                    .OnValueCommitted_Lambda([this](FICFrame Value, ETextCommit::Type) {
 	                    	FFICFrameRange Range = Context->GetActiveRange();
-	                        Range.End = FMath::Clamp(Value, Range.Begin+1, Context->GetAnimation()->AnimationEnd);
+	                        Range.End = FMath::Clamp(Value, Range.Begin+1, Context->GetScene()->AnimationRange.End);
 	                    	Context->SetActiveRange(Range);
 	                    })
 	                    .AllowSpin(true)
@@ -292,14 +292,14 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 						SNew(SNumericEntryBox<int64>)
 	                    .TypeInterface(Interface)
 	                    .Value_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationEnd;
+	                        return Context->GetScene()->AnimationRange.End;
 	                    })
 	                    .MinValue_Lambda([this]() {
-	                        return Context->GetAnimation()->AnimationStart+1;
+	                        return Context->GetScene()->AnimationRange.Begin+1;
 	                    })
 	                    .MaxValue(TNumericLimits<int64>::Max())
 	                    .OnValueCommitted_Lambda([this](int64 Value, ETextCommit::Type) {
-	                        Context->GetAnimation()->AnimationEnd = FMath::Clamp(Value, Context->GetAnimation()->AnimationStart+1, TNumericLimits<int64>::Max());
+	                        Context->GetScene()->AnimationRange.End = FMath::Clamp(Value, Context->GetScene()->AnimationRange.Begin+1, TNumericLimits<int64>::Max());
 	                    })
 	                ]
 	            ]
@@ -327,15 +327,15 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 								ECheckBoxState State = ECheckBoxState::Checked;
 								HasCheckedChild = [&HasCheckedChild, &State](FFICEditorAttributeBase* Attrib) {
 									bool bAtLeastOne = false;
-									for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Child : Attrib->GetChildAttributes()) {
-										if (Child.Value.Get()->GetChildAttributes().Num() < 1) {
-											if (Child.Value.Get()->bShowInGraph) {
+									for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attrib->GetChildAttributes()) {
+										if (Child.Value->GetChildAttributes().Num() < 1) {
+											if (Child.Value->bShowInGraph) {
 												bAtLeastOne = true;
 											} else {
 												State = ECheckBoxState::Undetermined;
 											}
 										} else {
-											bAtLeastOne = HasCheckedChild(Child.Value.Get()) || bAtLeastOne;
+											bAtLeastOne = HasCheckedChild(&*Child.Value) || bAtLeastOne;
 										}
 									}
 									return bAtLeastOne;
@@ -347,8 +347,8 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 								TFunction<void(FFICEditorAttributeBase*)> SetChildren;
 								SetChildren = [&SetChildren, State](FFICEditorAttributeBase* Attrib) {
 									Attrib->bShowInGraph = State == ECheckBoxState::Checked;
-									for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Child : Attrib->GetChildAttributes()) {
-										SetChildren(Child.Value.Get());
+									for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attrib->GetChildAttributes()) {
+										SetChildren(&*Child.Value);
 									}
 								};
 								SetChildren(Attribute->Attribute);
@@ -357,8 +357,8 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 						];
 					})
 					.OnGetChildren_Lambda([](TSharedPtr<FFICEditorAttributeReference> InEntry, TArray<TSharedPtr<FFICEditorAttributeReference>>& OutArray) {
-						for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Attribute : InEntry->Attribute->GetChildAttributes()) {
-							OutArray.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, Attribute.Value.Get()));
+						for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attribute : InEntry->Attribute->GetChildAttributes()) {
+							OutArray.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, &*Attribute.Value));
 						}
 					})
 				]
@@ -373,7 +373,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 					Context->SetCurrentFrame(Frame);
 				})
 				.FullRange_Lambda([this]() {
-					return Context->GetAnimation()->GetAnimationRange();
+					return Context->GetScene()->AnimationRange;
 				})
 				.ActiveRange_Lambda([this]() {
 					return Context->GetActiveRange();
@@ -394,14 +394,14 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 		            return Context->GetActiveRange();
 		        })
 		        .FullRange_Lambda([this]() {
-		            return Context->GetAnimation()->GetAnimationRange();
+		            return Context->GetScene()->AnimationRange;
 		        })
 			]
 			+SGridPanel::Slot(1, 2)
 			.HAlign(HAlign_Fill)
 			.VAlign(VAlign_Fill)[
 				SAssignNew(Graph, SFICGraphView, Context)
-				.Attributes({&Context->PosX, &Context->PosY, &Context->PosZ})
+				.Attributes({})
 				.AutoFit(true)
 				.Clipping(EWidgetClipping::ClipToBoundsAlways)
 				.Frame_Lambda([this]() {
@@ -411,7 +411,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 					return Context->GetActiveRange();
 				})
 				.FrameHighlightRange_Lambda([this]() {
-					return Context->GetAnimation()->GetAnimationRange();
+					return Context->GetScene()->AnimationRange;
 				})
 				.ValueRange_Lambda([this]() {
 					return ActiveValueRange;
@@ -436,8 +436,8 @@ void SFICTimelinePanel::UpdateLeafAttributes() {
 	TFunction<void(FFICEditorAttributeBase*)> AddLeaves;
 	AddLeaves = [this, &AddLeaves](FFICEditorAttributeBase* Attribute) {
 		if (Attribute->GetChildAttributes().Num() < 1 && Attribute->bShowInGraph) SelectedLeafAttributes.Add(Attribute); 
-		for (TTuple<FString, TAttribute<FFICEditorAttributeBase*>> Child : Attribute->GetChildAttributes()) {
-			AddLeaves(Child.Value.Get());
+		for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attribute->GetChildAttributes()) {
+			AddLeaves(&*Child.Value);
 		}
 	};
 	for (TSharedPtr<FFICEditorAttributeReference> Item : Attributes) {
@@ -450,6 +450,6 @@ void SFICTimelinePanel::UpdateLeafAttributes() {
 void SFICTimelinePanel::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
 	SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
 
-	//ActiveRangeStart = FMath::Clamp(ActiveRangeStart, Context->GetAnimation()->AnimationStart, ActiveRangeEnd-1);
-	//ActiveRangeEnd = FMath::Clamp(ActiveRangeEnd, ActiveRangeStart+1, Context->GetAnimation()->AnimationEnd);
+	//ActiveRangeStart = FMath::Clamp(ActiveRangeStart, Context->GetScene()->AnimationRange.Begin, ActiveRangeEnd-1);
+	//ActiveRangeEnd = FMath::Clamp(ActiveRangeEnd, ActiveRangeStart+1, Context->GetScene()->AnimationRange.End);
 }

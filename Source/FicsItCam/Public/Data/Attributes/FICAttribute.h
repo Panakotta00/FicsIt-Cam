@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FICKeyframe.h"
+#include "Editor/Data/FICEditorAttributeBase.h"
 #include "FICAttribute.generated.h"
 
 USTRUCT(BlueprintType)
@@ -23,6 +24,8 @@ struct FFICAttribute {
 	
 	virtual void Set(TSharedRef<FFICAttribute> InAttrib) { checkf(false, TEXT("Not Implemented!")); }
 	virtual TSharedRef<FFICAttribute> Get() { checkf(false, TEXT("Not Implemented!")); return MakeShareable<FFICAttribute>(nullptr); }
+
+	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute() { checkf(false, TEXT("Not Implemented!")); return MakeShareable<FFICEditorAttributeBase>(nullptr); }
 
 	void RecalculateAllKeyframes();
 

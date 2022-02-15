@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FicsItCam/Public/Data/FICTypes.h"
+#include "Data/FICTypes.h"
 #include "FICKeyframe.generated.h"
 
 UENUM()

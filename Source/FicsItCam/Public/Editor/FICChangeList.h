@@ -7,7 +7,7 @@ class FFICChangeList;
 typedef TPair<FFICAttribute*, TSharedRef<FFICAttribute>> FChangeStackEntry;
 
 #define BEGIN_ATTRIB_CHANGE(Attribute) \
-	FFICChange::ChangeStack.Push(FChangeStackEntry(Attribute, Attribute->Get()));
+	FFICChange::ChangeStack.Push(FChangeStackEntry(&Attribute, Attribute.Get()));
 
 #define END_ATTRIB_CHANGE(ChangeList) { \
 	FChangeStackEntry StackEntry = FFICChange::ChangeStack.Pop(); \

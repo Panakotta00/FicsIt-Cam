@@ -1,7 +1,6 @@
 #include "Editor/UI/FICDragDrop.h"
 
 #include "Editor/FICChangeList.h"
-#include "Editor/FICEditorAttributeBase.h"
 #include "Editor/FICEditorContext.h"
 #include "Widgets/SToolTip.h"
 
@@ -52,7 +51,7 @@ void FFICGraphKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	
 	FICFrame NewFrame = KeyframeControl->GetFrame() + TimelineDiff;
 	if (DragDropEvent.IsShiftDown()) NewFrame = TimelineStart;
-	FFICAttribute* Attribute = KeyframeControl->GetAttribute()->GetAttribute();
+	FFICAttribute* Attribute = &KeyframeControl->GetAttribute()->GetAttribute();
 	Attribute->MoveKeyframe(KeyframeControl->GetFrame(), NewFrame);
 	Attribute->RecalculateAllKeyframes();
 	KeyframeControl = GraphView->FindKeyframeControl(KeyframeControl->GetAttribute(), NewFrame).ToSharedRef();
@@ -79,12 +78,12 @@ void FFICGraphKeyframeDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent
 	FFICGraphDragDrop::OnDrop(bDropWasHandled, MouseEvent);
 	auto Change = MakeShared<FFICChange_Group>();
 	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(KeyframeControl->Context, TimelineStart, KeyframeControl->GetFrame()));
-	Change->PushChange(MakeShared<FFICChange_Attribute>(KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin.ToSharedRef()));
+	Change->PushChange(MakeShared<FFICChange_Attribute>(&KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin.ToSharedRef()));
 	KeyframeControl->Context->ChangeList.PushChange(Change);
 }
 
 FFICGraphKeyframeHandleDragDrop::FFICGraphKeyframeHandleDragDrop(TSharedRef<SFICKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent) : FFICGraphDragDrop(SharedThis(KeyframeHandle->KeyframeControl->GraphView), InitEvent), KeyframeHandle(KeyframeHandle) {
-	AttribBegin = KeyframeHandle->KeyframeControl->GetAttribute()->GetAttribute()->Get();
+	AttribBegin = KeyframeHandle->KeyframeControl->GetAttribute()->GetAttribute().Get();
 }
 
 void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
@@ -145,6 +144,6 @@ void FFICGraphKeyframeHandleDragDrop::OnDrop(bool bDropWasHandled, const FPointe
 	FFICGraphDragDrop::OnDrop(bDropWasHandled, MouseEvent);
 	auto Change = MakeShared<FFICChange_Group>();
 	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(KeyframeHandle->KeyframeControl->Context, TimelineStart, KeyframeHandle->KeyframeControl->GetFrame()));
-	Change->PushChange(MakeShared<FFICChange_Attribute>(KeyframeHandle->KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin.ToSharedRef()));
+	Change->PushChange(MakeShared<FFICChange_Attribute>(&KeyframeHandle->KeyframeControl->GetAttribute()->GetAttribute(), AttribBegin.ToSharedRef()));
 	KeyframeHandle->KeyframeControl->Context->ChangeList.PushChange(Change);
 }

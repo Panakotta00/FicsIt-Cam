@@ -117,6 +117,10 @@ TSharedRef<FFICAttribute> FFICFloatAttribute::Get() {
 	return MakeShared<FFICFloatAttribute>(*this);
 }
 
+TSharedRef<FFICEditorAttributeBase> FFICFloatAttribute::CreateEditorAttribute() {
+	return MakeShared<TFICEditorAttribute<FFICFloatAttribute>>(*this);
+}
+
 FFICFloatKeyframe* FFICFloatAttribute::SetKeyframe(FICFrame Time, FFICFloatKeyframe Keyframe) {
 	FFICFloatKeyframe* KF = &Keyframes.FindOrAdd(Time);
 	*KF = Keyframe;

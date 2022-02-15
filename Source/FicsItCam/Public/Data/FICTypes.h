@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FICTypes.generated.h"
+
 typedef int64 FICFrame;
 typedef float FICFrameFloat;
 
@@ -28,7 +30,10 @@ struct FFICFrameRangeIterator {
 	}
 };
 
+USTRUCT()
 struct FFICFrameRange {
+	GENERATED_BODY()
+	
 	FICFrame Begin;
 	FICFrame End;
 
@@ -81,6 +86,21 @@ struct FFICFrameRange {
 	FFICFrameRangeIterator end() const {
 		return FFICFrameRangeIterator(End);
 	}
+
+	bool Serialize(FStructuredArchive::FSlot Slot) {
+		FStructuredArchive::FRecord Record = Slot.EnterRecord();
+		Record.EnterField(SA_FIELD_NAME(TEXT("Begin"))) << Begin;
+		Record.EnterField(SA_FIELD_NAME(TEXT("End"))) << End;
+		return true;
+	}
+};
+
+template<>
+struct TStructOpsTypeTraits<FFICFrameRange> : TStructOpsTypeTraitsBase2<FFICFrameRange> {
+	enum {
+		//WithSerializer = true,
+		WithStructuredSerializer = true,
+	};
 };
 
 typedef float FICValue;

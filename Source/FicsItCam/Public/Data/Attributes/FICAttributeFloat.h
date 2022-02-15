@@ -64,6 +64,8 @@ public:
 
 	virtual void Set(TSharedRef<FFICAttribute> InAttrib) override;
 	virtual TSharedRef<FFICAttribute> Get() override;
+
+	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute() override;
 	// End FFICAttribute
 
 	virtual FFICFloatKeyframe* GetKeyframe(FICFrame Time) { return Keyframes.Find(Time); }

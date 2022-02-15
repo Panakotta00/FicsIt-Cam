@@ -5,6 +5,7 @@
 #include "FGPlayerController.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Data/Objects/FICCamera.h"
 #include "Editor/FICEditorCameraActor.h"
 #include "Editor/FICEditorContext.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -31,7 +32,7 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
 
 	if (GetController() == GetWorld()->GetFirstPlayerController()) {
-		bool bUseCinematic = EditorContext->GetAnimation()->bUseCinematic;
+		bool bUseCinematic = EditorContext->GetScene()->bUseCinematic;
 		if (!IsValid(Camera) || Camera->IsA<UCineCameraComponent>() != bUseCinematic) {
 			if (Camera) Camera->DestroyComponent();
 			if (bUseCinematic) {
@@ -57,11 +58,11 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 		Camera->bConstrainAspectRatio = EditorContext->bForceResolution;
 		if (Camera->IsA<UCineCameraComponent>()) {
 			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
-			CineCamera->Filmback.SensorWidth = EditorContext->GetAnimation()->SensorWidth * EditorContext->SensorWidthAdjust;
-			CineCamera->Filmback.SensorHeight = EditorContext->GetAnimation()->SensorHeight * EditorContext->SensorWidthAdjust;
-			Camera->SetFieldOfView(EditorContext->FOV.GetValue());
+			CineCamera->Filmback.SensorWidth = EditorContext->GetScene()->SensorDimension.X * EditorContext->SensorWidthAdjust;
+			CineCamera->Filmback.SensorHeight = EditorContext->GetScene()->SensorDimension.Y * EditorContext->SensorWidthAdjust;
+			Camera->SetFieldOfView(EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue());
 		} else {
-			Camera->SetAspectRatio(EditorContext->GetAnimation()->ResolutionHeight / EditorContext->GetAnimation()->ResolutionWidth);
+			Camera->SetAspectRatio(EditorContext->GetScene()->ResolutionHeight / EditorContext->GetScene()->ResolutionWidth);
 		}
 	
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
@@ -80,10 +81,10 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 				CameraActor->SetActorTransform(GetActorTransform());
 			}
 
+			FRotator RotOld = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
 			if (CameraActor) {
 				FVector Pos = CameraActor->GetActorLocation();
 				FRotator RotNew = CameraActor->GetActorRotation();
-				FRotator RotOld = FRotator(EditorContext->RotPitch.GetValue(), EditorContext->RotYaw.GetValue(), EditorContext->RotRoll.GetValue());
 				FRotator RotOldN = RotOld;
 				while (RotOldN.Pitch < -180.0) RotOldN.Pitch += 360.0;
 				while (RotOldN.Pitch > 180.0) RotOldN.Pitch -= 360.0;
@@ -100,23 +101,21 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 				while (RotDiff.Roll > 180.0) RotDiff.Roll -= 360.0;
 				RotNew = RotOld + RotDiff;
 			
-				EditorContext->PosX.SetValue(Pos.X);
-				EditorContext->PosY.SetValue(Pos.Y);
-				EditorContext->PosZ.SetValue(Pos.Z);
-				EditorContext->RotPitch.SetValue(RotNew.Pitch);
-				EditorContext->RotYaw.SetValue(RotNew.Yaw);
-				EditorContext->RotRoll.SetValue(RotNew.Roll);
+				FFICAttributePosition::ToEditorAttribute(Pos, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
+				FFICAttributeRotation::ToEditorAttribute(RotNew, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
+
+				RotOld = RotNew;
 			}
 
-			if (EditorContext->bMoveCamera) RotatorFix.Roll = EditorContext->RotRoll.GetValue();
+			if (EditorContext->bMoveCamera) RotatorFix.Roll = RotOld.Roll;
 
 			// Draw Path
 			if (EditorContext->bShowPath) {
 				FVector PrevLoc = FVector::ZeroVector;
 				FRotator PrevRot = FRotator::ZeroRotator;
-				for (int64 Time = EditorContext->GetAnimation()->AnimationStart; Time <= EditorContext->GetAnimation()->AnimationEnd; ++Time) {
-					bool bIsKeyframe = EditorContext->Pos.GetKeyframe(Time).IsValid();
-					FVector Loc = FVector(EditorContext->PosX.GetValue(Time), EditorContext->PosY.GetValue(Time), EditorContext->PosZ.GetValue(Time));
+				for (int64 Time : EditorContext->GetScene()->AnimationRange) {
+					bool bIsKeyframe = EditorContext->GetCameraEditor()->Get<FFICEditorAttributeBase>("Position").GetKeyframe(Time).IsValid();
+					FVector Loc = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"), Time);
 					if (bIsKeyframe || Loc != PrevLoc) GetWorld()->LineBatcher->DrawLine(Loc, Loc, bIsKeyframe ? FColor::Yellow : FColor::Blue, SDPG_World, 20);
 					if (PrevLoc != FVector::ZeroVector) {
 						GetWorld()->LineBatcher->DrawLine(PrevLoc, Loc, FColor::Red, SDPG_World, 5);
@@ -125,7 +124,7 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 				}
 			}
 		
-			UGameplayStatics::SetGlobalTimeDilation(this, EditorContext->GetAnimation()->bBulletTime ? 0.00001 : 1);
+			UGameplayStatics::SetGlobalTimeDilation(this, EditorContext->GetScene()->bBulletTime ? 0.00001 : 1);
 			CustomTimeDilation = 1.0f/UGameplayStatics::GetGlobalTimeDilation(this);
 		}
 	
@@ -242,13 +241,13 @@ void AFICEditorCameraCharacter::FlyUp(float Value) {
 
 void AFICEditorCameraCharacter::NextKeyframe() {
 	int64 Time;
-	TSharedPtr<FFICKeyframe> KF = EditorContext->All.GetAttribute()->GetNextKeyframe(EditorContext->GetCurrentFrame(), Time);
+	TSharedPtr<FFICKeyframe> KF = EditorContext->GetAllAttributes()->GetAttribute().GetNextKeyframe(EditorContext->GetCurrentFrame(), Time);
 	if (KF) EditorContext->SetCurrentFrame(Time);
 }
 
 void AFICEditorCameraCharacter::PrevKeyframe() {
 	int64 Time;
-	TSharedPtr<FFICKeyframe> KF = EditorContext->All.GetAttribute()->GetPrevKeyframe(EditorContext->GetCurrentFrame(), Time);
+	TSharedPtr<FFICKeyframe> KF = EditorContext->GetAllAttributes()->GetAttribute().GetPrevKeyframe(EditorContext->GetCurrentFrame(), Time);
 	EditorContext->SetCurrentFrame(Time);
 }
 
@@ -302,32 +301,8 @@ void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorCont
 void AFICEditorCameraCharacter::ChangedKeyframe() {
 	auto Change = MakeShared<FFICChange_Group>();
 	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(EditorContext, TNumericLimits<int64>::Min(), EditorContext->GetCurrentFrame()));
-	BEGIN_ATTRIB_CHANGE(EditorContext->PosX.GetAttribute())
-	BEGIN_ATTRIB_CHANGE(EditorContext->PosY.GetAttribute())
-	BEGIN_ATTRIB_CHANGE(EditorContext->PosZ.GetAttribute())
-	BEGIN_ATTRIB_CHANGE(EditorContext->RotPitch.GetAttribute())
-	BEGIN_ATTRIB_CHANGE(EditorContext->RotYaw.GetAttribute())
-	BEGIN_ATTRIB_CHANGE(EditorContext->RotRoll.GetAttribute())
-	BEGIN_ATTRIB_CHANGE(EditorContext->FOV.GetAttribute())
-	BEGIN_ATTRIB_CHANGE(EditorContext->FocusDistance.GetAttribute())
-	BEGIN_ATTRIB_CHANGE(EditorContext->Aperture.GetAttribute())
-	int64 Time = EditorContext->GetCurrentFrame();
-	if (EditorContext->PosX.GetKeyframe(Time) && EditorContext->PosY.GetKeyframe(Time) && EditorContext->PosZ.GetKeyframe(Time) && EditorContext->RotPitch.GetKeyframe(Time) && EditorContext->RotYaw.GetKeyframe(Time) && EditorContext->RotRoll.GetKeyframe(Time) && EditorContext->FOV.GetKeyframe(Time) &&
-		!EditorContext->PosX.HasChanged(Time) && !EditorContext->PosY.HasChanged(Time) && !EditorContext->PosZ.HasChanged(Time) && !EditorContext->RotPitch.HasChanged(Time) && !EditorContext->RotYaw.HasChanged(Time) && !EditorContext->RotRoll.HasChanged(Time) && !EditorContext->FOV.HasChanged(Time)) {
-		EditorContext->All.RemoveKeyframe(Time);
-	} else {
-		EditorContext->All.SetKeyframe(Time);
-	}
-	EditorContext->All.GetAttribute()->RecalculateAllKeyframes();
-	EditorContext->All.GetAttribute()->OnUpdate.Broadcast();
-	END_ATTRIB_CHANGE(Change)
-	END_ATTRIB_CHANGE(Change)
-	END_ATTRIB_CHANGE(Change)
-	END_ATTRIB_CHANGE(Change)
-	END_ATTRIB_CHANGE(Change)
-	END_ATTRIB_CHANGE(Change)
-	END_ATTRIB_CHANGE(Change)
-	END_ATTRIB_CHANGE(Change)
+	BEGIN_ATTRIB_CHANGE(EditorContext->GetAllAttributes()->GetAttribute())
+	// TODO: Toggle All keyframes (dynamic check if all attributes have keyframe and if is different from current value
 	END_ATTRIB_CHANGE(Change)
 	EditorContext->ChangeList.PushChange(Change);
 }
@@ -337,14 +312,15 @@ void AFICEditorCameraCharacter::Zoom(float Value) {
 	if (bChangeFOV) {
 		float Delta = Value;
 		if (bIsSprinting) Delta *= 2;
-		EditorContext->FOV.SetValue(EditorContext->FOV.GetValue() + Delta);
+		TFICEditorAttribute<FFICFloatAttribute> FOV = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV");
+		FOV.SetValue(FOV.GetValue() + Delta);
 	} else if (bChangeSpeed) {
 		float Delta = Value * 100;
 		if (bIsSprinting) Delta *= 2;
 		if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
 	} else {
 		float Delta = Value;
-		int64 Range = EditorContext->GetAnimation()->AnimationEnd - EditorContext->GetAnimation()->AnimationStart;
+		int64 Range = EditorContext->GetScene()->AnimationRange.Length();
 		while (Range > 300) {
 			Range /= 10;
 			Delta *= 10;
@@ -356,8 +332,8 @@ void AFICEditorCameraCharacter::Zoom(float Value) {
 
 void AFICEditorCameraCharacter::UpdateValues() {
 	if (EditorContext) {
-		FVector Pos = FVector(EditorContext->PosX.GetValue(), EditorContext->PosY.GetValue(), EditorContext->PosZ.GetValue());
-		FRotator Rot = FRotator(EditorContext->RotPitch.GetValue(), EditorContext->RotYaw.GetValue(), EditorContext->RotRoll.GetValue());
+		FVector Pos = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
+		FRotator Rot = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
 		if (EditorContext->bMoveCamera) {
 			SetActorLocation(Pos);
 			SetActorRotation(Rot);
@@ -367,13 +343,13 @@ void AFICEditorCameraCharacter::UpdateValues() {
 			}
 			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
 			if (CineCamera) {
-				CineCamera->Filmback.SensorWidth = EditorContext->GetAnimation()->SensorWidth * EditorContext->SensorWidthAdjust;
-				CineCamera->Filmback.SensorHeight = EditorContext->GetAnimation()->SensorHeight * EditorContext->SensorWidthAdjust;
+				CineCamera->Filmback.SensorWidth = EditorContext->GetScene()->SensorDimension.X * EditorContext->SensorWidthAdjust;
+				CineCamera->Filmback.SensorHeight = EditorContext->GetScene()->SensorDimension.Y * EditorContext->SensorWidthAdjust;
 			}
-			Camera->SetFieldOfView(EditorContext->FOV.GetValue());
+			Camera->SetFieldOfView(EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue());
 			if (CineCamera) {
-				CineCamera->CurrentAperture = EditorContext->Aperture.GetValue();
-				CineCamera->FocusSettings.ManualFocusDistance = EditorContext->FocusDistance.GetValue();
+				CineCamera->CurrentAperture = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Aperture").GetValue();
+				CineCamera->FocusSettings.ManualFocusDistance = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Focus Distance").GetValue();
 			}
 		}
 		CameraActor->SetActorTransform(FTransform(Rot, Pos));
