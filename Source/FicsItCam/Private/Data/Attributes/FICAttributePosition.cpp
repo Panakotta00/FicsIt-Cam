@@ -7,13 +7,13 @@
 
 TSharedRef<FFICEditorAttributeBase> FFICAttributePosition::CreateEditorAttribute() {
 	TSharedRef<FFICEditorAttributeBase> Base = Super::CreateEditorAttribute();
+	Base->Get<TFICEditorAttribute<FFICFloatAttribute>>("X").GraphColor = FColor::Red;
+	Base->Get<TFICEditorAttribute<FFICFloatAttribute>>("Y").GraphColor = FColor::Green;
+	Base->Get<TFICEditorAttribute<FFICFloatAttribute>>("Z").GraphColor = FColor::Blue;
 	StaticCastSharedRef<FFICEditorAttributeGroup>(Base)->OnCreateAttributeDetailsWidget.BindLambda([Base](UFICEditorContext* Context) {
 		return SNew(SHorizontalBox)
 		+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-			SNew(SFICKeyframeControl, Context)
-			.Attribute_Lambda([Base]() -> FFICEditorAttributeBase* {
-				return &*Base;
-			})
+			SNew(SFICKeyframeControl, Context, Base)
 			.Frame_Lambda([Context]() {
 				return Context->GetCurrentFrame();
 			})
@@ -23,19 +23,13 @@ TSharedRef<FFICEditorAttributeBase> FFICAttributePosition::CreateEditorAttribute
 			.Text(FText::FromString(":"))
 		]
 		+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
-			SNew(SFICVectorEditor, Context)
+			SNew(SFICVectorEditor, Context, Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("X"), Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Y"), Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Z"))
 			.ShowKeyframeControls(true)
-			.XAttr_Lambda([Base]() {
-				return &*(*Base)["X"];
-			})
-			.YAttr_Lambda([Base]() {
-				return &*(*Base)["Y"];
-			})
-			.ZAttr_Lambda([Base]() {
-				return &*(*Base)["Z"];
-			})
 			.AutoKeyframe_Lambda([Context]() {
 				return Context->bAutoKeyframe;
+			})
+			.Frame_Lambda([Context]() {
+				return Context->GetCurrentFrame();
 			})
 		];
 	});

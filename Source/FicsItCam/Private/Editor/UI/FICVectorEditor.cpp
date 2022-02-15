@@ -11,77 +11,13 @@ SFICVectorEditor::SFICVectorEditor() {
 	SpinBoxStyle.InactiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
 }
 
-void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext) {
-	X = InArgs._X;
-	Y = InArgs._Y;
-	Z = InArgs._Z;
-	XAttr = InArgs._XAttr;
-	YAttr = InArgs._YAttr;
-	ZAttr = InArgs._ZAttr;
+void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> InXAttr, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> InYAttr, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> InZAttr) {
+	XAttr = InXAttr;
+	YAttr = InYAttr;
+	ZAttr = InZAttr;
 	Frame = InArgs._Frame;
-	OnXCommitted = InArgs._OnXCommitted;
-	OnYCommitted = InArgs._OnYCommitted;
-	OnZCommitted = InArgs._OnZCommitted;
-	OnXChanged = InArgs._OnXChanged;
-	OnYChanged = InArgs._OnYChanged;
-	OnZChanged = InArgs._OnZChanged;
 	AutoKeyframe = InArgs._AutoKeyframe;
 	Context = InContext;
-
-	if (!X.IsSet() && !X.IsBound()) X = TAttribute<TOptional<float>>::Create([this]() {
-        if (XAttr.Get()) return TOptional<float>(static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(XAttr.Get())->GetValue());
-        return TOptional<float>();
-    });
-    if (!Y.IsSet() && !Y.IsBound()) Y = TAttribute<TOptional<float>>::Create([this]() {
-        if (YAttr.Get()) return TOptional<float>(static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(YAttr.Get())->GetValue());
-        return TOptional<float>();
-    });
-    if (!Z.IsSet() && !Z.IsBound()) Z = TAttribute<TOptional<float>>::Create([this]() {
-        if (ZAttr.Get()) return TOptional<float>(static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(ZAttr.Get())->GetValue());
-        return TOptional<float>();
-    });
-    if (!OnXCommitted.IsBound()) OnXCommitted = FFICVectorValueCommitted::CreateLambda([this](float Val, auto) {
-		if (XAttr.Get()) {
-			auto Attr = static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(XAttr.Get());
-			Attr->SetValue(Val);
-			if (AutoKeyframe.Get()) Attr->SetKeyframe(Frame.Get().GetValue());
-		}
-	});
-    if (!OnYCommitted.IsBound()) OnYCommitted = FFICVectorValueCommitted::CreateLambda([this](float Val, auto) {
-		if (YAttr.Get()) {
-			auto Attr = static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(YAttr.Get());
-			Attr->SetValue(Val);
-			if (AutoKeyframe.Get()) Attr->SetKeyframe(Frame.Get().GetValue());
-		}
-	});
-    if (!OnZCommitted.IsBound()) OnZCommitted = FFICVectorValueCommitted::CreateLambda([this](float Val, auto) {
-    	if (ZAttr.Get()) {
-			auto Attr = static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(ZAttr.Get());
-			Attr->SetValue(Val);
-			if (AutoKeyframe.Get()) Attr->SetKeyframe(Frame.Get().GetValue());
-		}
-	});
-	if (!OnXChanged.IsBound()) OnXChanged = FFICVectorValueChanged::CreateLambda([this](float Val) {
-		if (XAttr.Get()) {
-			auto Attr = static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(XAttr.Get());
-			Attr->SetValue(Val);
-			if (AutoKeyframe.Get()) Attr->SetKeyframe(Frame.Get().GetValue());
-		}
-	});
-	if (!OnYChanged.IsBound()) OnYChanged = FFICVectorValueChanged::CreateLambda([this](float Val) {
-		if (YAttr.Get()) {
-			auto Attr = static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(YAttr.Get());
-			Attr->SetValue(Val);
-			if (AutoKeyframe.Get()) Attr->SetKeyframe(Frame.Get().GetValue());
-		}
-	});
-	if (!OnZChanged.IsBound()) OnZChanged = FFICVectorValueChanged::CreateLambda([this](float Val) {
-		if (ZAttr.Get()) {
-			auto Attr = static_cast<TFICEditorAttribute<FFICFloatAttribute>*>(ZAttr.Get());
-			Attr->SetValue(Val);
-			if (AutoKeyframe.Get()) Attr->SetKeyframe(Frame.Get().GetValue());
-		}
-	});
 
 	TSharedRef<SHorizontalBox> Holder = SNew(SHorizontalBox);
 	ChildSlot[Holder];
@@ -93,7 +29,9 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 		]
 		+SOverlay::Slot().Padding(5, 0, 0, 0)[
 			SNew(SNumericEntryBox<float>)
-			.Value(X)
+			.Value_Lambda([this]() {
+				return XAttr->GetValue();
+			})
 			.SpinBoxStyle(&SpinBoxStyle)
 			.SupportDynamicSliderMaxValue(true)
 			.SupportDynamicSliderMinValue(true)
@@ -105,15 +43,18 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 			.MaxSliderValue(TOptional<float>())
 	        .LinearDeltaSensitivity(1)
 	        .AllowSpin(true)
-			.OnValueChanged(OnXChanged)
-			.OnValueCommitted(OnXCommitted)
+			.OnValueChanged_Lambda([this](float Value) {
+				XAttr->SetValue(Value);
+			})
+			.OnValueCommitted_Lambda([this](float Value, ETextCommit::Type) {
+				XAttr->SetValue(Value);
+			})
 			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 		]
 	];
 	if (InArgs._ShowKeyframeControls) {
 		Holder->AddSlot().AutoWidth()[
-            SNew(SFICKeyframeControl, Context)
-                .Attribute(XAttr)
+            SNew(SFICKeyframeControl, Context, XAttr.ToSharedRef())
                 .Frame(Frame)
         ];
 	}
@@ -125,7 +66,9 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	    ]
 	    +SOverlay::Slot().Padding(5, 0, 0, 0)[
 	        SNew(SNumericEntryBox<float>)
-	        .Value(Y)
+	        .Value_Lambda([this]() {
+		        return YAttr->GetValue();
+	        })
 	        .SpinBoxStyle(&SpinBoxStyle)
 	        .SupportDynamicSliderMaxValue(true)
 			.SupportDynamicSliderMinValue(true)
@@ -137,15 +80,18 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	        .MaxSliderValue(TOptional<float>())
 	        .LinearDeltaSensitivity(1)
 	        .AllowSpin(true)
-			.OnValueChanged(OnYChanged)
-	        .OnValueCommitted(OnYCommitted)
+			.OnValueChanged_Lambda([this](float Value) {
+				return YAttr->SetValue(Value);
+			})
+	        .OnValueCommitted_Lambda([this](float Value, ETextCommit::Type) {
+		        return YAttr->SetValue(Value);
+	        })
 			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 	    ]
 	];
 	if (InArgs._ShowKeyframeControls) {
 		Holder->AddSlot().AutoWidth()[
-			SNew(SFICKeyframeControl, Context)
-			.Attribute(YAttr)
+			SNew(SFICKeyframeControl, Context, YAttr.ToSharedRef())
 			.Frame(Frame)
 		];
 	}
@@ -157,7 +103,9 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	    ]
 	    +SOverlay::Slot().Padding(5, 0, 0, 0)[
 	        SNew(SNumericEntryBox<float>)
-	        .Value(Z)
+	        .Value_Lambda([this]() {
+		        return ZAttr->GetValue();
+	        })
 	        .AllowSpin(true)
 	        .SpinBoxStyle(&SpinBoxStyle)
 	        .SupportDynamicSliderMaxValue(true)
@@ -169,15 +117,18 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 			.MinSliderValue(TOptional<float>())
 			.MaxSliderValue(TOptional<float>())
 	        .LinearDeltaSensitivity(1)
-			.OnValueChanged(OnZChanged)
-	        .OnValueCommitted(OnZCommitted)
+			.OnValueChanged_Lambda([this](float Value) {
+				ZAttr->SetValue(Value);
+			})
+	        .OnValueCommitted_Lambda([this](float Value, ETextCommit::Type) {
+		        ZAttr->SetValue(Value);
+	        })
 			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 	    ]
     ];
 	if (InArgs._ShowKeyframeControls) {
 		Holder->AddSlot().AutoWidth()[
-			SNew(SFICKeyframeControl, Context)
-            .Attribute(ZAttr)
+			SNew(SFICKeyframeControl, Context, ZAttr.ToSharedRef())
             .Frame(Frame)
 		];
 	}

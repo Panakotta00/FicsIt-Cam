@@ -103,8 +103,8 @@ FFICKeyframeControlStyle* SFICKeyframeControl::DefaultStyle() {
 
 SFICKeyframeControl::SFICKeyframeControl() : Children(this) {}
 
-void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InContext) {
-	Attribute = InArgs._Attribute;
+void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InContext, TSharedRef<FFICEditorAttributeBase> InAttribute) {
+	Attribute = InAttribute;
 	Style = InArgs._Style;
 	Frame = InArgs._Frame;
 	GraphView = InArgs._GraphView;
@@ -113,7 +113,7 @@ void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InCont
 	Children.Add(
 		SAssignNew(MainHandle, SBox)
 		.ToolTipText_Lambda([this]() {
-			TSharedPtr<FFICKeyframe> KF = Attribute.Get()->GetKeyframe(GetFrame());
+			TSharedPtr<FFICKeyframe> KF = Attribute->GetKeyframe(GetFrame());
 	        if (KF) {
 	            switch (KF->KeyframeType) {
 	            case FIC_KF_EASE:
@@ -138,17 +138,15 @@ void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InCont
 			.Content()[
 				SNew(SImage)
 				.ColorAndOpacity_Lambda([this]() {
-					FFICEditorAttributeBase* Attr = Attribute.Get();
-					if (!Attr) return Style.Get()->UnsetColor;
-					TSharedPtr<FFICKeyframe> KF = Attr->GetKeyframe(GetFrame());
+					TSharedPtr<FFICKeyframe> KF = Attribute->GetKeyframe(GetFrame());
 					if (KF) {
-						if (Attr->HasChanged(GetFrame())) return Style.Get()->ChangedColor;
+						if (Attribute->HasChanged(GetFrame())) return Style.Get()->ChangedColor;
 						else return Style.Get()->SetColor;
-					} else if (Attr->IsAnimated()) return Style.Get()->AnimatedColor;
+					} else if (Attribute->IsAnimated()) return Style.Get()->AnimatedColor;
 					else return Style.Get()->UnsetColor;
 				})
 				.Image_Lambda([this]() {
-					TSharedPtr<FFICKeyframe> KF = Attribute.Get()->GetKeyframe(GetFrame());
+					TSharedPtr<FFICKeyframe> KF = Attribute->GetKeyframe(GetFrame());
 					if (!KF) {
 						return &Style.Get()->DefaultBrush;
 					}
@@ -178,8 +176,8 @@ void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InCont
 		TSharedPtr<FFICKeyframe> Keyframe = GetAttribute()->GetKeyframe(GetFrame());
 		TSharedPtr<FFICKeyframe> NextKeyframe, PrevKeyframe;
 		int64 NextKeyframeTime, PrevKeyframeTime;
-		NextKeyframe = Attribute.Get()->GetAttribute().GetNextKeyframe(Frame.Get().GetValue(), NextKeyframeTime);
-		PrevKeyframe = Attribute.Get()->GetAttribute().GetPrevKeyframe(Frame.Get().GetValue(), PrevKeyframeTime);
+		NextKeyframe = Attribute->GetAttribute().GetNextKeyframe(Frame.Get(), NextKeyframeTime);
+		PrevKeyframe = Attribute->GetAttribute().GetPrevKeyframe(Frame.Get(), PrevKeyframeTime);
 		if (PrevKeyframe && PrevKeyframe->KeyframeType & FIC_KF_HANDLES) {
 			FromHandle = SNew(SFICKeyframeHandle, this).Style(Style);
 			Children.Add(FromHandle.ToSharedRef());
@@ -226,7 +224,7 @@ void SFICKeyframeControl::OnArrangeChildren(const FGeometry& AllottedGeometry, F
 		ValuePerLocal = (float)(ValueRange.Length()) / GraphView->GetCachedGeometry().Size.Y;
 		TimelinePerLocal = (float)(FrameRange.Length()) / GraphView->GetCachedGeometry().Size.X;
 
-		TSharedPtr<FFICKeyframe> Keyframe = Attribute.Get()->GetKeyframe(Frame.Get().GetValue());
+		TSharedPtr<FFICKeyframe> Keyframe = Attribute->GetKeyframe(Frame.Get());
 
 		if (Keyframe) {
 			if (FromHandle) {
@@ -256,15 +254,15 @@ FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const
 
 FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton && !bWasDoubleClick) {
-		FFICAttribute& Attrib = Attribute.Get()->GetAttribute();
+		FFICAttribute& Attrib = Attribute->GetAttribute();
         BEGIN_QUICK_ATTRIB_CHANGE(Context, Attrib, GetFrame(), GetFrame())
-		if (Attribute.Get()->GetKeyframe(GetFrame()) && (ToHandle || FromHandle || !Attribute.Get()->HasChanged(GetFrame()))) Attribute.Get()->RemoveKeyframe(GetFrame());
-		else Attribute.Get()->SetKeyframe(GetFrame());
+		if (Attribute->GetKeyframe(GetFrame()) && (ToHandle || FromHandle || !Attribute->HasChanged(GetFrame()))) Attribute->RemoveKeyframe(GetFrame());
+		else Attribute->SetKeyframe(GetFrame());
 		Attrib.RecalculateAllKeyframes();
 		END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
 		return FReply::Handled();
 	} else 	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
-        TSharedPtr<FFICKeyframe> KF = Attribute.Get()->GetKeyframe(GetFrame());
+        TSharedPtr<FFICKeyframe> KF = Attribute->GetKeyframe(GetFrame());
 		if (KF) {
 			TSharedPtr<IMenu> MenuHandle;
 			FMenuBuilder MenuBuilder(true, NULL);
@@ -273,9 +271,9 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute.Get()->SetKeyframe(FFICValueTime(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASE, false);
-                	Attribute.Get()->GetAttribute().RecalculateAllKeyframes();
+                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
+                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASE, false);
+                	Attribute->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
@@ -283,9 +281,9 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute.Get()->SetKeyframe(FFICValueTime(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASEINOUT, false);
-                	Attribute.Get()->GetAttribute().RecalculateAllKeyframes();
+                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
+                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASEINOUT, false);
+                	Attribute->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
@@ -293,9 +291,9 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute.Get()->SetKeyframe(FFICValueTime(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->GetValue()), FIC_KF_LINEAR, false);
-                	Attribute.Get()->GetAttribute().RecalculateAllKeyframes();
+                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
+                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_LINEAR, false);
+                	Attribute->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 			MenuBuilder.AddMenuEntry(
@@ -303,9 +301,9 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FText(),
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute.Get()->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute.Get()->SetKeyframe(FFICValueTime(GetFrame(), Attribute.Get()->GetKeyframe(GetFrame())->GetValue()), FIC_KF_STEP, false);
-                	Attribute.Get()->GetAttribute().RecalculateAllKeyframes();
+                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
+                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_STEP, false);
+                	Attribute->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
 		
@@ -320,12 +318,11 @@ FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry
 	bWasDoubleClick = true;
 
 	if (!GraphView) {
-		FFICEditorAttributeBase* Attr = Attribute.Get();
-		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attr->GetAttribute().GetKeyframes();
+		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attribute->GetAttribute().GetKeyframes();
 		if (Keyframes.Num() > 0) {
-			BEGIN_QUICK_ATTRIB_CHANGE(Context, Attr->GetAttribute(), GetFrame(), GetFrame())
-			for (const TPair<FICFrame, TSharedRef<FFICKeyframe>>& KF : Keyframes) Attr->RemoveKeyframe(KF.Key);
-			Attr->GetAttribute().OnUpdate.Broadcast();
+			BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
+			for (const TPair<FICFrame, TSharedRef<FFICKeyframe>>& KF : Keyframes) Attribute->RemoveKeyframe(KF.Key);
+			Attribute->GetAttribute().OnUpdate.Broadcast();
 			END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
 		}
 	}
@@ -352,6 +349,6 @@ FICFrame SFICKeyframeControl::GetFrame() const {
 	return Context->GetCurrentFrame();
 }
 
-FFICEditorAttributeBase* SFICKeyframeControl::GetAttribute() const {
-	return Attribute.Get();
+TSharedRef<FFICEditorAttributeBase> SFICKeyframeControl::GetAttribute() const {
+	return Attribute.ToSharedRef();
 }

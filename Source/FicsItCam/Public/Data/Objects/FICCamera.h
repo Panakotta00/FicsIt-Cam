@@ -8,8 +8,10 @@
 #include "Data/Objects/FICSceneObject.h"
 #include "FICCamera.generated.h"
 
+class AFICEditorCameraActor;
+
 UCLASS()
-class FICSITCAM_API UFICCamera : public UObject, public IFICSceneObject {
+class FICSITCAM_API UFICCamera : public UObject, public FTickableGameObject, public IFICSceneObject {
 	GENERATED_BODY()
 public:
 	UPROPERTY(SaveGame)
@@ -27,6 +29,11 @@ public:
 	FFICGroupAttribute LensSettings;
 	FFICGroupAttribute RootAttribute;
 
+	UPROPERTY()
+	UFICEditorContext* EditorContext = nullptr;
+	UPROPERTY()
+	AFICEditorCameraActor* EditorCameraActor = nullptr;
+
 	UFICCamera() {
 		LensSettings.AddChildAttribute(TEXT("FOV"), &FOV);
 		LensSettings.AddChildAttribute(TEXT("Aperture"), &Aperture);
@@ -37,6 +44,12 @@ public:
 		RootAttribute.AddChildAttribute(TEXT("Lens Settings"), &LensSettings);
 	}
 
+	// Begin FTickableGameObject
+	virtual void Tick(float DeltaTime) override;
+	virtual bool IsTickable() const override { return true; }
+	virtual TStatId GetStatId() const override { return UObject::GetStatID(); }
+	// End FTickableGameObject
+
 	// Begin IFICEditorSceneObject-Interface
 	FText GetSceneObjectName() override {
 		return FText::FromString(TEXT("Camera"));
@@ -45,5 +58,9 @@ public:
 	FFICAttribute& GetRootAttribute() override {
 		return RootAttribute;
 	}
+
+	virtual void InitEditor(UFICEditorContext* Context) override;
+	virtual void UnloadEditor(UFICEditorContext* Context) override;
+	virtual void EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) override;
 	// End IFICEditorSceneObject-Interface
 };

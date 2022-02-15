@@ -39,6 +39,7 @@ private:
 
 	TSharedPtr<FFICEditorAttributeGroupDynamic> AllAttributes;
 	TMap<UObject*, TSharedRef<FFICEditorAttributeBase>> EditorAttributes;
+	TMap<UObject*, FDelegateHandle> DataAttributeOnUpdateDelegateHandles;
 
 	UPROPERTY()
 	ACharacter* OriginalCharacter = nullptr;
@@ -78,11 +79,19 @@ public:
 	virtual bool IsTickable() const override;
 	virtual TStatId GetStatId() const override { return UObject::GetStatID(); }
 	// End FTickableGameObject
+
+	void LoadSceneObject(UObject* SceneObject);
+	void UnloadSceneObject(UObject* SceneObject);
+	void AddSceneObject(UObject* SceneObject);
+	void RemoveSceneObject(UObject* SceneObject);
 	
 	void SetScene(AFICScene* Scene);
 	AFICScene* GetScene() const;
 	UFICCamera* GetCamera();
 	TSharedPtr<FFICEditorAttributeBase> GetCameraEditor();
+	UFICCamera* GetActiveCamera() {
+		return GetCamera();
+	}
 	
 	void SetCurrentFrame(int64 inFrame);
 	int64 GetCurrentFrame() const;

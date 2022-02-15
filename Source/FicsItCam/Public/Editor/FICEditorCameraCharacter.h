@@ -18,9 +18,6 @@ private:
 	UPROPERTY()
 	UCameraComponent* Camera;
 
-	UPROPERTY()
-	AFICEditorCameraActor* CameraActor = nullptr;
-
 	bool bIsSprinting = false;
 	bool bChangeFOV = false;
 	bool bChangeSpeed = false;

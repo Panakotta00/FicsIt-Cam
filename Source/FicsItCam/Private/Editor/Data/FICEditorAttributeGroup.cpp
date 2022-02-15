@@ -70,16 +70,16 @@ TSharedRef<SWidget> FFICEditorAttributeGroupBase::CreateDetailsWidget(UFICEditor
 	return OnCreateAttributeDetailsWidget.Execute(Context);
 }
 
-FFICEditorAttributeGroup::FFICEditorAttributeGroup(FFICGroupAttribute& InGroupAttribute, FFICAttributeValueChanged OnValueChanged, FLinearColor GraphColor): FFICEditorAttributeGroupBase(OnValueChanged, GraphColor), GroupAttribute(InGroupAttribute) {
+FFICEditorAttributeGroup::FFICEditorAttributeGroup(FFICGroupAttribute& InGroupAttribute, FFICAttributeValueChanged InOnValueChanged, FLinearColor GraphColor): FFICEditorAttributeGroupBase(InOnValueChanged, GraphColor), GroupAttribute(InGroupAttribute) {
 	for (TTuple<FString, FFICAttribute*> Attribute : GroupAttribute.Children) {
 		Attributes.Add(Attribute.Key, Attribute.Value->CreateEditorAttribute());
 	}
 
-	GroupAttribute.OnUpdate.AddLambda([this]() {
-		for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attribute : Attributes) {
-			Attribute.Value->GetAttribute().OnUpdate.Broadcast();
-		}
-	});
+	for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attribute : Attributes) {
+		Attribute.Value->OnValueChanged.AddLambda([this]() {
+			OnValueChanged.Broadcast();
+		});
+	}
 }
 const FFICAttribute& FFICEditorAttributeGroup::GetAttributeConst() const {
 	return GroupAttribute;

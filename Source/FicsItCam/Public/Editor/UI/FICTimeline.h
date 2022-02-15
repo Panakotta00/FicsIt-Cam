@@ -9,9 +9,13 @@ class UFICEditorContext;
 
 struct FFICEditorAttributeReference {
 	FString Name;
-	FFICEditorAttributeBase* Attribute;
+	TSharedRef<FFICEditorAttributeBase> Attribute;
+	TArray<TSharedPtr<FFICEditorAttributeReference>> Children;
+	bool bChildrenLoaded = false;
 
-	FFICEditorAttributeReference(FString Name, FFICEditorAttributeBase* Attribute) : Name(Name), Attribute(Attribute) {}
+	FFICEditorAttributeReference(FString Name, TSharedRef<FFICEditorAttributeBase> Attribute) : Name(Name), Attribute(Attribute) {}
+
+	TArray<TSharedPtr<FFICEditorAttributeReference>> GetChildren();
 };
 
 class SFICTimelinePanel : public SCompoundWidget {
@@ -39,7 +43,7 @@ private:
 	TSharedPtr<SFICGraphView> Graph;
 	
 	TArray<TSharedPtr<FFICEditorAttributeReference>> Attributes;
-	TArray<FFICEditorAttributeBase*> SelectedLeafAttributes;
+	TArray<TSharedRef<FFICEditorAttributeBase>> SelectedLeafAttributes;
 
 	FFICValueRange ActiveValueRange;
 	

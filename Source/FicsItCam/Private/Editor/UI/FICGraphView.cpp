@@ -29,7 +29,7 @@ SFICGraphView::SFICGraphView() : Children(this) {
 }
 
 SFICGraphView::~SFICGraphView() {
-	for (FFICEditorAttributeBase* Attribute : Attributes) {
+	for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
 		Attribute->GetAttribute().OnUpdate.Remove(DelegateHandles[Attribute]);
 	}
 }
@@ -71,7 +71,7 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), {FVector2D(FrameToLocal(ActiveFrame.Get()), 0), FVector2D(FrameToLocal(ActiveFrame.Get()), AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None, FrameColor, true, 2);
 	
 	// Draw Plots
-	for (FFICEditorAttributeBase* const& Attribute : Attributes) {
+	for (const TSharedRef<FFICEditorAttributeBase>& Attribute : Attributes) {
 		TArray<FVector2D> PlotPoints;
 		for (FICFrame PlotFrame : Range) {
 			FVector2D PlotPoint = FrameAttributeToLocal(Attribute, PlotFrame);
@@ -108,7 +108,7 @@ FReply SFICGraphView::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointe
 		return FReply::Handled();
 	} else if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
 		FVector2D LocalMousePos = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
-		for (FFICEditorAttributeBase* const& Attribute : Attributes) {
+		for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
 			FFICFrameRange Range = FrameRange.Get();
 			for (FICFrame Frame : Range) {
 				FVector2D PlotPoint = FrameAttributeToLocal(Attribute, Frame);
@@ -204,14 +204,14 @@ void SFICGraphView::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrang
 	}
 }
 
-void SFICGraphView::SetAttributes(const TArray<FFICEditorAttributeBase*>& InAttributes) {
-	for (FFICEditorAttributeBase* Attribute : Attributes) {
+void SFICGraphView::SetAttributes(const TArray<TSharedRef<FFICEditorAttributeBase>>& InAttributes) {
+	for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
 		Attribute->GetAttribute().OnUpdate.Remove(DelegateHandles[Attribute]);
 	}
 	
 	Attributes = InAttributes;
 
-	for (FFICEditorAttributeBase* Attribute : Attributes) {
+	for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
 		DelegateHandles.Add(Attribute, Attribute->GetAttribute().OnUpdate.AddRaw(this, &SFICGraphView::Update));
 	}
 	
@@ -222,11 +222,10 @@ void SFICGraphView::SetAttributes(const TArray<FFICEditorAttributeBase*>& InAttr
 void SFICGraphView::Update() {
 	Children.Empty();
 	
-	for (FFICEditorAttributeBase* Attribute : Attributes) {
+	for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
 		for (const TPair<FICFrame, TSharedRef<FFICKeyframe>>& Keyframe : Attribute->GetAttribute().GetKeyframes()) {
 			TSharedRef<SFICKeyframeControl> Child =
-				SNew(SFICKeyframeControl, Context)
-				.Attribute(Attribute)
+				SNew(SFICKeyframeControl, Context, Attribute)
 				.Frame(Keyframe.Key)
 				.GraphView(this)
 				.ShowHandles(true);
@@ -242,7 +241,7 @@ void SFICGraphView::FitAll() {
 	Values.Begin = TNumericLimits<FICValue>::Max();
 	Values.End = TNumericLimits<FICValue>::Lowest();
 	int MaxKeyframeCountOfAnyAttribute = 0;
-	for (FFICEditorAttributeBase* Attribute : Attributes) {
+	for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
 		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attribute->GetAttribute().GetKeyframes();
 		for (TTuple<FICFrame, TSharedRef<FFICKeyframe>> Keyframe : Keyframes) {
 			TSharedRef<FFICKeyframe> KF = Keyframe.Value;
@@ -322,13 +321,13 @@ float SFICGraphView::GetValuePerLocal() const {
 	return (float)(ValueRange.Get().Length()) / GetCachedGeometry().Size.Y;
 }
 
-FVector2D SFICGraphView::FrameAttributeToLocal(const FFICEditorAttributeBase* InAttribute, FICFrame InFrame) const {
+FVector2D SFICGraphView::FrameAttributeToLocal(TSharedRef<FFICEditorAttributeBase> InAttribute, FICFrame InFrame) const {
 	return FVector2D(
 		FrameToLocal(InFrame),
 		ValueToLocal(InAttribute->GetValue(InFrame)));
 }
 
-TSharedPtr<SFICKeyframeControl> SFICGraphView::FindKeyframeControl(const FFICEditorAttributeBase* InAttribute, FICFrame InFrame) {
+TSharedPtr<SFICKeyframeControl> SFICGraphView::FindKeyframeControl(TSharedRef<FFICEditorAttributeBase> InAttribute, FICFrame InFrame) {
 	for (int i = 0; i < Children.Num(); ++i) {
 		TSharedRef<SFICKeyframeControl> Child = StaticCastSharedRef<SFICKeyframeControl>(Children.GetChildAt(i));
 		if (Child->GetAttribute() == InAttribute && Child->GetFrame() == InFrame) {

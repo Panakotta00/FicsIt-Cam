@@ -16,4 +16,8 @@ public:
 	virtual FText GetSceneObjectName() = 0;
 	
 	virtual FFICAttribute& GetRootAttribute() = 0;
+
+	virtual void InitEditor(UFICEditorContext* Context) {}
+	virtual void UnloadEditor(UFICEditorContext* Context) {}
+	virtual void EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) {}
 };

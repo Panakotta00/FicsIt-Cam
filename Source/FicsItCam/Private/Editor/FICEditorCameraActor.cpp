@@ -39,3 +39,12 @@ void AFICEditorCameraActor::UpdateGizmo() {
 	if (TProxy) TProxy->SetTransform(GetActorTransform());
 	if (Gizmo) Gizmo->SetActorTransform(GetActorTransform());
 }
+
+void AFICEditorCameraActor::UpdateValues(TSharedRef<FFICEditorAttributeBase> Attribute) {
+	FVector Pos = FFICAttributePosition::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Position"));
+	FRotator Rot = FFICAttributeRotation::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Rotation"));
+	SetActorLocation(Pos);
+	SetActorRotation(Rot);
+	
+	UpdateGizmo();
+}

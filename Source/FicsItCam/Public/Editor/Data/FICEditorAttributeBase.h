@@ -5,7 +5,7 @@
 class UFICEditorContext;
 struct FFICAttribute;
 
-DECLARE_DELEGATE(FFICAttributeValueChanged)
+DECLARE_MULTICAST_DELEGATE(FFICAttributeValueChanged)
 
 /**
  * This is the base class of editor attributes which will manage a attribute in the view of
@@ -16,11 +16,10 @@ DECLARE_DELEGATE(FFICAttributeValueChanged)
  * so control interfaces can abstractly add, create, changed keyframes without the need to interact
  * directly with the value type of the attribute.
  */
-class FFICEditorAttributeBase {
-protected:
+class FFICEditorAttributeBase : public TSharedFromThis<FFICEditorAttributeBase> {
+public:
 	FFICAttributeValueChanged OnValueChanged;
 	
-public:
 	FLinearColor GraphColor;
 	bool bShowInGraph = false;
 	
@@ -92,8 +91,12 @@ public:
 		return GetChildAttributes()[Name];
 	}
 	template<typename T = FFICEditorAttributeBase>
+	TSharedRef<T> GetRef(const FString& Name) {
+		return StaticCastSharedRef<T>((*this)[Name]);
+	}
+	template<typename T = FFICEditorAttributeBase>
 	T& Get(const FString& Name) {
-		return *StaticCastSharedRef<T>((*this)[Name]);
+		return *GetRef<T>(Name);
 	}
 };
 
@@ -173,10 +176,7 @@ public:
 			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<typename AttribType::ValueType>>())
 		]
 		+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-			SNew(SFICKeyframeControl, Context)
-			.Attribute_Lambda([this]() {
-				return this;
-			})
+			SNew(SFICKeyframeControl, Context, SharedThis(this))
 			.Frame_Lambda([this, Context]() {
 				return Context->GetCurrentFrame();
 			})
@@ -187,7 +187,7 @@ public:
 	void SetValue(typename AttribType::ValueType Value) {
 		if (CurrentValue == Value) return;
 		CurrentValue = Value;
-		bool _ = OnValueChanged.ExecuteIfBound();
+		OnValueChanged.Broadcast();
 		if (!IsAnimated()) Attribute.SetDefaultValue(CurrentValue);
 	}
 

@@ -27,4 +27,6 @@ public:
 	// End AActor
 
 	void UpdateGizmo();
+	
+	void UpdateValues(TSharedRef<FFICEditorAttributeBase> Attribute);
 };

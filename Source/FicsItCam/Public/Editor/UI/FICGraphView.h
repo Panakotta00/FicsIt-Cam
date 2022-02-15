@@ -15,7 +15,7 @@ class SFICGraphView : public SPanel {
 		SLATE_ATTRIBUTE(FFICValueRange, ValueRange)
 
 		SLATE_ARGUMENT_DEFAULT(bool, AutoFit) = false;
-		SLATE_ARGUMENT(TArray<FFICEditorAttributeBase*>, Attributes)
+		SLATE_ARGUMENT(TArray<TSharedRef<FFICEditorAttributeBase>>, Attributes)
 
 		SLATE_EVENT(FFICFrameRangeChanged, OnFrameRangeChanged)
 		SLATE_EVENT(FFICValueRangeChanged, OnValueRangeChanged)
@@ -41,8 +41,8 @@ private:
 	FFICFrameRangeChanged OnFrameRangeChanged;
 	FFICValueRangeChanged OnValueRangeChanged;
 
-	TArray<FFICEditorAttributeBase*> Attributes;
-	TMap<FFICEditorAttributeBase*, FDelegateHandle> DelegateHandles;
+	TArray<TSharedRef<FFICEditorAttributeBase>> Attributes;
+	TMap<TSharedRef<FFICEditorAttributeBase>, FDelegateHandle> DelegateHandles;
 
 public:
 	UFICEditorContext* Context = nullptr;
@@ -66,7 +66,7 @@ public:
 	virtual void OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const override;
 	// End SWidget
 
-	void SetAttributes(const TArray<FFICEditorAttributeBase*>& InAttributes);
+	void SetAttributes(const TArray<TSharedRef<FFICEditorAttributeBase>>& InAttributes);
 	void Update();
 	void FitAll();
 
@@ -89,7 +89,7 @@ public:
 	float ValueToLocal(FICValue Value) const;
 	float GetFramePerLocal() const;
 	float GetValuePerLocal() const;
-	FVector2D FrameAttributeToLocal(const FFICEditorAttributeBase* InAttribute, FICFrame InFrame) const;
+	FVector2D FrameAttributeToLocal(TSharedRef<FFICEditorAttributeBase> InAttribute, FICFrame InFrame) const;
 
-	TSharedPtr<SFICKeyframeControl> FindKeyframeControl(const FFICEditorAttributeBase* InAttribute, FICFrame InFrame);
+	TSharedPtr<SFICKeyframeControl> FindKeyframeControl(TSharedRef<FFICEditorAttributeBase> InAttribute, FICFrame InFrame);
 };

@@ -25,7 +25,6 @@ AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	bUseControllerRotationPitch = true;
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = true;
-	
 }
 
 void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
@@ -77,14 +76,13 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 		}
 	
 		if (EditorContext) {
-			if (EditorContext->bMoveCamera) {
-				CameraActor->SetActorTransform(GetActorTransform());
-			}
+			UFICCamera* CameraObject = EditorContext->GetActiveCamera();
+			if (EditorContext->bMoveCamera && CameraObject) {
+				CameraObject->EditorCameraActor->SetActorTransform(GetActorTransform());
 
-			FRotator RotOld = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
-			if (CameraActor) {
-				FVector Pos = CameraActor->GetActorLocation();
-				FRotator RotNew = CameraActor->GetActorRotation();
+				FRotator RotOld = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
+				FVector Pos = CameraObject->EditorCameraActor->GetActorLocation();
+				FRotator RotNew = CameraObject->EditorCameraActor->GetActorRotation();
 				FRotator RotOldN = RotOld;
 				while (RotOldN.Pitch < -180.0) RotOldN.Pitch += 360.0;
 				while (RotOldN.Pitch > 180.0) RotOldN.Pitch -= 360.0;
@@ -100,30 +98,15 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 				while (RotDiff.Roll < -180.0) RotDiff.Roll += 360.0;
 				while (RotDiff.Roll > 180.0) RotDiff.Roll -= 360.0;
 				RotNew = RotOld + RotDiff;
-			
+		
 				FFICAttributePosition::ToEditorAttribute(Pos, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
 				FFICAttributeRotation::ToEditorAttribute(RotNew, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
 
 				RotOld = RotNew;
+				
+				RotatorFix.Roll = RotOld.Roll;
 			}
 
-			if (EditorContext->bMoveCamera) RotatorFix.Roll = RotOld.Roll;
-
-			// Draw Path
-			if (EditorContext->bShowPath) {
-				FVector PrevLoc = FVector::ZeroVector;
-				FRotator PrevRot = FRotator::ZeroRotator;
-				for (int64 Time : EditorContext->GetScene()->AnimationRange) {
-					bool bIsKeyframe = EditorContext->GetCameraEditor()->Get<FFICEditorAttributeBase>("Position").GetKeyframe(Time).IsValid();
-					FVector Loc = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"), Time);
-					if (bIsKeyframe || Loc != PrevLoc) GetWorld()->LineBatcher->DrawLine(Loc, Loc, bIsKeyframe ? FColor::Yellow : FColor::Blue, SDPG_World, 20);
-					if (PrevLoc != FVector::ZeroVector) {
-						GetWorld()->LineBatcher->DrawLine(PrevLoc, Loc, FColor::Red, SDPG_World, 5);
-					}
-					PrevLoc = Loc;
-				}
-			}
-		
 			UGameplayStatics::SetGlobalTimeDilation(this, EditorContext->GetScene()->bBulletTime ? 0.00001 : 1);
 			CustomTimeDilation = 1.0f/UGameplayStatics::GetGlobalTimeDilation(this);
 		}
@@ -139,15 +122,10 @@ void AFICEditorCameraCharacter::BeginPlay() {
 	Mov->GravityScale = 0;
 	Mov->bUseSeparateBrakingFriction = true;
 	Mov->BrakingFriction = 1000000;
-
-	CameraActor = GetWorld()->SpawnActor<AFICEditorCameraActor>();
-	CameraActor->SetActorTransform(GetActorTransform());
-	CameraActor->EditorContext = EditorContext;
 }
 
 void AFICEditorCameraCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason) {
 	Super::EndPlay(EndPlayReason);
-	if (CameraActor) CameraActor->Destroy();
 }
 
 void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
@@ -295,7 +273,6 @@ void AFICEditorCameraCharacter::Redo() {
 
 void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorContext) {
 	EditorContext = InEditorContext;
-	if (CameraActor) CameraActor->EditorContext = EditorContext;
 }
 
 void AFICEditorCameraCharacter::ChangedKeyframe() {
@@ -352,7 +329,5 @@ void AFICEditorCameraCharacter::UpdateValues() {
 				CineCamera->FocusSettings.ManualFocusDistance = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Focus Distance").GetValue();
 			}
 		}
-		CameraActor->SetActorTransform(FTransform(Rot, Pos));
-		CameraActor->UpdateGizmo();
 	}
 }

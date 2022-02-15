@@ -7,13 +7,13 @@
 
 TSharedRef<FFICEditorAttributeBase> FFICAttributeRotation::CreateEditorAttribute() {
 	TSharedRef<FFICEditorAttributeBase> Base = Super::CreateEditorAttribute();
+	Base->Get<TFICEditorAttribute<FFICFloatAttribute>>("Pitch").GraphColor = FColor::Red;
+    Base->Get<TFICEditorAttribute<FFICFloatAttribute>>("Yaw").GraphColor = FColor::Green;
+    Base->Get<TFICEditorAttribute<FFICFloatAttribute>>("Roll").GraphColor = FColor::Blue;
 	StaticCastSharedRef<FFICEditorAttributeGroup>(Base)->OnCreateAttributeDetailsWidget.BindLambda([Base](UFICEditorContext* Context) {
 		return SNew(SHorizontalBox)
 		+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-			SNew(SFICKeyframeControl, Context)
-			.Attribute_Lambda([Base]() -> FFICEditorAttributeBase* {
-				return &*Base;
-			})
+			SNew(SFICKeyframeControl, Context, Base)
 			.Frame_Lambda([Context]() {
 				return Context->GetCurrentFrame();
 			})
@@ -23,19 +23,13 @@ TSharedRef<FFICEditorAttributeBase> FFICAttributeRotation::CreateEditorAttribute
 			.Text(FText::FromString(":"))
 		]
 		+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
-			SNew(SFICVectorEditor, Context)
+			SNew(SFICVectorEditor, Context, Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Pitch"), Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Yaw"), Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Roll"))
 			.ShowKeyframeControls(true)
-			.XAttr_Lambda([Base]() {
-				return &*(*Base)["Pitch"];
-			})
-			.YAttr_Lambda([Base]() {
-				return &*(*Base)["Yaw"];
-			})
-			.ZAttr_Lambda([Base]() {
-				return &*(*Base)["Roll"];
-			})
 			.AutoKeyframe_Lambda([Context]() {
 				return Context->bAutoKeyframe;
+			})
+			.Frame_Lambda([Context]() {
+				return Context->GetCurrentFrame();
 			})
 		];
 	});

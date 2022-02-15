@@ -9,6 +9,16 @@ FCheckBoxStyle SFICTimelinePanel::DefaultToggleButtonStyle = FCoreStyle::Get().G
 FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonChecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.25f, 0.25f, 0.25f));
 FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonUnchecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.72f, 0.72f, 0.72f));
 
+TArray<TSharedPtr<FFICEditorAttributeReference>> FFICEditorAttributeReference::GetChildren() {
+	if (!bChildrenLoaded) {
+		for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attr : Attribute->GetChildAttributes()) {
+			Children.Add(MakeShared<FFICEditorAttributeReference>(Attr.Key, Attr.Value));
+		}
+		bChildrenLoaded = true;
+	}
+	return Children;
+}
+
 void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context;
 	BackgroundBrush = InArgs._Background;
@@ -21,7 +31,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	DefaultToggleButtonStyle.UncheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
 	
 	for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attribute : Context->GetAllAttributes()->GetChildAttributes()) {
-		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, &*Attribute.Value));
+		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, Attribute.Value));
 	}
 
 	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TDefaultNumericTypeInterface<int64>>();
@@ -323,9 +333,9 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 								.Text(FText::FromString(Attribute->Name))
 							].IsChecked_Lambda([Attribute]() {
 								if (Attribute->Attribute->GetChildAttributes().Num() < 1) return Attribute->Attribute->bShowInGraph ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-								TFunction<bool(FFICEditorAttributeBase*)> HasCheckedChild;
+								TFunction<bool(TSharedRef<FFICEditorAttributeBase>)> HasCheckedChild;
 								ECheckBoxState State = ECheckBoxState::Checked;
-								HasCheckedChild = [&HasCheckedChild, &State](FFICEditorAttributeBase* Attrib) {
+								HasCheckedChild = [&HasCheckedChild, &State](TSharedRef<FFICEditorAttributeBase> Attrib) {
 									bool bAtLeastOne = false;
 									for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attrib->GetChildAttributes()) {
 										if (Child.Value->GetChildAttributes().Num() < 1) {
@@ -335,7 +345,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 												State = ECheckBoxState::Undetermined;
 											}
 										} else {
-											bAtLeastOne = HasCheckedChild(&*Child.Value) || bAtLeastOne;
+											bAtLeastOne = HasCheckedChild(Child.Value) || bAtLeastOne;
 										}
 									}
 									return bAtLeastOne;
@@ -344,11 +354,11 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 								return ECheckBoxState::Unchecked;
 							})
 							.OnCheckStateChanged_Lambda([this, Attribute](ECheckBoxState State) {
-								TFunction<void(FFICEditorAttributeBase*)> SetChildren;
-								SetChildren = [&SetChildren, State](FFICEditorAttributeBase* Attrib) {
+								TFunction<void(TSharedRef<FFICEditorAttributeBase>)> SetChildren;
+								SetChildren = [&SetChildren, State](TSharedRef<FFICEditorAttributeBase> Attrib) {
 									Attrib->bShowInGraph = State == ECheckBoxState::Checked;
 									for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attrib->GetChildAttributes()) {
-										SetChildren(&*Child.Value);
+										SetChildren(Child.Value);
 									}
 								};
 								SetChildren(Attribute->Attribute);
@@ -357,9 +367,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 						];
 					})
 					.OnGetChildren_Lambda([](TSharedPtr<FFICEditorAttributeReference> InEntry, TArray<TSharedPtr<FFICEditorAttributeReference>>& OutArray) {
-						for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attribute : InEntry->Attribute->GetChildAttributes()) {
-							OutArray.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, &*Attribute.Value));
-						}
+						OutArray = InEntry->GetChildren();
 					})
 				]
 			]
@@ -433,11 +441,11 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 
 void SFICTimelinePanel::UpdateLeafAttributes() {
 	SelectedLeafAttributes.Empty();
-	TFunction<void(FFICEditorAttributeBase*)> AddLeaves;
-	AddLeaves = [this, &AddLeaves](FFICEditorAttributeBase* Attribute) {
+	TFunction<void(TSharedRef<FFICEditorAttributeBase>)> AddLeaves;
+	AddLeaves = [this, &AddLeaves](TSharedRef<FFICEditorAttributeBase> Attribute) {
 		if (Attribute->GetChildAttributes().Num() < 1 && Attribute->bShowInGraph) SelectedLeafAttributes.Add(Attribute); 
 		for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attribute->GetChildAttributes()) {
-			AddLeaves(&*Child.Value);
+			AddLeaves(Child.Value);
 		}
 	};
 	for (TSharedPtr<FFICEditorAttributeReference> Item : Attributes) {

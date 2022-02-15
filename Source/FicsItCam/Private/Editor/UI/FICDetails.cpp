@@ -11,7 +11,7 @@
 
 FSlateColorBrush SFICDetails::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 
-TSharedRef<SWidget> ScalarAttribute(UFICEditorContext* Context, TFICEditorAttribute<FFICFloatAttribute>& Attr, const FString& Label) {
+TSharedRef<SWidget> ScalarAttribute(UFICEditorContext* Context, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> Attr, const FString& Label) {
 	return
 	SNew(SHorizontalBox)
 	+SHorizontalBox::Slot().Padding(5).AutoWidth()[
@@ -21,7 +21,7 @@ TSharedRef<SWidget> ScalarAttribute(UFICEditorContext* Context, TFICEditorAttrib
 	+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
 		SNew(SNumericEntryBox<float>)
 		.Value_Lambda([&Attr]() -> TOptional<float> {
-			return Attr.GetValue();
+			return Attr->GetValue();
 		})
 		.SupportDynamicSliderMaxValue(true)
 		.SupportDynamicSliderMinValue(true)
@@ -34,18 +34,15 @@ TSharedRef<SWidget> ScalarAttribute(UFICEditorContext* Context, TFICEditorAttrib
 		.LinearDeltaSensitivity(10)
 		.AllowSpin(true)
 		.OnValueChanged_Lambda([&Attr](float Val) {
-			Attr.SetValue(Val);
+			Attr->SetValue(Val);
 		})
 		.OnValueCommitted_Lambda([&Attr](float Val, auto) {
-			Attr.SetValue(Val);
+			Attr->SetValue(Val);
 		})
 		.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 	]
 	+SHorizontalBox::Slot().Padding(5).AutoWidth()[
-		SNew(SFICKeyframeControl, Context)
-		.Attribute_Lambda([&Attr]() -> FFICEditorAttributeBase* {
-			return &Attr;
-		})
+		SNew(SFICKeyframeControl, Context, Attr)
 		.Frame_Lambda([Context]() {
 			return Context->GetCurrentFrame();
 		})
@@ -273,10 +270,6 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 	
 	for (UObject* Object : Context->GetScene()->GetSceneObjects()) {
 		Outliner->AddSlot().HAlign(HAlign_Fill).AutoHeight()[
-				SNew(STextBlock)
-				.Text(FText::FromString(TEXT("Fuck You!")))
-		];
-		Outliner->AddSlot().HAlign(HAlign_Fill).AutoHeight()[
 			SNew(SExpandableArea)
 			.HeaderContent()[
 				SNew(SHorizontalBox)
@@ -285,8 +278,7 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					.Text(Cast<IFICSceneObject>(Object)->GetSceneObjectName())
 				]
 				+SHorizontalBox::Slot().AutoWidth().HAlign(HAlign_Center).VAlign(VAlign_Center).Padding(5)[
-					SNew(SFICKeyframeControl, Context)
-					.Attribute(&*Context->GetEditorAttributes()[Object])
+					SNew(SFICKeyframeControl, Context, Context->GetEditorAttributes()[Object])
 					.Frame_Lambda([this]() {
 						return Context->GetCurrentFrame();
 					})

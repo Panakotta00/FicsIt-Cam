@@ -40,11 +40,20 @@ void UFICEditorContext::ShowEditor() {
 		EditorWidget.ToSharedRef()
 	];
 
+	for (UObject* SceneObject : Scene->GetSceneObjects()) {
+		Cast<IFICSceneObject>(SceneObject)->InitEditor(this);
+	}
+
 	IsEditorShown = true;
 }
 
 void UFICEditorContext::HideEditor() {
 	IsEditorShowing = false;
+
+	if (Scene) for (UObject* Object : Scene->GetSceneObjects()) {
+		Cast<IFICSceneObject>(Object)->UnloadEditor(this);
+	}
+	
 	if (CameraCharacter) {
 		GetWorld()->GetFirstPlayerController()->Possess(OriginalCharacter);
 		UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
@@ -98,14 +107,40 @@ bool UFICEditorContext::IsTickable() const {
 	return !WITH_EDITOR;
 }
 
+void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
+	TSharedRef<FFICEditorAttributeBase> Attribute = Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().CreateEditorAttribute();
+	AllAttributes->AddAttribute(Cast<IFICSceneObject>(SceneObject)->GetSceneObjectName().ToString(), Attribute);
+	// TODO: All Attributes support multiple objects of same type (using GetScneObjectName is a BAAAAD idea)
+	EditorAttributes.Add(SceneObject, Attribute);
+	Attribute->OnValueChanged.AddLambda([this, Attribute, SceneObject]() {
+		Cast<IFICSceneObject>(SceneObject)->EditorUpdate(this, Attribute);
+	});
+	DataAttributeOnUpdateDelegateHandles.Add(SceneObject, Attribute->GetAttribute().OnUpdate.AddLambda([this, Attribute]() {
+		Attribute->UpdateValue(GetCurrentFrame());
+	}));
+}
+
+void UFICEditorContext::UnloadSceneObject(UObject* SceneObject) {
+	EditorAttributes[SceneObject]->GetAttribute().OnUpdate.Remove(DataAttributeOnUpdateDelegateHandles[SceneObject]);
+	EditorAttributes.Remove(SceneObject);
+	DataAttributeOnUpdateDelegateHandles.Remove(SceneObject);
+	// TODO: Remove Attribute form AllAttributes
+}
+
+void UFICEditorContext::AddSceneObject(UObject* SceneObject) {
+	Scene->AddSceneObject(SceneObject);
+}
+
+void UFICEditorContext::RemoveSceneObject(UObject* SceneObject) {
+	
+}
+
 void UFICEditorContext::SetScene(AFICScene* InScene) {
 	Scene = InScene;
 	SetCurrentFrame(Scene->AnimationRange.Begin);
 	AllAttributes = MakeShared<FFICEditorAttributeGroupDynamic>();
 	for (UObject* SceneObject : Scene->GetSceneObjects()) {
-		TSharedRef<FFICEditorAttributeBase> Attribute = Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().CreateEditorAttribute();
-		AllAttributes->AddAttribute(Cast<IFICSceneObject>(SceneObject)->GetSceneObjectName().ToString(), Attribute);
-		EditorAttributes.Add(SceneObject, Attribute);
+		LoadSceneObject(SceneObject);
 	}
 }
 

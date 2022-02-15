@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "Data/FICTypes.h"
+
 class FFICEditorAttributeBase;
 class UFICEditorContext;
 class SFICGraphView;
@@ -49,10 +51,8 @@ class SFICKeyframeControl : public SPanel {
 	
 	SLATE_BEGIN_ARGS(SFICKeyframeControl) :
 		_Style(TAttribute<FFICKeyframeControlStyle*>::Create(TFunction<FFICKeyframeControlStyle*()>([](){ return DefaultStyle(); }))),
-		_GraphView(nullptr),
 		_ShowHandles(false) {}
-		SLATE_ATTRIBUTE(FFICEditorAttributeBase*, Attribute)
-		SLATE_ATTRIBUTE(TOptional<int64>, Frame)
+		SLATE_ATTRIBUTE(FICFrame, Frame)
 		SLATE_ATTRIBUTE(FFICKeyframeControlStyle*, Style)
 		SLATE_ARGUMENT(SFICGraphView*, GraphView)
 		SLATE_ARGUMENT(bool, ShowHandles)
@@ -61,11 +61,11 @@ class SFICKeyframeControl : public SPanel {
 public:
 	SFICKeyframeControl();
 	
-	void Construct(FArguments InArgs, UFICEditorContext* Context);
+	void Construct(FArguments InArgs, UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute);
 
 private:
-	TAttribute<TOptional<int64>> Frame;
-	TAttribute<FFICEditorAttributeBase*> Attribute;
+	TAttribute<FICFrame> Frame;
+	
 	TAttribute<FFICKeyframeControlStyle*> Style;
 
 	TSlotlessChildren<SWidget> Children;
@@ -77,8 +77,9 @@ private:
 
 
 public:
-	SFICGraphView* GraphView = nullptr;
 	UFICEditorContext* Context = nullptr;
+	TSharedPtr<FFICEditorAttributeBase> Attribute;
+	SFICGraphView* GraphView = nullptr;
 	
 	// Begin SWidget
 	virtual int OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
@@ -92,6 +93,6 @@ public:
 	virtual FCursorReply OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const override;
 	// End SWidget
 
-	int64 GetFrame() const;
-	FFICEditorAttributeBase* GetAttribute() const;
+	FICFrame GetFrame() const;
+	TSharedRef<FFICEditorAttributeBase> GetAttribute() const;
 };

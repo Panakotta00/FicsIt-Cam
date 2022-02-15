@@ -6,6 +6,7 @@
 #include "FICAttributePosition.generated.h"
 
 class FFICEditorAttributeGroup;
+
 USTRUCT(BlueprintType)
 struct FFICAttributePosition : public FFICGroupAttribute {
 	GENERATED_BODY()
