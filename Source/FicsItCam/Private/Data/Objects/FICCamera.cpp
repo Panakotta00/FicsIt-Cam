@@ -26,6 +26,7 @@ void UFICCamera::InitEditor(UFICEditorContext* Context) {
 
 	EditorCameraActor = Context->GetScene()->GetWorld()->SpawnActor<AFICEditorCameraActor>();
 	EditorCameraActor->EditorContext = EditorContext;
+	EditorCameraActor->Camera = this;
 	EditorCameraActor->UpdateValues(Context->GetEditorAttributes()[this]);
 }
 

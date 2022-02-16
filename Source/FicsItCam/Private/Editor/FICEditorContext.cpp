@@ -5,6 +5,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Data/Objects/FICCamera.h"
 #include "Data/Objects/FICSceneObject.h"
+#include "Editor/Data/FICEditorAttributeBool.h"
 #include "Engine/GameEngine.h"
 #include "Slate/SceneViewport.h"
 
@@ -13,7 +14,12 @@ void UFICEditorContext::ShowEditor() {
 
 	IsEditorShowing = true;
 	OriginalCharacter = GetWorld()->GetFirstPlayerController()->GetCharacter();
-	if (!CameraCharacter) CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(GetCamera()->Position.Get(0), GetCamera()->Rotation.Get(0));
+	if (!CameraCharacter) {
+		CameraCharacter = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(GetScene()->GetActorLocation(), GetScene()->GetActorRotation());
+		if (GetCamera()) {
+			CameraCharacter->SetActorLocationAndRotation(GetCamera()->Position.Get(0), GetCamera()->Rotation.Get(0));
+		}
+	}
 	CameraCharacter->SetEditorContext(this);
 	GetWorld()->GetFirstPlayerController()->Possess(CameraCharacter);
 	UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
@@ -154,16 +160,18 @@ AFICScene* UFICEditorContext::GetScene() const {
 
 UFICCamera* UFICEditorContext::GetCamera() {
 	for (UObject* Object : Scene->GetSceneObjects()) {
-		if (Object->IsA<UFICCamera>()) return Cast<UFICCamera>(Object);
+		UFICCamera* CameraObject = Cast<UFICCamera>(Object);
+		if (CameraObject) {
+			if (GetEditorAttributes()[CameraObject]->Get<FFICEditorAttributeBool>("Active").GetActiveValue()) return Cast<UFICCamera>(Object);
+		}
 	}
 	return nullptr;
 }
 
 TSharedPtr<FFICEditorAttributeBase> UFICEditorContext::GetCameraEditor() {
-	for (TTuple<UObject*, TSharedPtr<FFICEditorAttributeBase>> Attribute : EditorAttributes) {
-		if (Attribute.Key->IsA<UFICCamera>()) return Attribute.Value;
-	}
-	return nullptr;
+	UFICCamera* Camera = GetCamera();
+	if (!Camera) return nullptr;
+	return GetEditorAttributes()[GetCamera()];
 }
 
 void UFICEditorContext::SetCurrentFrame(FICFrame inFrame) {

@@ -59,7 +59,7 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
 			CineCamera->Filmback.SensorWidth = EditorContext->GetScene()->SensorDimension.X * EditorContext->SensorWidthAdjust;
 			CineCamera->Filmback.SensorHeight = EditorContext->GetScene()->SensorDimension.Y * EditorContext->SensorWidthAdjust;
-			Camera->SetFieldOfView(EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue());
+			if (EditorContext->GetCamera()) Camera->SetFieldOfView(EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue());
 		} else {
 			Camera->SetAspectRatio(EditorContext->GetScene()->ResolutionHeight / EditorContext->GetScene()->ResolutionWidth);
 		}
@@ -78,11 +78,14 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 		if (EditorContext) {
 			UFICCamera* CameraObject = EditorContext->GetActiveCamera();
 			if (EditorContext->bMoveCamera && CameraObject) {
-				CameraObject->EditorCameraActor->SetActorTransform(GetActorTransform());
+				if (LastCameraSceneObject != CameraObject) {
+					LastCameraSceneObject = CameraObject;
+					UpdateValues();
+				}
 
 				FRotator RotOld = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
-				FVector Pos = CameraObject->EditorCameraActor->GetActorLocation();
-				FRotator RotNew = CameraObject->EditorCameraActor->GetActorRotation();
+				FVector Pos = GetActorLocation();
+				FRotator RotNew = GetActorRotation();
 				FRotator RotOldN = RotOld;
 				while (RotOldN.Pitch < -180.0) RotOldN.Pitch += 360.0;
 				while (RotOldN.Pitch > 180.0) RotOldN.Pitch -= 360.0;
@@ -308,7 +311,7 @@ void AFICEditorCameraCharacter::Zoom(float Value) {
 }
 
 void AFICEditorCameraCharacter::UpdateValues() {
-	if (EditorContext) {
+	if (EditorContext && EditorContext->GetCamera()) {
 		FVector Pos = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
 		FRotator Rot = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
 		if (EditorContext->bMoveCamera) {

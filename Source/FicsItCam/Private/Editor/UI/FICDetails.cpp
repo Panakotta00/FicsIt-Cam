@@ -68,42 +68,46 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 			.Image(BackgroundBrush)
 		]
 		+SOverlay::Slot()[
-			SNew(SVerticalBox)
-			+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Fill)[
-				SNew(SButton)
-				.Text(FText::FromString("Add"))
-				.OnClicked_Lambda([this]() {
-					Context->AddSceneObject(NewObject<UFICCamera>());
-					return FReply::Handled();
-				})
+			SNew(SSplitter)
+			.Orientation(Orient_Vertical)
+			+SSplitter::Slot()[
+				SNew(SVerticalBox)
+				+SVerticalBox::Slot().AutoHeight()[
+					SNew(SButton)
+					.Text(FText::FromString("Add"))
+					.OnClicked_Lambda([this]() {
+						Context->AddSceneObject(NewObject<UFICCamera>());
+						return FReply::Handled();
+					})
+				]
+				+SVerticalBox::Slot().FillHeight(1)[
+					SAssignNew(SceneObjectListWidget, SListView<TSharedPtr<FFICSceneObjectReference>>)
+					.ListItemsSource(&SceneObjectList)
+					.OnSelectionChanged_Lambda([this](TSharedPtr<FFICSceneObjectReference> SelectedObject, ESelectInfo::Type) {
+						if (SelectedObject) SelectSceneObject(SelectedObject->SceneObject);
+						else SelectSceneObject(nullptr);
+					})
+					.SelectionMode(ESelectionMode::Single)
+					.OnGenerateRow_Lambda([this](TSharedPtr<FFICSceneObjectReference> SceneObject, const TSharedRef<STableViewBase>& Base) {
+						return SNew(STableRow<TSharedPtr<FFICSceneObjectReference>>, Base)
+						.Content()[
+							SNew(SHorizontalBox)
+							+SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[
+								SNew(STextBlock)
+								.Text(Cast<IFICSceneObject>(SceneObject->SceneObject)->GetSceneObjectName())
+							]
+							+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
+								SNew(SFICKeyframeControl, Context, Context->GetEditorAttributes()[SceneObject->SceneObject])
+								.Frame_Lambda([this]() {
+									return Context->GetCurrentFrame();
+								})
+							]
+						];
+					})
+				]
 			]
-			+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Fill)[
-				SNew(SListView<TSharedPtr<FFICSceneObjectReference>>)
-				.ListItemsSource(&SceneObjectList)
-				.OnSelectionChanged_Lambda([this](TSharedPtr<FFICSceneObjectReference> SelectedObject, ESelectInfo::Type) {
-					if (SelectedObject) SelectSceneObject(SelectedObject->SceneObject);
-					else SelectSceneObject(nullptr);
-				})
-				.SelectionMode(ESelectionMode::Single)
-				.OnGenerateRow_Lambda([this](TSharedPtr<FFICSceneObjectReference> SceneObject, const TSharedRef<STableViewBase>& Base) {
-					return SNew(STableRow<TSharedPtr<FFICSceneObjectReference>>, Base)
-					.Content()[
-						SNew(SHorizontalBox)
-						+SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[
-							SNew(STextBlock)
-							.Text(Cast<IFICSceneObject>(SceneObject->SceneObject)->GetSceneObjectName())
-						]
-						+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
-							SNew(SFICKeyframeControl, Context, Context->GetEditorAttributes()[SceneObject->SceneObject])
-							.Frame_Lambda([this]() {
-								return Context->GetCurrentFrame();
-							})
-						]
-					];
-				})
-			]
-			+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Fill).Expose(SceneObjectDetailsSlot)
-			+SVerticalBox::Slot().Padding(5).AutoHeight()[
+			+SSplitter::Slot().Expose(SceneObjectDetailsSlot)
+			+SSplitter::Slot()[
 				SNew(SHorizontalBox)
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
 					SNew(STextBlock)
@@ -245,8 +249,8 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					]
 				]
 			]
-			+SVerticalBox::Slot().Padding(5).AutoHeight()[
-			SNew(SHorizontalBox)
+			+SSplitter::Slot()[
+				SNew(SHorizontalBox)
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
 					SNew(STextBlock)
 					.Text(FText::FromString("Editor:"))
@@ -299,9 +303,6 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					]
 				]
 			]
-			+SVerticalBox::Slot().FillHeight(1)[
-				SNew(SSpacer)
-			]
 		]
 	];
 }
@@ -311,6 +312,7 @@ void SFICDetails::UpdateSceneObjectList() {
 	for (UObject* SceneObject : Context->GetScene()->GetSceneObjects()) {
 		SceneObjectList.Add(MakeShared<FFICSceneObjectReference>(SceneObject));
 	}
+	if (SceneObjectListWidget) SceneObjectListWidget->RebuildList();
 }
 
 void SFICDetails::SelectSceneObject(UObject* SceneObject) {

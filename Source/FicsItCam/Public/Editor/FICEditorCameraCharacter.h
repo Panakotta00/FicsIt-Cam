@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "FICEditorCameraCharacter.generated.h"
 
+class UFICCamera;
 class UCineCameraComponent;
 class AFICEditorCameraActor;
 class UTransformProxy;
@@ -17,6 +18,9 @@ class AFICEditorCameraCharacter : public ACharacter {
 private:
 	UPROPERTY()
 	UCameraComponent* Camera;
+
+	UPROPERTY()
+	UFICCamera* LastCameraSceneObject = nullptr;
 
 	bool bIsSprinting = false;
 	bool bChangeFOV = false;

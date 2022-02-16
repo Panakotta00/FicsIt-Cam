@@ -10,6 +10,8 @@ class AFICEditorCameraActor : public AActor {
 public:
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
+	UPROPERTY()
+	UFICCamera* Camera = nullptr;
 
 	UPROPERTY()
 	ULineBatchComponent* LineBatcher = nullptr;

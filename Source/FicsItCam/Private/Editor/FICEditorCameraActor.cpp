@@ -2,6 +2,7 @@
 
 #include "BaseGizmos/TransformGizmo.h"
 #include "Components/LineBatchComponent.h"
+#include "Editor/Data/FICEditorAttributeBool.h"
 
 AFICEditorCameraActor::AFICEditorCameraActor() {
 	PrimaryActorTick.bCanEverTick = true;
@@ -27,10 +28,12 @@ void AFICEditorCameraActor::Tick(float DeltaSeconds) {
 		}
 		
 		if (EditorContext->bShowPath) {
+			bool Active = EditorContext->GetActiveCamera() == Camera;
+			FColor Color = Active ? FColor::Green : FColor::Red;
 			FTransform Transform = GetActorTransform();
-			GetWorld()->LineBatcher->DrawBox(FBox(FVector(-1, -1, -1), FVector(1, 1, 1)), Transform.GetScaled(FVector(60, 40, 40)).ToMatrixWithScale(), FColor::Green, SDPG_World);
-			GetWorld()->LineBatcher->DrawDirectionalArrow(Transform.ToMatrixNoScale(), FColor::Green, 200, 20, SDPG_World);
-			GetWorld()->LineBatcher->DrawLine(GetActorLocation(), GetActorTransform().TransformPositionNoScale(FVector(0, 0, 100)), FColor::Green, SDPG_World);
+			GetWorld()->LineBatcher->DrawBox(FBox(FVector(-1, -1, -1), FVector(1, 1, 1)), Transform.GetScaled(FVector(60, 40, 40)).ToMatrixWithScale(), Color, SDPG_World);
+			GetWorld()->LineBatcher->DrawDirectionalArrow(Transform.ToMatrixNoScale(), Color, 200, 20, SDPG_World);
+			GetWorld()->LineBatcher->DrawLine(GetActorLocation(), GetActorTransform().TransformPositionNoScale(FVector(0, 0, 100)), Color, SDPG_World);
 		}
 	}
 }

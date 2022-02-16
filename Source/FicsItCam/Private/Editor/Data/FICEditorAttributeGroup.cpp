@@ -3,7 +3,7 @@
 #include "Data/Attributes/FICAttributeGroup.h"
 #include "Widgets/Layout/SExpandableArea.h"
 
-FFICEditorAttributeGroupBase::FFICEditorAttributeGroupBase(FFICAttributeValueChanged OnValueChanged, FLinearColor GraphColor): FFICEditorAttributeBase(OnValueChanged, GraphColor) {
+FFICEditorAttributeGroupBase::FFICEditorAttributeGroupBase(FFICAttributeValueChanged OnValueChanged, FLinearColor GraphColor): FFICEditorAttributeBase(GraphColor) {
 	OnCreateAttributeDetailsWidget.BindLambda([this](UFICEditorContext* Context) {
 		TSharedRef<SVerticalBox> List = SNew(SVerticalBox);
 		for (const TPair<FString, TSharedRef<FFICEditorAttributeBase>>& Attrib : Attributes) {

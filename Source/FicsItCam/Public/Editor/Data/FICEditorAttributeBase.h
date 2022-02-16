@@ -23,7 +23,7 @@ public:
 	FLinearColor GraphColor;
 	bool bShowInGraph = false;
 	
-	FFICEditorAttributeBase(const FFICAttributeValueChanged& OnValueChanged, FLinearColor GraphColor) : OnValueChanged(OnValueChanged), GraphColor(GraphColor) {}
+	FFICEditorAttributeBase(FLinearColor GraphColor) : GraphColor(GraphColor) {}
 	virtual ~FFICEditorAttributeBase() = default;
 	
 	/**
@@ -107,7 +107,7 @@ private:
 	typename AttribType::ValueType CurrentValue = AttribType::ValueType();
 
 public:
-	TFICEditorAttribute(AttribType& inAttribute, FFICAttributeValueChanged OnValueChanged = FFICAttributeValueChanged(), FLinearColor GraphColor = FColor::White) : FFICEditorAttributeBase(OnValueChanged, GraphColor), Attribute(inAttribute) {
+	TFICEditorAttribute(AttribType& inAttribute, FLinearColor GraphColor = FColor::White) : FFICEditorAttributeBase(GraphColor), Attribute(inAttribute) {
 		CurrentValue = Attribute.GetValue(0);
 	}
 	

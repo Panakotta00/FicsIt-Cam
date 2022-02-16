@@ -26,10 +26,11 @@ public:
 private:
 	UFICEditorContext* Context = nullptr;
 	TAttribute<const FSlateBrush*> BackgroundBrush;
-	SVerticalBox::FSlot* SceneObjectDetailsSlot = nullptr;
+	SSplitter::FSlot* SceneObjectDetailsSlot = nullptr;
 	FDelegateHandle OnSceneObjectsChangedDelegateHandle;
 
 	TArray<TSharedPtr<FFICSceneObjectReference>> SceneObjectList;
+	TSharedPtr<SListView<TSharedPtr<FFICSceneObjectReference>>> SceneObjectListWidget;
 
 	void UpdateSceneObjectList();
 	void SelectSceneObject(UObject* SceneObject);

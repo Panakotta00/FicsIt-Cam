@@ -1,8 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/Attributes/FICAttributeBool.h"
 #include "Data/Attributes/FICAttributePosition.h"
 #include "Data/Attributes/FICAttributeRotation.h"
 #include "Data/Objects/FICSceneObject.h"
@@ -14,6 +13,9 @@ UCLASS()
 class FICSITCAM_API UFICCamera : public UObject, public FTickableGameObject, public IFICSceneObject {
 	GENERATED_BODY()
 public:
+	UPROPERTY()
+	FFICAttributeBool Active;
+	
 	UPROPERTY(SaveGame)
 	FFICAttributePosition Position;
 	UPROPERTY(SaveGame)
@@ -35,10 +37,13 @@ public:
 	AFICEditorCameraActor* EditorCameraActor = nullptr;
 
 	UFICCamera() {
+		Active.SetDefaultValue(true);
+		
 		LensSettings.AddChildAttribute(TEXT("FOV"), &FOV);
 		LensSettings.AddChildAttribute(TEXT("Aperture"), &Aperture);
 		LensSettings.AddChildAttribute(TEXT("Focus Distance"), &FocusDistance);
-		
+
+		RootAttribute.AddChildAttribute(TEXT("Active"), &Active);
 		RootAttribute.AddChildAttribute(TEXT("Position"), &Position);
 		RootAttribute.AddChildAttribute(TEXT("Rotation"), &Rotation);
 		RootAttribute.AddChildAttribute(TEXT("Lens Settings"), &LensSettings);
