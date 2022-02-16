@@ -7,7 +7,6 @@
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Editor/UI/FICKeyframeControl.h"
 #include "Editor/UI/FICVectorEditor.h"
-#include "Widgets/Layout/SExpandableArea.h"
 
 FSlateColorBrush SFICDetails::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 
@@ -49,11 +48,18 @@ TSharedRef<SWidget> ScalarAttribute(UFICEditorContext* Context, TSharedRef<TFICE
 	];
 }
 
+SFICDetails::~SFICDetails() {
+	Context->OnSceneObjectsChanged.Remove(OnSceneObjectsChangedDelegateHandle);
+}
+
 void SFICDetails::Construct(const FArguments& InArgs) {
 	Context = InArgs._Context;
 	BackgroundBrush = InArgs._Background;
 
-	TSharedPtr<SVerticalBox> Outliner;
+	UpdateSceneObjectList();
+	OnSceneObjectsChangedDelegateHandle = Context->OnSceneObjectsChanged.AddLambda([this]() {
+		UpdateSceneObjectList();
+	});
 
 	ChildSlot[
 		SNew(SOverlay)
@@ -64,8 +70,39 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 		+SOverlay::Slot()[
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Fill)[
-				SAssignNew(Outliner, SVerticalBox)
+				SNew(SButton)
+				.Text(FText::FromString("Add"))
+				.OnClicked_Lambda([this]() {
+					Context->AddSceneObject(NewObject<UFICCamera>());
+					return FReply::Handled();
+				})
 			]
+			+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Fill)[
+				SNew(SListView<TSharedPtr<FFICSceneObjectReference>>)
+				.ListItemsSource(&SceneObjectList)
+				.OnSelectionChanged_Lambda([this](TSharedPtr<FFICSceneObjectReference> SelectedObject, ESelectInfo::Type) {
+					if (SelectedObject) SelectSceneObject(SelectedObject->SceneObject);
+					else SelectSceneObject(nullptr);
+				})
+				.SelectionMode(ESelectionMode::Single)
+				.OnGenerateRow_Lambda([this](TSharedPtr<FFICSceneObjectReference> SceneObject, const TSharedRef<STableViewBase>& Base) {
+					return SNew(STableRow<TSharedPtr<FFICSceneObjectReference>>, Base)
+					.Content()[
+						SNew(SHorizontalBox)
+						+SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[
+							SNew(STextBlock)
+							.Text(Cast<IFICSceneObject>(SceneObject->SceneObject)->GetSceneObjectName())
+						]
+						+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
+							SNew(SFICKeyframeControl, Context, Context->GetEditorAttributes()[SceneObject->SceneObject])
+							.Frame_Lambda([this]() {
+								return Context->GetCurrentFrame();
+							})
+						]
+					];
+				})
+			]
+			+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Fill).Expose(SceneObjectDetailsSlot)
 			+SVerticalBox::Slot().Padding(5).AutoHeight()[
 				SNew(SHorizontalBox)
 				+SHorizontalBox::Slot().Padding(5).AutoWidth()[
@@ -267,26 +304,19 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 			]
 		]
 	];
-	
-	for (UObject* Object : Context->GetScene()->GetSceneObjects()) {
-		Outliner->AddSlot().HAlign(HAlign_Fill).AutoHeight()[
-			SNew(SExpandableArea)
-			.HeaderContent()[
-				SNew(SHorizontalBox)
-				+SHorizontalBox::Slot().FillWidth(1).HAlign(HAlign_Center).VAlign(VAlign_Center)[
-					SNew(STextBlock)
-					.Text(Cast<IFICSceneObject>(Object)->GetSceneObjectName())
-				]
-				+SHorizontalBox::Slot().AutoWidth().HAlign(HAlign_Center).VAlign(VAlign_Center).Padding(5)[
-					SNew(SFICKeyframeControl, Context, Context->GetEditorAttributes()[Object])
-					.Frame_Lambda([this]() {
-						return Context->GetCurrentFrame();
-					})
-				]
-			]
-			.BodyContent()[
-				Context->GetEditorAttributes()[Object]->CreateDetailsWidget(Context)
-			]
-		];
+}
+
+void SFICDetails::UpdateSceneObjectList() {
+	SceneObjectList.Empty();
+	for (UObject* SceneObject : Context->GetScene()->GetSceneObjects()) {
+		SceneObjectList.Add(MakeShared<FFICSceneObjectReference>(SceneObject));
 	}
+}
+
+void SFICDetails::SelectSceneObject(UObject* SceneObject) {
+	if (!SceneObject) {
+		SceneObjectDetailsSlot->DetachWidget();
+		return;
+	}
+	SceneObjectDetailsSlot->AttachWidget(Context->GetEditorAttributes()[SceneObject]->CreateDetailsWidget(Context));
 }

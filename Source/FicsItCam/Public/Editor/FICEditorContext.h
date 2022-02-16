@@ -26,6 +26,8 @@ enum EFICAnimPlayerState {
 	FIC_PLAY_BACKWARDS,
 };
 
+DECLARE_MULTICAST_DELEGATE(FFICSceneObjectsChanged)
+
 UCLASS()
 class UFICEditorContext : public UObject, public FTickableGameObject {
 	GENERATED_BODY()
@@ -71,6 +73,8 @@ public:
 	TSharedPtr<SFICEditor> EditorWidget;
 
 	FFICChangeList ChangeList;
+	
+	FFICSceneObjectsChanged OnSceneObjectsChanged;
 
 	UFICEditorContext();
 

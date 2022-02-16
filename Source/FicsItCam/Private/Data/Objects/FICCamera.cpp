@@ -10,8 +10,8 @@ void UFICCamera::Tick(float DeltaTime) {
 		FVector PrevLoc = FVector::ZeroVector;
 		FRotator PrevRot = FRotator::ZeroRotator;
 		for (int64 Time : EditorContext->GetScene()->AnimationRange) {
-			bool bIsKeyframe = EditorContext->GetCameraEditor()->Get<FFICEditorAttributeBase>("Position").GetKeyframe(Time).IsValid();
-			FVector Loc = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"), Time);
+			bool bIsKeyframe = EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeBase>("Position").GetKeyframe(Time).IsValid();
+			FVector Loc = FFICAttributePosition::FromEditorAttribute(EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Position"), Time);
 			if (bIsKeyframe || Loc != PrevLoc) EditorContext->GetScene()->GetWorld()->LineBatcher->DrawLine(Loc, Loc, bIsKeyframe ? FColor::Yellow : FColor::Blue, SDPG_World, 20);
 			if (PrevLoc != FVector::ZeroVector) {
 				EditorContext->GetScene()->GetWorld()->LineBatcher->DrawLine(PrevLoc, Loc, FColor::Red, SDPG_World, 5);

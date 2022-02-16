@@ -32,4 +32,5 @@ public:
 	// End FFICAttribute
 
 	void AddChildAttribute(FString Name, FFICAttribute* Attribute);
+	void RemoveChildAttribute(FString Name);
 };

@@ -109,8 +109,7 @@ bool UFICEditorContext::IsTickable() const {
 
 void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 	TSharedRef<FFICEditorAttributeBase> Attribute = Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().CreateEditorAttribute();
-	AllAttributes->AddAttribute(Cast<IFICSceneObject>(SceneObject)->GetSceneObjectName().ToString(), Attribute);
-	// TODO: All Attributes support multiple objects of same type (using GetScneObjectName is a BAAAAD idea)
+	AllAttributes->AddAttribute(FString::FromInt(SceneObject->GetUniqueID()), Attribute);
 	EditorAttributes.Add(SceneObject, Attribute);
 	Attribute->OnValueChanged.AddLambda([this, Attribute, SceneObject]() {
 		Cast<IFICSceneObject>(SceneObject)->EditorUpdate(this, Attribute);
@@ -121,18 +120,23 @@ void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 }
 
 void UFICEditorContext::UnloadSceneObject(UObject* SceneObject) {
+	AllAttributes->RemoveAttribute(FString::FromInt(SceneObject->GetUniqueID()));
 	EditorAttributes[SceneObject]->GetAttribute().OnUpdate.Remove(DataAttributeOnUpdateDelegateHandles[SceneObject]);
 	EditorAttributes.Remove(SceneObject);
 	DataAttributeOnUpdateDelegateHandles.Remove(SceneObject);
-	// TODO: Remove Attribute form AllAttributes
 }
 
 void UFICEditorContext::AddSceneObject(UObject* SceneObject) {
 	Scene->AddSceneObject(SceneObject);
+	LoadSceneObject(SceneObject);
+	Cast<IFICSceneObject>(SceneObject)->InitEditor(this);
+	OnSceneObjectsChanged.Broadcast();
 }
 
 void UFICEditorContext::RemoveSceneObject(UObject* SceneObject) {
 	
+	//Cast<IFICSceneObject>(SceneObject)->UnloadEditor();
+	//OnSceneObjectsChanged.Broadcast();
 }
 
 void UFICEditorContext::SetScene(AFICScene* InScene) {

@@ -15,4 +15,5 @@ public:
 	// End FFICEditorAttributeBase
 
 	void AddAttribute(FString InName, TSharedRef<FFICEditorAttributeBase> InAttribute);
+	void RemoveAttribute(FString InName);
 };

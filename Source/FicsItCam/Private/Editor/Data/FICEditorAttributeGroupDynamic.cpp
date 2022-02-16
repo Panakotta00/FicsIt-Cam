@@ -22,3 +22,8 @@ void FFICEditorAttributeGroupDynamic::AddAttribute(FString InName, TSharedRef<FF
 	Attributes.Add(InName, InAttribute);
 	GroupAttribute.AddChildAttribute(InName, &InAttribute->GetAttribute());
 }
+
+void FFICEditorAttributeGroupDynamic::RemoveAttribute(FString InName) {
+	Attributes.Remove(InName);
+	GroupAttribute.RemoveChildAttribute(InName);
+}

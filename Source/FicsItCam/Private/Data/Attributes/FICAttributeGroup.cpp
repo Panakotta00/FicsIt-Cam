@@ -73,3 +73,8 @@ void FFICGroupAttribute::AddChildAttribute(FString Name, FFICAttribute* Attribut
 	Children.Add(Name, Attribute);
 	// TODO: Maybe add Update Delegate to Attribute
 }
+
+void FFICGroupAttribute::RemoveChildAttribute(FString Name) {
+	Children.Remove(Name);
+	// TODO: Maybe add Update Delegate to Attribute
+}

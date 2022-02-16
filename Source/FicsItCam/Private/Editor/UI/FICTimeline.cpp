@@ -30,8 +30,8 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	DefaultToggleButtonStyle.UncheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
 	DefaultToggleButtonStyle.UncheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
 	
-	for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attribute : Context->GetAllAttributes()->GetChildAttributes()) {
-		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Attribute.Key, Attribute.Value));
+	for (TTuple<UObject*, TSharedRef<FFICEditorAttributeBase>> Attribute : Context->GetEditorAttributes()) {
+		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Cast<IFICSceneObject>(Attribute.Key)->GetSceneObjectName().ToString(), Attribute.Value));
 	}
 
 	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TDefaultNumericTypeInterface<int64>>();
