@@ -2,6 +2,7 @@
 
 #include "FICUtils.h"
 #include "Data/Attributes/FICAttributeFloat.h"
+#include "Data/Objects/FICParticleSystem.h"
 #include "Data/Objects/FICSceneObject.h"
 #include "Editor/FICEditorContext.h"
 #include "Widgets/Input/SNumericEntryBox.h"
@@ -76,7 +77,40 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 					SNew(SButton)
 					.Text(FText::FromString("Add"))
 					.OnClicked_Lambda([this]() {
-						Context->AddSceneObject(NewObject<UFICCamera>());
+						/*TSharedRef<SVerticalBox> List = SNew(SVerticalBox);
+						for (TObjectIterator<UParticleSystem> System; System; ++System) {
+							List->AddSlot()[
+								SNew(SButton)
+								.Text(FText::FromString(System->GetName()))
+								.OnClicked_Lambda([this]() {
+									FVector Pos = Context->GetScene()->GetWorld()->GetFirstPlayerController()->GetCharacter()->GetActorLocation();
+									UFICParticleSystem* System = NewObject<UFICParticleSystem>();
+									System->Position.X.SetDefaultValue(Pos.X);
+									System->Position.Y.SetDefaultValue(Pos.Y);
+									System->Position.Z.SetDefaultValue(Pos.Z);
+									Context->AddSceneObject(System);
+									return FReply::Handled();
+								})
+							];
+						}
+						FSlateApplication::Get().AddWindow(SNew(SWindow)
+							.Content()[
+								SNew(SScrollBox)
+								+SScrollBox::Slot()[
+									List
+								]
+							]);*/
+						FVector Pos = Context->GetPlayerCharacter()->GetActorLocation();
+						FRotator Rot = Context->GetPlayerCharacter()->GetControlRotation();
+						UFICCamera* Camera = NewObject<UFICCamera>();
+						Camera->Position.X.SetDefaultValue(Pos.X);
+						Camera->Position.Y.SetDefaultValue(Pos.Y);
+						Camera->Position.Z.SetDefaultValue(Pos.Z);
+						Camera->Rotation.Pitch.SetDefaultValue(Rot.Pitch);
+						Camera->Rotation.Yaw.SetDefaultValue(Rot.Yaw);
+						Camera->Rotation.Roll.SetDefaultValue(Rot.Roll);
+						Context->AddSceneObject(Camera);
+						
 						return FReply::Handled();
 					})
 				]
@@ -87,15 +121,41 @@ void SFICDetails::Construct(const FArguments& InArgs) {
 						if (SelectedObject) SelectSceneObject(SelectedObject->SceneObject);
 						else SelectSceneObject(nullptr);
 					})
+					.OnKeyDownHandler_Lambda([this](const FGeometry&, const FKeyEvent& Event) {
+						if (Event.GetKey() == EKeys::Delete) {
+							TArray<TSharedPtr<FFICSceneObjectReference>> Selected;
+							if (SceneObjectListWidget->GetSelectedItems(Selected) > 0) {
+								Context->RemoveSceneObject(Selected[0]->SceneObject);
+							}
+							return FReply::Handled();
+						}
+						return FReply::Unhandled();
+					})
 					.SelectionMode(ESelectionMode::Single)
 					.OnGenerateRow_Lambda([this](TSharedPtr<FFICSceneObjectReference> SceneObject, const TSharedRef<STableViewBase>& Base) {
 						return SNew(STableRow<TSharedPtr<FFICSceneObjectReference>>, Base)
 						.Content()[
 							SNew(SHorizontalBox)
-							+SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[
-								SNew(STextBlock)
-								.Text(Cast<IFICSceneObject>(SceneObject->SceneObject)->GetSceneObjectName())
+							+SHorizontalBox::Slot().AutoWidth()[
+								SNew(SBox)
+								.VAlign(VAlign_Center)
+								.MinDesiredWidth(20)[
+									SNew(SEditableText)
+									.IsEnabled_Lambda([this, SceneObject]() {
+										return SceneObjectListWidget->IsItemSelected(SceneObject);
+									})
+									.IsReadOnly_Lambda([this, SceneObject]() {
+										return !SceneObjectListWidget->IsItemSelected(SceneObject);
+									})
+									.OnTextCommitted_Lambda([SceneObject](const FText& Text, ETextCommit::Type Type) {
+										Cast<IFICSceneObject>(SceneObject->SceneObject)->SetSceneObjectName(Text.ToString());
+									})
+									.Text_Lambda([SceneObject]() {
+										return FText::FromString(Cast<IFICSceneObject>(SceneObject->SceneObject)->GetSceneObjectName());
+									})
+								]
 							]
+							+SHorizontalBox::Slot().FillWidth(1)
 							+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
 								SNew(SFICKeyframeControl, Context, Context->GetEditorAttributes()[SceneObject->SceneObject])
 								.Frame_Lambda([this]() {

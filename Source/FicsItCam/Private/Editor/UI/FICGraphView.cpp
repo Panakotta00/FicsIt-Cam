@@ -18,7 +18,7 @@ void SFICGraphView::Construct(const FArguments& InArgs, UFICEditorContext* InCon
 
 	SetAttributes(InArgs._Attributes);
 	Update();
-
+	
 	if (InArgs._AutoFit) {
 		FitAll();
 	}

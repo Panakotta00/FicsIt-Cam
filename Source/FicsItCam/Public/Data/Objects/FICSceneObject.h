@@ -13,7 +13,8 @@ class FICSITCAM_API IFICSceneObject {
 	GENERATED_BODY()
 
 public:
-	virtual FText GetSceneObjectName() = 0;
+	virtual FString GetSceneObjectName() = 0;
+	virtual void SetSceneObjectName(FString Name) = 0;
 	
 	virtual FFICAttribute& GetRootAttribute() = 0;
 

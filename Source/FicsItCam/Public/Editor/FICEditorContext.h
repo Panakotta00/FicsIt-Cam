@@ -36,22 +36,15 @@ private:
 	UPROPERTY()
 	AFICScene* Scene = nullptr;
 
+	UPROPERTY()
+	AFICEditorCameraCharacter* EditorPlayerCharacter = nullptr;
+	
 	FICFrame CurrentFrame = 0;
 	FFICFrameRange ActiveRange;
 
 	TSharedPtr<FFICEditorAttributeGroupDynamic> AllAttributes;
 	TMap<UObject*, TSharedRef<FFICEditorAttributeBase>> EditorAttributes;
 	TMap<UObject*, FDelegateHandle> DataAttributeOnUpdateDelegateHandles;
-
-	UPROPERTY()
-	ACharacter* OriginalCharacter = nullptr;
-
-	UPROPERTY()
-	AFICEditorCameraCharacter* CameraCharacter = nullptr;
-
-	TSharedPtr<SViewport> GameViewport;
-	TSharedPtr<SVerticalBox> GameViewportContainer;
-	TSharedPtr<SOverlay> GameOverlay;
 
 	EFICAnimPlayerState AnimPlayerState = FIC_PLAY_PAUSED;
 	float AnimPlayerDelta = 0.0f;
@@ -70,8 +63,6 @@ public:
 	bool TempViewportFocus = false;
 	FVector2D TempCursorPos;
 	
-	TSharedPtr<SFICEditor> EditorWidget;
-
 	FFICChangeList ChangeList;
 	
 	FFICSceneObjectsChanged OnSceneObjectsChanged;
@@ -89,7 +80,6 @@ public:
 	void AddSceneObject(UObject* SceneObject);
 	void RemoveSceneObject(UObject* SceneObject);
 	
-	void SetScene(AFICScene* Scene);
 	AFICScene* GetScene() const;
 	UFICCamera* GetCamera();
 	TSharedPtr<FFICEditorAttributeBase> GetCameraEditor();
@@ -103,14 +93,6 @@ public:
 	void SetActiveRange(const FFICFrameRange& InActiveRange);
 	FFICFrameRange GetActiveRange();
 
-	void SetFlySpeed(float Speed);
-	float GetFlySpeed();
-
-	UFUNCTION()
-	void UpdateCharacterValues();
-
-	void ShowEditor();
-	void HideEditor();
 
 	void SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor);
 	EFICAnimPlayerState GetAnimPlayer() { return AnimPlayerState; }
@@ -118,4 +100,27 @@ public:
 
 	TSharedPtr<FFICEditorAttributeGroupDynamic> GetAllAttributes() { return AllAttributes; }
 	const TMap<UObject*, TSharedRef<FFICEditorAttributeBase>>& GetEditorAttributes() { return EditorAttributes; }
+
+	AFICEditorCameraCharacter* GetPlayerCharacter() { return EditorPlayerCharacter; }
+
+	/**
+	 * Called after the Context Object got created.
+	 * Used to load a scene into the editor, create the editor attributes, load the scene objects etc.
+	 * The Context should be handled as invalid until this function is called and after unload is called.
+	 */
+	void Load(AFICEditorCameraCharacter* InEditorPlayerCharacter, AFICScene* InScene);
+
+	/**
+	 * Called before the context object gets destroyed and the editor closed.
+	 * Should remove everything used by the editor in the world and cleans up actor states etc.
+	 * Should unload scene objects.
+	 */
+	void Unload();
+
+	/**
+	 * Called by the Active Camera to notify the editor character of a value change of the active camera.
+	 * This is mainly important for "lock view to camera".
+	 * If the "lock view to camera" flag is not set, the function does nothing, otherwise it will redirect the notification to the editor character.
+	 */
+	void UpdateCharacterValues();
 };

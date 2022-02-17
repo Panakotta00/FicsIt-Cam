@@ -30,10 +30,6 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 	DefaultToggleButtonStyle.UncheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
 	DefaultToggleButtonStyle.UncheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
 	
-	for (TTuple<UObject*, TSharedRef<FFICEditorAttributeBase>> Attribute : Context->GetEditorAttributes()) {
-		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Cast<IFICSceneObject>(Attribute.Key)->GetSceneObjectName().ToString(), Attribute.Value));
-	}
-
 	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TDefaultNumericTypeInterface<int64>>();
 
 	ChildSlot[SNew(SOverlay)
@@ -433,10 +429,16 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs) {
 			]
 		]
 	];
+
+	OnSceneObjectsChangedDelegateHandle = Context->OnSceneObjectsChanged.AddLambda([this]() {
+		Update();
+	});
+
+	Update();
 	
-	// TArray<FFICEditorAttributeBase*> Attributes;
-	// Attributes.Add(Context->All.GetAttributes()["X"].Get());
-	// Graph->SetAttributes(Attributes);
+	if (UFICCamera* Camera = Context->GetActiveCamera()) {
+		Context->GetEditorAttributes()[Camera]->bShowInGraph = true;
+	}
 }
 
 void SFICTimelinePanel::UpdateLeafAttributes() {
@@ -455,9 +457,21 @@ void SFICTimelinePanel::UpdateLeafAttributes() {
 	Graph->FitAll();
 }
 
+SFICTimelinePanel::~SFICTimelinePanel() {
+	Context->OnSceneObjectsChanged.Remove(OnSceneObjectsChangedDelegateHandle);
+}
+
 void SFICTimelinePanel::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
 	SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
 
 	//ActiveRangeStart = FMath::Clamp(ActiveRangeStart, Context->GetScene()->AnimationRange.Begin, ActiveRangeEnd-1);
 	//ActiveRangeEnd = FMath::Clamp(ActiveRangeEnd, ActiveRangeStart+1, Context->GetScene()->AnimationRange.End);
+}
+
+void SFICTimelinePanel::Update() {
+	Attributes.Empty();
+	for (TTuple<UObject*, TSharedRef<FFICEditorAttributeBase>> Attribute : Context->GetEditorAttributes()) {
+		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Cast<IFICSceneObject>(Attribute.Key)->GetSceneObjectName(), Attribute.Value));
+	}
+	AttributeTree->RebuildList();
 }

@@ -43,7 +43,7 @@ TMap<FString, TSharedRef<FFICEditorAttributeBase>> FFICEditorAttributeBool::GetC
 
 TSharedRef<SWidget> FFICEditorAttributeBool::CreateDetailsWidget(UFICEditorContext* Context) {
 	return SNew(SHorizontalBox)
-	+SHorizontalBox::Slot()[
+	+SHorizontalBox::Slot().AutoWidth()[
 		SNew(SCheckBox)
 		.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
 			SetActiveValue(State == ECheckBoxState::Checked);

@@ -6,6 +6,7 @@
 #include "FGPlayerController.h"
 #include "Command/CommandSender.h"
 #include "Data/FICAnimation.h"
+#include "Editor/FICEditorSubsystem.h"
 #include "Misc/DefaultValueHelper.h"
 #include "Runtime/FICTimelapseCamera.h"
 
@@ -21,8 +22,7 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		return EExecutionStatus::INSUFFICIENT_PERMISSIONS;
 	}
 	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(this);
-	UFICEditorContext* Context = SubSys->GetEditor();
-	
+		
 	if (Arguments[0] == "list") {
 		Sender->SendChatMessage(TEXT("List of Animations:"));
 		for (const TPair<FString, AFICAnimation*>& Entry : SubSys->StoredAnimations) {
@@ -80,11 +80,10 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		}
 		AFICAnimation** FoundAnimation = SubSys->StoredAnimations.Find(Arguments[1]);
 		if (!FoundAnimation) {
-			SubSys->SetActiveAnimation(nullptr);
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' not found.");
 			return EExecutionStatus::COMPLETED;
 		} else {
-			SubSys->SetActiveAnimation(*FoundAnimation);
+			AFICEditorSubsystem::GetFICEditorSubsystem(*FoundAnimation)->OpenEditor((*FoundAnimation)->CreateScene());
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' opened for edit.");
 			return EExecutionStatus::COMPLETED;
 		}

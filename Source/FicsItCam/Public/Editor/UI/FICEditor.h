@@ -6,13 +6,10 @@ class UFICEditorContext;
 
 class SFICEditor : public SCompoundWidget {
 	SLATE_BEGIN_ARGS(SFICEditor) {}
-		SLATE_ATTRIBUTE(UFICEditorContext*, Context);
-		SLATE_ATTRIBUTE(TSharedPtr<SWidget>, GameWidget);
-		SLATE_ARGUMENT(TSharedPtr<SViewport>, Viewport)
 	SLATE_END_ARGS()
 
 public:
-	void Construct(const FArguments& InArgs);
+	void Construct(const FArguments& InArgs, UFICEditorContext* Context, TSharedPtr<SWidget> GameWidget, TSharedPtr<SViewport> Viewport);
 	
 private:
 	static FSlateColorBrush Background;

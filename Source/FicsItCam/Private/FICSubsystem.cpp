@@ -95,23 +95,6 @@ void AFICSubsystem::AddVisibleAnimation(AFICAnimation* Path) {
 	if (Path) VisibleAnimations.Add(Path);
 }
 
-void AFICSubsystem::SetActiveAnimation(AFICAnimation* inActiveAnimation) {
-	if (EditorContext) {
-		EditorContext->HideEditor();
-		EditorContext = nullptr;
-	}
-	ActiveAnimation = inActiveAnimation;
-	if (ActiveAnimation) {
-		EditorContext = NewObject<UFICEditorContext>(this);
-		EditorContext->SetScene(ActiveAnimation->CreateScene());
-		EditorContext->ShowEditor();
-	}
-}
-
-UFICEditorContext* AFICSubsystem::GetEditor() const {
-	return EditorContext;
-}
-
 void AFICSubsystem::CreateCamera() {
 	if (!Camera) Camera = GetWorld()->SpawnActor<AFICCameraCharacter>();
 }

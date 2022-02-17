@@ -28,6 +28,7 @@ private:
 	float FlyMultiplier = 10000;
 
 	float RollRotationFixValue = 0.0f;
+	bool bReposses = false;
 	
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;

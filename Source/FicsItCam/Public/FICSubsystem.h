@@ -50,9 +50,6 @@ private:
 	UPROPERTY()
 	AFICAnimation* ActiveAnimation = nullptr;
 
-	UPROPERTY()
-	UFICEditorContext* EditorContext = nullptr;
-
 	TQueue<TSharedPtr<FFICRenderRequest>> RenderRequestQueue;
 	
 public:
@@ -88,11 +85,7 @@ public:
 	
 	void AddVisibleAnimation(AFICAnimation* Path);
 
-	void SetActiveAnimation(AFICAnimation* ActiveAnimation);
-	UFICEditorContext* GetEditor() const;
-
 	void CreateCamera();
-
 	
 	void SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget);
 };

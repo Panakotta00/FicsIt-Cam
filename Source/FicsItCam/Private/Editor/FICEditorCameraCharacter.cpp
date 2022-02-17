@@ -8,6 +8,7 @@
 #include "Data/Objects/FICCamera.h"
 #include "Editor/FICEditorCameraActor.h"
 #include "Editor/FICEditorContext.h"
+#include "Editor/FICEditorSubsystem.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/InputSettings.h"
@@ -45,8 +46,10 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
 			AController* PController = Controller;
+			bReposses = true;
 			PController->UnPossess();
 			PController->Possess(this);
+			bReposses = false;
 		
 			Camera->SetActive(true);
 
@@ -85,7 +88,7 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 
 				FRotator RotOld = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
 				FVector Pos = GetActorLocation();
-				FRotator RotNew = GetActorRotation();
+				FRotator RotNew = GetController()->GetControlRotation();
 				FRotator RotOldN = RotOld;
 				while (RotOldN.Pitch < -180.0) RotOldN.Pitch += 360.0;
 				while (RotOldN.Pitch > 180.0) RotOldN.Pitch -= 360.0;
@@ -172,17 +175,30 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 
 void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
 	Super::PossessedBy(NewController);
-	if (NewController && (EditorContext->IsEditorShown || EditorContext->IsEditorShowing)) NewController->DisableInput(Cast<APlayerController>(NewController));
+
+	if (bReposses) return;
+	AFICEditorSubsystem* SubSys = AFICEditorSubsystem::GetFICEditorSubsystem(this);
+	if (NewController) NewController->DisableInput(Cast<APlayerController>(NewController));
 }
 
 void AFICEditorCameraCharacter::UnPossessed() {
-	AController* OldController = Controller;
+	AController* OldController = GetController();
+
 	Super::UnPossessed();
+	
+	if (bReposses) return;
+	
 	UGameplayStatics::SetGlobalTimeDilation(this, 1);
 	CustomTimeDilation = 1;
-	if (OldController) OldController->EnableInput(Cast<APlayerController>(OldController));
-	if (OldController && EditorContext && EditorContext->IsEditorShown && !EditorContext->IsEditorShowing) {
-		EditorContext->HideEditor();
+
+	if (OldController) {
+		// Make sure if not able to recover, game is interactable
+		OldController->EnableInput(Cast<APlayerController>(OldController));
+
+		// Force Close the editor
+		AFICEditorSubsystem* SubSys = AFICEditorSubsystem::GetFICEditorSubsystem(this);
+		if (SubSys->GetEditorPlayerCharacter() == this) SubSys->CloseEditor();
+		// TODO: Try to do recover
 	}
 }
 
@@ -259,7 +275,7 @@ void AFICEditorCameraCharacter::ToggleLockCamera() {
 void AFICEditorCameraCharacter::RightMouseRelease() {
 	if (EditorContext->TempViewportFocus) {
 		EditorContext->TempViewportFocus = false;
-		EditorContext->EditorWidget->FocusUI(FSlateApplication::Get().GetUserIndexForKeyboard());
+		AFICEditorSubsystem::GetFICEditorSubsystem(this)->GetEditorWidget()->FocusUI(FSlateApplication::Get().GetUserIndexForKeyboard());
 		FSlateApplication::Get().SetCursorPos(EditorContext->TempCursorPos);
 	}
 }
@@ -297,7 +313,8 @@ void AFICEditorCameraCharacter::Zoom(float Value) {
 	} else if (bChangeSpeed) {
 		float Delta = Value * 100;
 		if (bIsSprinting) Delta *= 2;
-		if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
+		//if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
+		// TODO: Fly Speed!
 	} else {
 		float Delta = Value;
 		int64 Range = EditorContext->GetScene()->AnimationRange.Length();

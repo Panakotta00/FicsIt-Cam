@@ -46,11 +46,17 @@ private:
 	TArray<TSharedRef<FFICEditorAttributeBase>> SelectedLeafAttributes;
 
 	FFICValueRange ActiveValueRange;
+
+	FDelegateHandle OnSceneObjectsChangedDelegateHandle;
 	
 	void UpdateLeafAttributes();
 
 public:
+	virtual ~SFICTimelinePanel() override;
+	
 	// Begin SWidget
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 	// End SWidget
+
+	void Update();
 };

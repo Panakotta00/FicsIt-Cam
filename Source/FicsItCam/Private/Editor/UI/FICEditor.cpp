@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Editor/FICEditorContext.h"
+#include "Editor/FICEditorSubsystem.h"
 #include "GameFramework/InputSettings.h"
 #include "Slate/SceneViewport.h"
 #include "Widgets/Docking/SDockTab.h"
@@ -13,10 +14,10 @@
 
 FSlateColorBrush SFICEditor::Background = FSlateColorBrush(FColor::FromHex("030303"));
 
-void SFICEditor::Construct(const FArguments& InArgs) {
-	Context = InArgs._Context.Get();
-	GameWidget = InArgs._GameWidget.Get();
-	GameViewport = InArgs._Viewport;
+void SFICEditor::Construct(const FArguments& InArgs, UFICEditorContext* InContext, TSharedPtr<SWidget> InGameWidget, TSharedPtr<SViewport> InViewport) {
+	Context = InContext;
+	GameWidget = InGameWidget;
+	GameViewport = InViewport;
 	
 	ChildSlot[
 		SNew(SOverlay)
@@ -36,7 +37,7 @@ void SFICEditor::Construct(const FArguments& InArgs) {
 						SNew(SButton)
 						.Text(FText::FromString("Exit"))
 						.OnClicked_Lambda([this]() {
-							AFICSubsystem::GetFICSubsystem(Context->GetWorld())->SetActiveAnimation(nullptr);
+							AFICEditorSubsystem::GetFICEditorSubsystem(Context->GetScene()->GetWorld())->CloseEditor();
 							return FReply::Handled();
 						})
 					]
@@ -71,7 +72,7 @@ void SFICEditor::Tick(const FGeometry& AllottedGeometry, const double InCurrentT
 
 	FVector2D ViewportSize = GameWidget->GetCachedGeometry().GetAbsoluteSize();
 	FVector2D GameSize = FVector2D(Context->GetScene()->ResolutionWidth, Context->GetScene()->ResolutionHeight);
-	FVector2D Size = Context->GetWorld()->GetGameViewport()->GetGameViewport()->GetSizeXY();
+	FVector2D Size = Context->GetScene()->GetWorld()->GetGameViewport()->GetGameViewport()->GetSizeXY();
 	Size *= Scalability::GetResolutionScreenPercentage() / 100.0;
 	float SecondaryPercentage = IConsoleManager::Get().FindConsoleVariable(TEXT("r.SecondaryScreenPercentage.GameViewport"))->GetFloat();
 	if (SecondaryPercentage) Size *= SecondaryPercentage / 100.0;
@@ -95,11 +96,11 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 	if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleCursor"))) {
 		if (GameWidget->HasUserFocusedDescendants(InKeyEvent.GetUserIndex())) {
 			FSlateApplication::Get().SetUserFocus(InKeyEvent.GetUserIndex(), SharedThis(this));
-			APlayerController* Controller = Context->GetWorld()->GetFirstPlayerController();
+			APlayerController* Controller = Context->GetScene()->GetWorld()->GetFirstPlayerController();
 			UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(Controller);
 		} else {
 			FSlateApplication::Get().SetUserFocusToGameViewport(InKeyEvent.GetUserIndex());
-			APlayerController* Controller = Context->GetWorld()->GetFirstPlayerController();
+			APlayerController* Controller = Context->GetScene()->GetWorld()->GetFirstPlayerController();
 			UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 		}
 		return FReply::Handled();
@@ -181,7 +182,8 @@ FReply SFICEditor::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent
 		return FReply::Handled();
 	} else if (MouseEvent.GetModifierKeys().IsShiftDown()) {
 		float Delta = MouseEvent.GetWheelDelta();
-		Context->SetFlySpeed(Context->GetFlySpeed() + Delta);
+		//Context->SetFlySpeed(Context->GetFlySpeed() + Delta);
+		// TODO: Fly Speed!
 		return FReply::Handled();
 	}
 	return FReply::Unhandled();
@@ -224,7 +226,7 @@ FReply SFICEditor::OnPreviewKeyDown(const FGeometry& MyGeometry, const FKeyEvent
 
 void SFICEditor::FocusUI(uint32 UserIndex, bool bFocusWidget) {
 	if (bFocusWidget) FSlateApplication::Get().SetUserFocus(UserIndex, SharedThis(this));
-	APlayerController* Controller = Context->GetWorld()->GetFirstPlayerController();
+	APlayerController* Controller = Context->GetScene()->GetWorld()->GetFirstPlayerController();
 	UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(Controller);
 	FSlateApplication::Get().SetCursorPos(Context->TempCursorPos);
 }
@@ -232,6 +234,6 @@ void SFICEditor::FocusUI(uint32 UserIndex, bool bFocusWidget) {
 void SFICEditor::FocusViewport(uint32 UserIndex, bool bFocusWidget) {
 	Context->TempCursorPos = FSlateApplication::Get().GetCursorPos();
 	if (bFocusWidget) FSlateApplication::Get().SetUserFocusToGameViewport(UserIndex);
-	APlayerController* Controller = Context->GetWorld()->GetFirstPlayerController();
+	APlayerController* Controller = Context->GetScene()->GetWorld()->GetFirstPlayerController();
 	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 }

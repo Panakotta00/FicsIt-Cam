@@ -2,6 +2,7 @@
 
 #include "FICEditorContext.h"
 #include "BaseGizmos/TransformGizmo.h"
+#include "Components/SceneCaptureComponent.h"
 #include "FICEditorCameraActor.generated.h"
 
 UCLASS()
@@ -12,6 +13,12 @@ public:
 	UFICEditorContext* EditorContext = nullptr;
 	UPROPERTY()
 	UFICCamera* Camera = nullptr;
+	
+	UPROPERTY()
+	USceneCaptureComponent2D* CaptureComponent;
+	UPROPERTY()
+	UTextureRenderTarget2D* RenderTarget;
+	FSlateImageBrush Brush = FSlateImageBrush("Meep", FVector2D(1,1), FColor::Green);
 
 	UPROPERTY()
 	ULineBatchComponent* LineBatcher = nullptr;

@@ -13,7 +13,10 @@ UCLASS()
 class FICSITCAM_API UFICCamera : public UObject, public FTickableGameObject, public IFICSceneObject {
 	GENERATED_BODY()
 public:
-	UPROPERTY()
+	UPROPERTY(SaveGame)
+	FString SceneObjectName = TEXT("Camera");
+	
+	UPROPERTY(SaveGame)
 	FFICAttributeBool Active;
 	
 	UPROPERTY(SaveGame)
@@ -56,11 +59,13 @@ public:
 	// End FTickableGameObject
 
 	// Begin IFICEditorSceneObject-Interface
-	FText GetSceneObjectName() override {
-		return FText::FromString(TEXT("Camera"));
+	virtual FString GetSceneObjectName() override {
+		return SceneObjectName;
 	}
+
+	virtual void SetSceneObjectName(FString Name) override;
 	
-	FFICAttribute& GetRootAttribute() override {
+	virtual FFICAttribute& GetRootAttribute() override {
 		return RootAttribute;
 	}
 

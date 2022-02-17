@@ -40,6 +40,9 @@ public:
 	void AddSceneObject(UObject* Object) {
 		check(Object->Implements<UFICSceneObject>());
 		SceneObjects.Add(Object);
-		// TODO: Tell Editor Context that Scene Objects have changed and cause a reload of details panel etc.
+	}
+
+	void RemoveSceneObject(UObject* Object) {
+		SceneObjects.Remove(Object);
 	}
 };

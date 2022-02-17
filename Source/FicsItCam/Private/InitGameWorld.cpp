@@ -10,6 +10,7 @@ UInitGameWorldFicsItCam::UInitGameWorldFicsItCam() {
 	bRootModule = true;
 	mChatCommands.Add(AFICCommand::StaticClass());
 	ModSubsystems.Add(AFICSubsystem::StaticClass());
+	ModSubsystems.Add(AFICEditorSubsystem::StaticClass());
 }
 
 #pragma optimize("", off)

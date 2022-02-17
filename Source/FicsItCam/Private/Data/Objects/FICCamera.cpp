@@ -21,6 +21,10 @@ void UFICCamera::Tick(float DeltaTime) {
 	}
 }
 
+void UFICCamera::SetSceneObjectName(FString Name) {
+	SceneObjectName = Name;
+}
+
 void UFICCamera::InitEditor(UFICEditorContext* Context) {
 	EditorContext = Context;
 
