@@ -58,11 +58,6 @@ public:
 
 	float SensorWidthAdjust = 1.0f;
 
-	bool IsEditorShown = false;
-	bool IsEditorShowing = false;
-	bool TempViewportFocus = false;
-	FVector2D TempCursorPos;
-	
 	FFICChangeList ChangeList;
 	
 	FFICSceneObjectsChanged OnSceneObjectsChanged;
@@ -102,6 +97,12 @@ public:
 	const TMap<UObject*, TSharedRef<FFICEditorAttributeBase>>& GetEditorAttributes() { return EditorAttributes; }
 
 	AFICEditorCameraCharacter* GetPlayerCharacter() { return EditorPlayerCharacter; }
+
+	bool bViewportCameraControl = false;
+	
+	bool IsViewportCameraControl() {
+		return bViewportCameraControl;
+	}
 
 	/**
 	 * Called after the Context Object got created.

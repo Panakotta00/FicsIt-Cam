@@ -15,9 +15,9 @@ public:
 	UFICCamera* Camera = nullptr;
 	
 	UPROPERTY()
-	USceneCaptureComponent2D* CaptureComponent;
+	USceneCaptureComponent2D* CaptureComponent = nullptr;
 	UPROPERTY()
-	UTextureRenderTarget2D* RenderTarget;
+	UTextureRenderTarget2D* RenderTarget = nullptr;
 	FSlateImageBrush Brush = FSlateImageBrush("Meep", FVector2D(1,1), FColor::Green);
 
 	UPROPERTY()

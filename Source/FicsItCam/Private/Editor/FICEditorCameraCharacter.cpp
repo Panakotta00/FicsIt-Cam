@@ -167,10 +167,14 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleShowPath"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleShowPath);
 	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleLockCamera"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleLockCamera);
 
-	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::RightMouseRelease);
-
 	PlayerInputComponent->BindKey(EKeys::Z, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::Undo);
 	PlayerInputComponent->BindKey(EKeys::Y, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::Redo);
+
+	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::RightMousePress);
+	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::RightMouseRelease);
+	
+	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &AFICEditorCameraCharacter::OnLeftMouseDown);
+	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &AFICEditorCameraCharacter::OnLeftMouseUp);
 }
 
 void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
@@ -210,25 +214,30 @@ void AFICEditorCameraCharacter::MoveForward(float Value) {
 }
 
 void AFICEditorCameraCharacter::MoveRight(float Value) {
+	if (!IsControlView()) return;
 	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
 	float Multi = FlyMultiplier;
 	if (bIsSprinting) Multi *= 3;
 	AddMovementInput(Direction, Value * Multi);
 }
 void AFICEditorCameraCharacter::RotatePitch(float Value) {
+	if (!IsControlView()) return;
 	AddControllerPitchInput(Value);
 }
 
 void AFICEditorCameraCharacter::RotateYaw(float Value) {
+	if (!IsControlView()) return;
 	AddControllerYawInput(Value);
 }
 
 void AFICEditorCameraCharacter::RotateRoll(float Value) {
+	if (!IsControlView()) return;
 	AddControllerRollInput(Value);
 	RollRotationFixValue += Value;
 }
 
 void AFICEditorCameraCharacter::FlyUp(float Value) {
+	if (!IsControlView()) return;
 	FVector Direction = GetActorUpVector();
 	float Multi = FlyMultiplier;
 	if (bIsSprinting) Multi *= 3;
@@ -272,11 +281,13 @@ void AFICEditorCameraCharacter::ToggleLockCamera() {
 	EditorContext->bMoveCamera = !EditorContext->bMoveCamera;
 }
 
+void AFICEditorCameraCharacter::RightMousePress() {
+	SetControlView(true, true);
+}
+
 void AFICEditorCameraCharacter::RightMouseRelease() {
-	if (EditorContext->TempViewportFocus) {
-		EditorContext->TempViewportFocus = false;
-		AFICEditorSubsystem::GetFICEditorSubsystem(this)->GetEditorWidget()->FocusUI(FSlateApplication::Get().GetUserIndexForKeyboard());
-		FSlateApplication::Get().SetCursorPos(EditorContext->TempCursorPos);
+	if (bControlViewTemp) {
+		SetControlView(false);
 	}
 }
 
@@ -288,10 +299,6 @@ void AFICEditorCameraCharacter::Undo() {
 void AFICEditorCameraCharacter::Redo() {
 	TSharedPtr<FFICChange> Change = EditorContext->ChangeList.PushChange();
 	if (Change) Change->RedoChange();
-}
-
-void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorContext) {
-	EditorContext = InEditorContext;
 }
 
 void AFICEditorCameraCharacter::ChangedKeyframe() {
@@ -327,6 +334,18 @@ void AFICEditorCameraCharacter::Zoom(float Value) {
 	}
 }
 
+void AFICEditorCameraCharacter::OnLeftMouseDown() {
+	AFICEditorSubsystem::GetFICEditorSubsystem(GetWorld())->OnLeftMouseDown();
+}
+
+void AFICEditorCameraCharacter::OnLeftMouseUp() {
+	AFICEditorSubsystem::GetFICEditorSubsystem(GetWorld())->OnLeftMouseUp();
+}
+
+void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorContext) {
+	EditorContext = InEditorContext;
+}
+
 void AFICEditorCameraCharacter::UpdateValues() {
 	if (EditorContext && EditorContext->GetCamera()) {
 		FVector Pos = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
@@ -350,4 +369,28 @@ void AFICEditorCameraCharacter::UpdateValues() {
 			}
 		}
 	}
+}
+
+void AFICEditorCameraCharacter::SetControlView(bool bInControlView, bool bIsTemporary) {
+	bControlViewTemp = bIsTemporary;
+
+	APlayerController* Player = Cast<APlayerController>(Controller);
+	if (bInControlView) {
+		if (bInControlView == bControlView) return;
+		LastCursorPos = FSlateApplication::Get().GetCursorPos();
+		FInputModeGameOnly InputMode;
+		InputMode.SetConsumeCaptureMouseDown(false);
+		Player->SetInputMode(InputMode);
+		Player->SetShowMouseCursor(false);
+	} else {
+		if (bControlView) FSlateApplication::Get().SetCursorPos(LastCursorPos);
+		FInputModeGameOnly InputMode;
+		//InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		InputMode.SetConsumeCaptureMouseDown(false);
+		Player->SetInputMode(InputMode);
+		Player->SetShowMouseCursor(true);
+		FSlateApplication::Get().SetAllUserFocusToGameViewport();
+	}
+	
+	bControlView = bInControlView;
 }

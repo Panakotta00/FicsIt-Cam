@@ -29,6 +29,10 @@ private:
 
 	float RollRotationFixValue = 0.0f;
 	bool bReposses = false;
+
+	bool bControlView = true;
+	bool bControlViewTemp = false;
+	FVector2D LastCursorPos;
 	
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
@@ -105,6 +109,8 @@ public:
 	void ToggleLockCamera();
 
 	UFUNCTION()
+	void RightMousePress();
+	UFUNCTION()
 	void RightMouseRelease();
 
 	UFUNCTION()
@@ -113,14 +119,24 @@ public:
 	void Redo();
 
 	UFUNCTION()
-	void SetEditorContext(UFICEditorContext* InEditorContext);
-
-	UFUNCTION()
 	void ChangedKeyframe();
-
+	
 	UFUNCTION()
 	void Zoom(float Value);
 
+	UFUNCTION()
+	void OnLeftMouseDown();
+	UFUNCTION()
+	void OnLeftMouseUp();
+	
+
+	UFUNCTION()
+	void SetEditorContext(UFICEditorContext* InEditorContext);
+	
 	// Updates Camera Values based on the current value cache in the referenced editor context
 	void UpdateValues();
+
+	void SetControlView(bool bInControlView, bool bIsTemporary = false);
+	bool IsControlView() { return bControlView; }
+	void ControlViewToggle() { SetControlView(!bControlView); }
 };

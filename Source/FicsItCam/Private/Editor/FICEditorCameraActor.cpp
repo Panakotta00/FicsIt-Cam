@@ -5,10 +5,9 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Editor/Data/FICEditorAttributeBool.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "Slate/SceneViewport.h"
 
 AFICEditorCameraActor::AFICEditorCameraActor() {
-	CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("CaptureComponent"));
+	/*CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("CaptureComponent"));
 	CaptureComponent->SetupAttachment(GetRootComponent());
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("RenderTarget"));
 	RenderTarget->InitAutoFormat(320, 320);
@@ -20,7 +19,7 @@ AFICEditorCameraActor::AFICEditorCameraActor() {
 	CaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
 	CaptureComponent->bUseRayTracingIfEnabled = true;
 	CaptureComponent->ShowFlags.SetTemporalAA(true);
-	Brush = FSlateImageBrush(RenderTarget, FVector2D(RenderTarget->SizeX, RenderTarget->SizeY));
+	Brush = FSlateImageBrush(RenderTarget, FVector2D(RenderTarget->SizeX, RenderTarget->SizeY));*/
 	
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -32,14 +31,14 @@ void AFICEditorCameraActor::BeginPlay() {
 	Super::BeginPlay();
 
 	//Gizmo = FTransformGizmoActorFactory().CreateNewGizmoActor(GetWorld());
-	TProxy = NewObject<UTransformProxy>();
+	/*TProxy = NewObject<UTransformProxy>();
 	TProxy->SetTransform(GetActorTransform());
 
 	FSlateApplication::Get().AddWindow(SNew(SWindow)
 		.Content()[
 			SNew(SImage)
 			.Image(&Brush)
-		]);
+		]);*/
 }
 
 void AFICEditorCameraActor::Tick(float DeltaSeconds) {

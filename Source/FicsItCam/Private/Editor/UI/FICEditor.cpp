@@ -189,11 +189,22 @@ FReply SFICEditor::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent
 	return FReply::Unhandled();
 }
 
+FReply SFICEditor::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
+		if (GameViewport->HasAnyUserFocusOrFocusedDescendants()) {
+			AFICEditorSubsystem::GetFICEditorSubsystem(Context)->OnLeftMouseDown();
+			return FReply::Handled();
+		}
+	}
+	return SCompoundWidget::OnMouseButtonDown(MyGeometry, MouseEvent);
+}
+
 FReply SFICEditor::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	if (Context->TempViewportFocus && MouseEvent.GetEffectingButton() == EKeys::RightMouseButton) {
-		Context->TempViewportFocus = false;
-		FocusUI(MouseEvent.GetUserIndex());
-		return FReply::Handled();
+	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
+		if (GameViewport->HasAnyUserFocusOrFocusedDescendants()) {
+			AFICEditorSubsystem::GetFICEditorSubsystem(Context)->OnLeftMouseUp();
+			return FReply::Handled();
+		}
 	}
 	return SCompoundWidget::OnMouseButtonUp(MyGeometry, MouseEvent);
 }
@@ -206,34 +217,15 @@ void SFICEditor::OnFocusChanging(const FWeakWidgetPath& PreviousFocusPath, const
 	SCompoundWidget::OnFocusChanging(PreviousFocusPath, NewWidgetPath, InFocusEvent);
 	if (!PreviousFocusPath.ContainsWidget(GameWidget.ToSharedRef()) && NewWidgetPath.ContainsWidget(GameWidget.ToSharedRef())) {
 		if (FSlateApplication::Get().GetPressedMouseButtons().Contains(EKeys::RightMouseButton)) {
-			Context->TempViewportFocus = true;
+			Context->GetPlayerCharacter()->SetControlView(true, true);
 		}
-		FocusViewport(InFocusEvent.GetUser(), false);
 	}
 }
 
 FReply SFICEditor::OnPreviewKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) {
 	if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleCursor")) || IsAction(Context, InKeyEvent, TEXT("PauseGame"))) {
-		if (GameWidget->HasUserFocusedDescendants(InKeyEvent.GetUserIndex())) {
-			FocusUI(InKeyEvent.GetUserIndex());
-		} else {
-			FocusViewport(InKeyEvent.GetUserIndex());
-		}
+		Context->GetPlayerCharacter()->ControlViewToggle();
 		return FReply::Handled();
 	}
 	return SCompoundWidget::OnPreviewKeyDown(MyGeometry, InKeyEvent);
-}
-
-void SFICEditor::FocusUI(uint32 UserIndex, bool bFocusWidget) {
-	if (bFocusWidget) FSlateApplication::Get().SetUserFocus(UserIndex, SharedThis(this));
-	APlayerController* Controller = Context->GetScene()->GetWorld()->GetFirstPlayerController();
-	UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(Controller);
-	FSlateApplication::Get().SetCursorPos(Context->TempCursorPos);
-}
-
-void SFICEditor::FocusViewport(uint32 UserIndex, bool bFocusWidget) {
-	Context->TempCursorPos = FSlateApplication::Get().GetCursorPos();
-	if (bFocusWidget) FSlateApplication::Get().SetUserFocusToGameViewport(UserIndex);
-	APlayerController* Controller = Context->GetScene()->GetWorld()->GetFirstPlayerController();
-	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 }
