@@ -11,6 +11,8 @@
 #include "Widgets/Layout/SScaleBox.h"
 #include "Editor/UI/FICTimeline.h"
 #include "Editor/UI/FICDetails.h"
+#include "Slate/Private/Framework/Docking/SDockingArea.h"
+#include "Slate/Private/Framework/Docking/SDockingTabStack.h"
 
 FSlateColorBrush SFICEditor::Background = FSlateColorBrush(FColor::FromHex("030303"));
 
@@ -18,7 +20,73 @@ void SFICEditor::Construct(const FArguments& InArgs, UFICEditorContext* InContex
 	Context = InContext;
 	GameWidget = InGameWidget;
 	GameViewport = InViewport;
+		
+	/*FTabSpawnerEntry Viewport = FGlobalTabmanager::Get()->RegisterTabSpawner("Viewport", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& Args) {
+		SNew(SDockTab)
+		.Content()[
+			GameWidget.ToSharedRef()
+		].OnCanCloseTab(false);
+	}), FCanSpawnTab::CreateLambda([](const FSpawnTabArgs& Args) {
+		return true;
+	}));*/
+
+	FTabSpawnerEntry Details = FGlobalTabmanager::Get()->RegisterTabSpawner("Details", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& Args) {
+		return SNew(SDockTab)
+		.Content()[
+			SNew(SVerticalBox)
+			+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Left)[
+				SNew(SButton)
+				.Text(FText::FromString("Exit"))
+				.OnClicked_Lambda([this]() {
+					AFICEditorSubsystem::GetFICEditorSubsystem(Context->GetScene()->GetWorld())->CloseEditor();
+					return FReply::Handled();
+				})
+			]
+			+SVerticalBox::Slot().FillHeight(1)[
+				SNew(SFICDetails)
+				.Context(Context)
+			]
+		];
+	}), FCanSpawnTab::CreateLambda([](const FSpawnTabArgs& Args) {
+		return true;
+	}));
 	
+	FTabSpawnerEntry Timeline = FGlobalTabmanager::Get()->RegisterTabSpawner("Timeline", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& Args) {
+		return SNew(SDockTab)
+		.Content()[
+			SNew(SFICTimelinePanel)
+			.Context(Context)
+		];
+	}), FCanSpawnTab::CreateLambda([](const FSpawnTabArgs& Args) {
+		return true;
+	}));
+	
+	FTabSpawnerEntry Test = FGlobalTabmanager::Get()->RegisterTabSpawner(
+		"Test", FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& Args) {
+			return SNew(SDockTab)
+				.Content()[
+					SNew(SBox)
+			.WidthOverride(100)
+			.HeightOverride(100)
+			.Content()[
+						SNew(STextBlock)
+						.Text(FText::FromString("Test"))
+					]
+				];
+		}), FCanSpawnTab::CreateLambda([](const FSpawnTabArgs& Args) {
+			return true;
+		}));
+
+	TSharedPtr<SDockTab> Tab = FGlobalTabmanager::Get()->TryInvokeTab(FTabId("Viewport"));
+	TSharedRef<SDockTab> ViewportTab = SNew(SDockTab)
+		.Content()[
+			GameWidget.ToSharedRef()
+		].OnCanCloseTab(false);
+	ViewportTab->SetTabManager(FGlobalTabmanager::Get());
+	FGlobalTabmanager::Get()->SetMainTab(ViewportTab);
+
+	TSharedPtr<SDockingArea> Area;
+	TSharedPtr<SDockingTabStack> Stack;
 	ChildSlot[
 		SNew(SOverlay)
 		+SOverlay::Slot()[
@@ -26,37 +94,15 @@ void SFICEditor::Construct(const FArguments& InArgs, UFICEditorContext* InContex
 			.Image(&Background)
 		]
 		+SOverlay::Slot()[
-			SNew(SSplitter)
-			.Orientation(EOrientation::Orient_Vertical)
-			+SSplitter::Slot().Value(2)[
-				SNew(SSplitter)
-				.Orientation(EOrientation::Orient_Horizontal)
-				+SSplitter::Slot()[
-					SNew(SVerticalBox)
-					+SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Left)[
-						SNew(SButton)
-						.Text(FText::FromString("Exit"))
-						.OnClicked_Lambda([this]() {
-							AFICEditorSubsystem::GetFICEditorSubsystem(Context->GetScene()->GetWorld())->CloseEditor();
-							return FReply::Handled();
-						})
-					]
-					+SVerticalBox::Slot().FillHeight(1)[
-						SNew(SFICDetails)
-						.Context(Context)
-					]
-				]
-				+SSplitter::Slot().Value(4)[
-					GameWidget.ToSharedRef()
-				]
-			]
-			+SSplitter::Slot().SizeRule(SSplitter::ESizeRule::FractionOfParent)[
-				SNew(SFICTimelinePanel)
-				.Context(Context)
-			]
+			SAssignNew(Area, SDockingArea, FGlobalTabmanager::Get(), FTabManager::NewPrimaryArea())
+			.ParentWindow(FSlateApplication::Get().FindWidgetWindow(SharedThis(this)))
+			.ShouldManageParentWindow(false)
+			.InitialContent(SAssignNew(Stack, SDockingTabStack, FTabManager::NewStack()))
 		]
 	];
-	
+	Stack->AddTabWidget(ViewportTab);
+		
+	FGlobalTabmanager::Get()->TryInvokeTab(FTabId("Details"));
 }
 
 void SFICEditor::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
