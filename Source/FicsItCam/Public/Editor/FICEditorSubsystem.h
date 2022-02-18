@@ -18,7 +18,7 @@ class AFICScene;
 class UFICEditorContext;
 
 UCLASS()
-class FICSITCAM_API AFICEditorSubsystem : public AModSubsystem {
+class FICSITCAM_API AFICEditorSubsystem : public AModSubsystem, public IFGSaveInterface {
 	GENERATED_BODY()
 private:
 	UPROPERTY()
@@ -66,6 +66,11 @@ public:
 		check(SubsystemActorManager);
 		return SubsystemActorManager->GetSubsystemActor<AFICEditorSubsystem>();
 	}
+
+	UPROPERTY(SaveGame)
+	TMap<FString, FString> EditorLayouts;
+	UPROPERTY(SaveGame)
+	FString LastEditorLayout;
 	
 	AFICEditorSubsystem();
 
@@ -73,6 +78,10 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	// End AActor
+
+	// Begin IFGSaveInterface
+	virtual bool ShouldSave_Implementation() const override { return true; }
+	// End IFGSaveInterface
 
 	void OpenEditor(AFICScene* InScene);
 	void CloseEditor();

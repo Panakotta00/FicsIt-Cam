@@ -26,12 +26,11 @@ class SFICTimelinePanel : public SCompoundWidget {
 	
 	SLATE_BEGIN_ARGS(SFICTimelinePanel) :
 		_Background(&DefaultBackgroundBrush) {}
-		SLATE_ARGUMENT(UFICEditorContext*, Context)
 		SLATE_ATTRIBUTE(const FSlateBrush*, Background)
 	SLATE_END_ARGS()
 
 public:
-	void Construct(const FArguments& InArgs);
+	void Construct(const FArguments& InArgs, UFICEditorContext* InContext);
 
 private:
 	UFICEditorContext* Context = nullptr;

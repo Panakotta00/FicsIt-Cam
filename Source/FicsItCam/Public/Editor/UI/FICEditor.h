@@ -20,9 +20,17 @@ private:
 	TSharedPtr<SViewport> GameViewport;
 	SHorizontalBox::FSlot* GameSlot = nullptr;
 
+	SVerticalBox::FSlot* EditorSlot = nullptr;
+	TSharedPtr<FTabManager> TabManager;
+	TSharedPtr<FTabManager::FLayout> DefaultLayout;
+
 	bool bIsLeft = false;
 	bool bIsRight = false;
 	float KeyPressTime = 0;
+
+	void RegisterTabs();
+	FMenuBarBuilder CreateMenuBar();
+	void LoadLayout(TSharedPtr<FTabManager::FLayout> Layout);
 
 public:
 	// Begin SWidget

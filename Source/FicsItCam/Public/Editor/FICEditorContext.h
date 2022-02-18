@@ -61,6 +61,12 @@ public:
 	FFICChangeList ChangeList;
 	
 	FFICSceneObjectsChanged OnSceneObjectsChanged;
+	FFICSceneObjectsChanged OnSceneObjectSelectionChanged;
+	UObject* Selection = nullptr;
+	void SetSelection(UObject* SceneObject) {
+		Selection = SceneObject;
+		OnSceneObjectSelectionChanged.Broadcast();
+	}
 
 	UFICEditorContext();
 

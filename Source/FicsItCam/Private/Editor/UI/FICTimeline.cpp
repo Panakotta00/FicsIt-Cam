@@ -19,8 +19,8 @@ TArray<TSharedPtr<FFICEditorAttributeReference>> FFICEditorAttributeReference::G
 	return Children;
 }
 
-void SFICTimelinePanel::Construct(const FArguments& InArgs) {
-	Context = InArgs._Context;
+void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
+	Context = InContext;
 	BackgroundBrush = InArgs._Background;
 	
 	DefaultToggleButtonStyle.CheckedImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
