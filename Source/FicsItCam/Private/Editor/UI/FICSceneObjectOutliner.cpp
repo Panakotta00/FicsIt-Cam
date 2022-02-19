@@ -10,8 +10,8 @@ SFICSceneObjectOutliner::~SFICSceneObjectOutliner() {
 void SFICSceneObjectOutliner::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
 	Context = InContext;
 
-	OnSceneObjectsChangedDelegateHandle = Context->OnSceneObjectsChanged.AddRaw(this, &SFICSceneObjectOutliner::UpdateSceneObjects);
-	OnSelectionChangedDelegateHandle = Context->OnSceneObjectSelectionChanged.AddRaw(this, &SFICSceneObjectOutliner::UpdateSelection);
+	OnSceneObjectsChangedDelegateHandle = Context->OnSceneObjectsChanged.AddSP(this, &SFICSceneObjectOutliner::UpdateSceneObjects);
+	OnSelectionChangedDelegateHandle = Context->OnSceneObjectSelectionChanged.AddSP(this, &SFICSceneObjectOutliner::UpdateSelection);
 
 	ChildSlot[
 		SNew(SVerticalBox)
@@ -62,8 +62,8 @@ void SFICSceneObjectOutliner::Construct(const FArguments& InArgs, UFICEditorCont
 			.SelectionMode(ESelectionMode::Single)
 			.OnSelectionChanged_Lambda([this](TSharedPtr<FFICSceneObjectReference> SelectedObject, ESelectInfo::Type Type) {
 				if (Type != ESelectInfo::Type::Direct) {
-					if (SelectedObject) Context->SetSelection(SelectedObject->SceneObject);
-					else Context->SetSelection(nullptr);
+					if (SelectedObject) Context->SetSelectedSceneObject(SelectedObject->SceneObject);
+					else Context->SetSelectedSceneObject(nullptr);
 				}
 			})
 			.OnKeyDownHandler_Lambda([this](const FGeometry&, const FKeyEvent& Event) {
@@ -129,7 +129,7 @@ void SFICSceneObjectOutliner::UpdateSceneObjects() {
 void SFICSceneObjectOutliner::UpdateSelection() {
 	if (!SceneObjectListWidget) return;
 	SceneObjectListWidget->ClearSelection();
-	if (Context->Selection) {
-		SceneObjectListWidget->SetSelection(SceneObjectMap[Context->Selection]);
+	if (Context->GetSelectedSceneObject()) {
+		SceneObjectListWidget->SetSelection(SceneObjectMap[Context->GetSelectedSceneObject()]);
 	}
 }

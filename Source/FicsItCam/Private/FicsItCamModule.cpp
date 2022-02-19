@@ -19,9 +19,11 @@ void FGGameMode_Play(CallScope<void(*)(AActor*, bool)>& Scope, AActor* gm, bool)
 
 void FFicsItCamModule::StartupModule() {
 	FCoreDelegates::OnPostEngineInit.AddStatic([]() {
+#if !WITH_EDITOR
 		SUBSCRIBE_METHOD(AFGItemRegrowSubsystem::AddPickup, &AddPickup_Override);
 
 		SUBSCRIBE_METHOD(AFGGameMode::DispatchBeginPlay, &FGGameMode_Play)
+#endif
 
 		AFGGameMode* gm = const_cast<AFGGameMode*>(GetDefault<AFGGameMode>());
 		gm->ReplaySpectatorPlayerControllerClass = gm->PlayerControllerClass;

@@ -135,7 +135,7 @@ FMenuBarBuilder SFICEditor::CreateMenuBar() {
 	}));
 	MenuBarBuilder.AddPullDownMenu(LOCTEXT("Layout", "Layout"), LOCTEXT("LayoutTT", "Editor Panel/View Layouts"), FNewMenuDelegate::CreateLambda([this](FMenuBuilder& MenuBuilder) {
 		MenuBuilder.AddMenuEntry(LOCTEXT("Default", "Default"), LOCTEXT("DefaultTT", "Default Editor Layout"), FSlateIcon(), FExecuteAction::CreateLambda([this]() {
-			LoadLayout(nullptr);
+			LoadLayout(DefaultLayout.ToSharedRef());
 		}));
 		AFICEditorSubsystem* SubSys = AFICEditorSubsystem::GetFICEditorSubsystem(Context);
 		if (SubSys->EditorLayouts.Num() > 0) {
@@ -192,9 +192,11 @@ FMenuBarBuilder SFICEditor::CreateMenuBar() {
 }
 
 void SFICEditor::LoadLayout(TSharedPtr<FTabManager::FLayout> Layout) {
-	FString LastLayout = AFICEditorSubsystem::GetFICEditorSubsystem(Context)->LastEditorLayout;
-	if (LastLayout.Len() > 0) {
-		Layout = FTabManager::FLayout::NewFromString(LastLayout);
+	if (!Layout) {
+		FString LastLayout = AFICEditorSubsystem::GetFICEditorSubsystem(Context)->LastEditorLayout;
+		if (LastLayout.Len() > 0) {
+			Layout = FTabManager::FLayout::NewFromString(LastLayout);
+		}
 	}
 	if (!Layout) Layout = DefaultLayout.ToSharedRef();
 

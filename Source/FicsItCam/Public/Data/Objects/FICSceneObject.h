@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InteractiveGizmo.h"
 #include "UObject/Interface.h"
 #include "FICSceneObject.generated.h"
 
@@ -21,4 +22,9 @@ public:
 	virtual void InitEditor(UFICEditorContext* Context) {}
 	virtual void UnloadEditor(UFICEditorContext* Context) {}
 	virtual void EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) {}
+
+	virtual bool Is3DSceneObject() { return false; }
+	virtual ETransformGizmoSubElements GetGizmoSubElements() { return ETransformGizmoSubElements::FullTranslateRotateScale; }
+	virtual void SetSceneObjectTransform(FTransform InTransform) {}
+	virtual FTransform GetSceneObjectTransform() { return FTransform(); }
 };

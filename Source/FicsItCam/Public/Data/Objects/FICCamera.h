@@ -72,5 +72,10 @@ public:
 	virtual void InitEditor(UFICEditorContext* Context) override;
 	virtual void UnloadEditor(UFICEditorContext* Context) override;
 	virtual void EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) override;
+
+	virtual bool Is3DSceneObject() override;
+	virtual ETransformGizmoSubElements GetGizmoSubElements() { return ETransformGizmoSubElements::StandardTranslateRotate; }
+	virtual FTransform GetSceneObjectTransform() override;
+	virtual void SetSceneObjectTransform(FTransform InTransform) override;
 	// End IFICEditorSceneObject-Interface
 };

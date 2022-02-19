@@ -1,4 +1,4 @@
-#include "Editor/FICEditorCameraActor.h"
+#include "Editor/Data/FICEditorCameraActor.h"
 
 #include "BaseGizmos/TransformGizmo.h"
 #include "Components/LineBatchComponent.h"
@@ -7,6 +7,8 @@
 #include "Engine/TextureRenderTarget2D.h"
 
 AFICEditorCameraActor::AFICEditorCameraActor() {
+	SetRootComponent(CreateDefaultSubobject<USceneComponent>("RootComponent"));
+	
 	/*CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("CaptureComponent"));
 	CaptureComponent->SetupAttachment(GetRootComponent());
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("RenderTarget"));
@@ -22,47 +24,42 @@ AFICEditorCameraActor::AFICEditorCameraActor() {
 	Brush = FSlateImageBrush(RenderTarget, FVector2D(RenderTarget->SizeX, RenderTarget->SizeY));*/
 	
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	LineBatcher = CreateDefaultSubobject<ULineBatchComponent>(TEXT("LineBatcher"));
-	LineBatcher->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	LineBatcher->SetupAttachment(RootComponent);
+	LineBatcher->SetMobility(EComponentMobility::Movable);
+	
+	SelectionHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SelectionHitBox"));
+	SelectionHitBox->InitBoxExtent(FVector(60.f,40.f,40.f));
+	SelectionHitBox->SetupAttachment(RootComponent);
+	SelectionHitBox->SetMobility(EComponentMobility::Movable);
+	SelectionHitBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	SelectionHitBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel10, ECollisionResponse::ECR_Block);
+	SelectionHitBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 }
 
 void AFICEditorCameraActor::BeginPlay() {
 	Super::BeginPlay();
-
-	//Gizmo = FTransformGizmoActorFactory().CreateNewGizmoActor(GetWorld());
-	/*TProxy = NewObject<UTransformProxy>();
-	TProxy->SetTransform(GetActorTransform());
-
-	FSlateApplication::Get().AddWindow(SNew(SWindow)
-		.Content()[
-			SNew(SImage)
-			.Image(&Brush)
-		]);*/
 }
 
 void AFICEditorCameraActor::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
 
 	if (EditorContext) {
-		if (EditorContext->bMoveCamera) {
-			UpdateGizmo();
-		}
-		
 		if (EditorContext->bShowPath) {
+			LineBatcher->Flush();
 			bool Active = EditorContext->GetActiveCamera() == Camera;
 			FColor Color = Active ? FColor::Green : FColor::Red;
 			FTransform Transform = GetActorTransform();
-			GetWorld()->LineBatcher->DrawBox(FBox(FVector(-1, -1, -1), FVector(1, 1, 1)), Transform.GetScaled(FVector(60, 40, 40)).ToMatrixWithScale(), Color, SDPG_World);
-			GetWorld()->LineBatcher->DrawDirectionalArrow(Transform.ToMatrixNoScale(), Color, 200, 20, SDPG_World);
-			GetWorld()->LineBatcher->DrawLine(GetActorLocation(), GetActorTransform().TransformPositionNoScale(FVector(0, 0, 100)), Color, SDPG_World);
+			LineBatcher->DrawBox(FBox(FVector(-1, -1, -1), FVector(1, 1, 1)), Transform.GetScaled(FVector(60, 40, 40)).ToMatrixWithScale(), Color, SDPG_World);
+			LineBatcher->DrawDirectionalArrow(Transform.ToMatrixNoScale(), Color, 200, 20, SDPG_World);
+			LineBatcher->DrawLine(GetActorLocation(), GetActorTransform().TransformPositionNoScale(FVector(0, 0, 100)), Color, SDPG_World);
 		}
 	}
 }
 
-void AFICEditorCameraActor::UpdateGizmo() {
-	if (TProxy) TProxy->SetTransform(GetActorTransform());
-	if (Gizmo) Gizmo->SetActorTransform(GetActorTransform());
+UObject* AFICEditorCameraActor::Select() {
+	return Camera;
 }
 
 void AFICEditorCameraActor::UpdateValues(TSharedRef<FFICEditorAttributeBase> Attribute) {
@@ -70,6 +67,4 @@ void AFICEditorCameraActor::UpdateValues(TSharedRef<FFICEditorAttributeBase> Att
 	FRotator Rot = FFICAttributeRotation::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Rotation"));
 	SetActorLocation(Pos);
 	SetActorRotation(Rot);
-	
-	UpdateGizmo();
 }

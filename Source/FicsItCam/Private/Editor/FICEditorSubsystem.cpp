@@ -29,11 +29,32 @@ void AFICEditorSubsystem::InitInteractiveTools() {
 	
 	// register selection interaction
 	SelectionInteraction = NewObject<UFICSelectionInteraction>(this);
+	SelectionInteraction->Initialize(GetActiveEditorContext());
 	ToolsContext->InputRouter->RegisterSource(SelectionInteraction);
 
 	// create transform interaction
 	TransformInteraction = NewObject<UFICTransformInteraction>(this);
-	TransformInteraction->Initialize();
+	TransformInteraction->Initialize(GetActiveEditorContext());
+}
+
+void AFICEditorSubsystem::ShutdownInteractiveTools() {
+	if (ToolsContext != nullptr) {
+		TransformInteraction->Shutdown();
+		ToolsContext->Shutdown();
+	}
+
+	if (PDIRenderActor) {
+		PDIRenderActor->Destroy();
+		PDIRenderActor = nullptr;
+		PDIRenderComponent = nullptr;
+	}
+
+	ToolsContext = nullptr;
+	ToolsQueries = nullptr;
+	ToolsTransactions = nullptr;
+
+	SelectionInteraction = nullptr;
+	TransformInteraction = nullptr;
 }
 
 void AFICEditorSubsystem::OnLeftMouseDown() {
@@ -231,8 +252,6 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	ActiveEditorContext = Context;
 	EditorPlayerCharacter = Character;
 
-
-
 	InitInteractiveTools();
 }
 
@@ -247,6 +266,9 @@ void AFICEditorSubsystem::CloseEditor() {
 	
 	AFICScene* Scene = Context->GetScene();
 
+	// Shutdown Interactive Tools
+	ShutdownInteractiveTools();
+	
 	// Unload loaded Editor Context
 	Context->Unload();
 	
@@ -268,7 +290,7 @@ void AFICEditorSubsystem::CloseEditor() {
 	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 	UGameplayStatics::SetGamePaused(this, false);
-
+	
 	// Cleanup Editor Objects
 	EditorWidget = nullptr;
 	Character->Destroy();

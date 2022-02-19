@@ -9,13 +9,13 @@ SFICSceneObjectDetails::~SFICSceneObjectDetails() {
 void SFICSceneObjectDetails::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
 	Context = InContext;
 
-	OnSelectionChangedDelegateHandle = Context->OnSceneObjectSelectionChanged.AddRaw(this, &SFICSceneObjectDetails::UpdateSelection);
+	OnSelectionChangedDelegateHandle = Context->OnSceneObjectSelectionChanged.AddSP(this, &SFICSceneObjectDetails::UpdateSelection);
 
 	UpdateSelection();
 }
 
 void SFICSceneObjectDetails::UpdateSelection() {
-	UpdatePanel(Context->Selection);
+	UpdatePanel(Context->GetSelectedSceneObject());
 }
 
 void SFICSceneObjectDetails::UpdatePanel(UObject* SceneObject) {

@@ -7,6 +7,17 @@
 
 #include "FICSelectionInteraction.generated.h"
 
+UINTERFACE()
+class UFICSelectionInteractionTarget : public UInterface {
+	GENERATED_BODY()
+};
+
+class IFICSelectionInteractionTarget {
+	GENERATED_IINTERFACE_BODY()
+public:
+	virtual UObject* Select() { return nullptr; }
+};
+
 UCLASS()
 class UFICSelectionInteraction : public UObject, public IInputBehaviorSource, public IClickBehaviorTarget {
 	GENERATED_BODY()
@@ -15,52 +26,22 @@ private:
 	USingleClickInputBehavior* ClickBehavior;
 	UPROPERTY()
 	UInputBehaviorSet* BehaviorSet;
+	UPROPERTY()
+	UFICEditorContext* Context;
 
 public:
-	UFICSelectionInteraction() {
-		ClickBehavior = NewObject<USingleClickInputBehavior>();
-		ClickBehavior->Initialize(this);
+	UFICSelectionInteraction();
 
-		BehaviorSet = NewObject<UInputBehaviorSet>();
-		BehaviorSet->Add(ClickBehavior, this);
-	}
-	
+	void Initialize(UFICEditorContext* Context);
+
 	// Begin IInputBehaviourSource
-	virtual const UInputBehaviorSet* GetInputBehaviors() const {
+	virtual const UInputBehaviorSet* GetInputBehaviors() const override {
 		return BehaviorSet;
 	}
 	// End IInputBehaviourSource
 
 	// Begin IClickBehaviourTarget
-	virtual FInputRayHit IsHitByClick(const FInputDeviceRay& ClickPos) override {
-		FInputRayHit RayHit;
-		
-		FHitResult Result;
-		GetWorld()->LineTraceSingleByObjectType(Result, ClickPos.WorldRay.Origin, ClickPos.WorldRay.Origin + ClickPos.WorldRay.Direction * 10000, FCollisionObjectQueryParams());
-		if (Result.Actor.IsValid()) {
-			RayHit.bHit = true;
-			RayHit.HitDepth = Result.Distance;
-			//RayHit.HitNormal = ;			// todo - can compute from bary coords
-			//RayHit.bHasHitNormal = ;		// todo - can compute from bary coords
-			RayHit.HitIdentifier = Result.FaceIndex;
-			RayHit.HitOwner = Result.GetActor();
-		} else {
-			RayHit.bHit = true;
-			RayHit.HitDepth = TNumericLimits<float>::Max();
-			RayHit.HitIdentifier = 0;
-			RayHit.HitOwner = this;
-		}
-		return RayHit;
-	}
-	
-	virtual void OnClicked(const FInputDeviceRay& ClickPos) override {
-		FHitResult Result;
-		GetWorld()->LineTraceSingleByObjectType(Result, ClickPos.WorldRay.Origin, ClickPos.WorldRay.Origin + ClickPos.WorldRay.Direction * 10000, FCollisionObjectQueryParams());
-		if (Result.Actor.IsValid()) {
-			AFICEditorSubsystem::GetFICEditorSubsystem(GetWorld())->SetSelection(Result.GetActor());
-		} else {
-			AFICEditorSubsystem::GetFICEditorSubsystem(GetWorld())->SetSelection(nullptr);
-		}
-	}
+	virtual FInputRayHit IsHitByClick(const FInputDeviceRay& ClickPos) override;
+	virtual void OnClicked(const FInputDeviceRay& ClickPos) override;
 	// End IClickBehaviourTarget
 };

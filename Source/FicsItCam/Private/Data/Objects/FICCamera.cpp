@@ -1,7 +1,7 @@
 #include "Data/Objects/FICCamera.h"
 
 #include "Components/LineBatchComponent.h"
-#include "Editor/FICEditorCameraActor.h"
+#include "Editor/Data/FICEditorCameraActor.h"
 #include "Editor/FICEditorContext.h"
 
 void UFICCamera::Tick(float DeltaTime) {
@@ -45,4 +45,23 @@ void UFICCamera::UnloadEditor(UFICEditorContext* Context) {
 void UFICCamera::EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) {
 	EditorCameraActor->UpdateValues(Attribute);
 	if (EditorContext->GetActiveCamera() == this) EditorContext->UpdateCharacterValues();
+}
+
+bool UFICCamera::Is3DSceneObject() {
+	return !!EditorContext;
+}
+
+FTransform UFICCamera::GetSceneObjectTransform() {
+	if (EditorCameraActor) {
+		return EditorCameraActor->GetActorTransform();
+	}
+	return FTransform();
+}
+
+void UFICCamera::SetSceneObjectTransform(FTransform InTransform) {
+	if (EditorCameraActor) {
+		EditorCameraActor->SetActorTransform(InTransform);
+		FFICAttributePosition::ToEditorAttribute(InTransform.GetLocation(), EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Position"));
+		FFICAttributeRotation::ToEditorAttribute(InTransform.GetRotation().Rotator(), EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Rotation"));
+	}
 }

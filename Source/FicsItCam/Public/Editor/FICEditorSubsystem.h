@@ -52,6 +52,7 @@ private:
 	AActor* Selection = nullptr;
 
 	void InitInteractiveTools();
+	void ShutdownInteractiveTools();
 
 public:
 	UPROPERTY()

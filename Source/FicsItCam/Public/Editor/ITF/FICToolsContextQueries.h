@@ -49,6 +49,8 @@ public:
 		return UMaterial::GetDefaultMaterial(MD_Surface);
 	}
 
+	virtual HHitProxy* GetHitProxy(int32 X, int32 Y) const { return nullptr; }
+
 protected:
 	UInteractiveToolsContext* ToolsContext;
 	UWorld* TargetWorld;

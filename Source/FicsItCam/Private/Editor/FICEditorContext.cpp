@@ -133,6 +133,15 @@ FFICFrameRange UFICEditorContext::GetActiveRange() {
 	return ActiveRange;
 }
 
+void UFICEditorContext::SetSelectedSceneObject(UObject* SceneObject) {
+	SelectedSceneObject = SceneObject;
+	OnSceneObjectSelectionChanged.Broadcast();
+}
+
+UObject* UFICEditorContext::GetSelectedSceneObject() {
+	return SelectedSceneObject;
+}
+
 void UFICEditorContext::UpdateCharacterValues() {
 	if (bMoveCamera) EditorPlayerCharacter->UpdateValues();
 }

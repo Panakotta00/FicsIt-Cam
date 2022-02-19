@@ -50,6 +50,8 @@ private:
 	float AnimPlayerDelta = 0.0f;
 	float AnimPlayerFactor = 1.0f;
 	
+	UObject* SelectedSceneObject = nullptr;
+	
 public:
 	bool bMoveCamera = true;
 	bool bShowPath = true;
@@ -62,11 +64,6 @@ public:
 	
 	FFICSceneObjectsChanged OnSceneObjectsChanged;
 	FFICSceneObjectsChanged OnSceneObjectSelectionChanged;
-	UObject* Selection = nullptr;
-	void SetSelection(UObject* SceneObject) {
-		Selection = SceneObject;
-		OnSceneObjectSelectionChanged.Broadcast();
-	}
 
 	UFICEditorContext();
 
@@ -94,6 +91,8 @@ public:
 	void SetActiveRange(const FFICFrameRange& InActiveRange);
 	FFICFrameRange GetActiveRange();
 
+	void SetSelectedSceneObject(UObject* SceneObject);
+	UObject* GetSelectedSceneObject();
 
 	void SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor);
 	EFICAnimPlayerState GetAnimPlayer() { return AnimPlayerState; }

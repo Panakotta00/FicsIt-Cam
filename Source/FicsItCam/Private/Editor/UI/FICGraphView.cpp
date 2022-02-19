@@ -212,7 +212,7 @@ void SFICGraphView::SetAttributes(const TArray<TSharedRef<FFICEditorAttributeBas
 	Attributes = InAttributes;
 
 	for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
-		DelegateHandles.Add(Attribute, Attribute->GetAttribute().OnUpdate.AddRaw(this, &SFICGraphView::Update));
+		DelegateHandles.Add(Attribute, Attribute->GetAttribute().OnUpdate.AddSP(this, &SFICGraphView::Update));
 	}
 	
 	Update();

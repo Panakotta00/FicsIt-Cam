@@ -6,7 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Data/Objects/FICCamera.h"
-#include "Editor/FICEditorCameraActor.h"
+#include "Editor/Data/FICEditorCameraActor.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -280,7 +280,7 @@ void AFICEditorCameraCharacter::ToggleShowPath() {
 void AFICEditorCameraCharacter::ToggleLockCamera() {
 	EditorContext->bMoveCamera = !EditorContext->bMoveCamera;
 }
-
+#pragma optimize("", off)
 void AFICEditorCameraCharacter::RightMousePress() {
 	SetControlView(true, true);
 }
@@ -290,6 +290,7 @@ void AFICEditorCameraCharacter::RightMouseRelease() {
 		SetControlView(false);
 	}
 }
+#pragma optimize("", on)
 
 void AFICEditorCameraCharacter::Undo() {
 	TSharedPtr<FFICChange> Change = EditorContext->ChangeList.PopChange();
@@ -384,12 +385,20 @@ void AFICEditorCameraCharacter::SetControlView(bool bInControlView, bool bIsTemp
 		Player->SetShowMouseCursor(false);
 	} else {
 		if (bControlView) FSlateApplication::Get().SetCursorPos(LastCursorPos);
-		FInputModeGameOnly InputMode;
-		//InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-		InputMode.SetConsumeCaptureMouseDown(false);
-		Player->SetInputMode(InputMode);
+
+		UGameViewportClient* GameViewportClient = GetWorld()->GetGameViewport();
+		ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(Player->Player);
+		if (GameViewportClient && LocalPlayer) {
+			GameViewportClient->SetMouseLockMode(EMouseLockMode::DoNotLock);
+			GameViewportClient->SetIgnoreInput(false);
+			GameViewportClient->SetHideCursorDuringCapture(false);
+			GameViewportClient->SetMouseCaptureMode(EMouseCaptureMode::CapturePermanently_IncludingInitialMouseDown);
+			FReply& SlateOperations = LocalPlayer->GetSlateOperations();
+			SlateOperations.ReleaseMouseCapture();
+			SlateOperations.ReleaseMouseLock();
+		}
 		Player->SetShowMouseCursor(true);
-		FSlateApplication::Get().SetAllUserFocusToGameViewport();
+		FSlateApplication::Get().SetAllUserFocus(AFICEditorSubsystem::GetFICEditorSubsystem(EditorContext)->GetEditorWidget());
 	}
 	
 	bControlView = bInControlView;
