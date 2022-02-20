@@ -12,6 +12,7 @@
 #include "Editor/UI/FICSceneObjectDetails.h"
 #include "Editor/UI/FICSceneObjectOutliner.h"
 #include "Editor/UI/FICSceneSettings.h"
+#include "Editor/UI/FICViewport.h"
 #include "Slate/Private/Framework/Docking/SDockingArea.h"
 #include "Slate/Private/Framework/Docking/SDockingTabStack.h"
 
@@ -69,7 +70,8 @@ void SFICEditor::RegisterTabs() {
 	TabManager->RegisterTabSpawner("Viewport", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& Args) {
 		TSharedRef<SDockTab> ViewportTab = SNew(SDockTab)
 			.Content()[
-				GameWidget.ToSharedRef()
+				SNew(SFICViewport, Context, GameWidget.ToSharedRef())
+				//GameWidget.ToSharedRef()
 			].OnCanCloseTab(false)
 			.Label(FText::FromString("Viewport"));
 		TabManager->SetMainTab(ViewportTab);
@@ -299,6 +301,9 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 		} else if (InKeyEvent.GetKey() == EKeys::Y && InKeyEvent.IsControlDown()) {
 			TSharedPtr<FFICChange> Change = Context->ChangeList.PushChange();
 			if (Change) Change->RedoChange();
+			return FReply::Handled();
+		} else if (InKeyEvent.GetKey() == EKeys::Delete) {
+			Context->RemoveSceneObject(Context->GetSelectedSceneObject());
 			return FReply::Handled();
 		}
 	}

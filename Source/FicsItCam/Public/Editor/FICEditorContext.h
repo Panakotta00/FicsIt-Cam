@@ -28,6 +28,7 @@ enum EFICAnimPlayerState {
 
 DECLARE_MULTICAST_DELEGATE(FFICSceneObjectsChanged)
 DECLARE_MULTICAST_DELEGATE(FFICCurrentFrameChanged)
+DECLARE_MULTICAST_DELEGATE(FFICOverlayWidgetsChanged)
 
 UCLASS()
 class UFICEditorContext : public UObject, public FTickableGameObject {
@@ -52,9 +53,12 @@ private:
 	float AnimPlayerFactor = 1.0f;
 	
 	UObject* SelectedSceneObject = nullptr;
+
+	TArray<TSharedRef<SWidget>> OverlayWidgets;
 	
 	bool bAutoKeyframe = false;
 	bool bMoveCamera = true;
+	bool bCameraPreview = false;
 	
 public:
 	bool bShowPath = true;
@@ -68,6 +72,7 @@ public:
 	FFICSceneObjectsChanged OnSceneObjectsChanged;
 	FFICSceneObjectsChanged OnSceneObjectSelectionChanged;
 	FFICCurrentFrameChanged OnCurrentFrameChanged;
+	FFICOverlayWidgetsChanged OnOverlayWidgetsChanged;
 		
 	UFICEditorContext();
 
@@ -103,6 +108,21 @@ public:
 
 	void SetLockCameraToView(bool bInLockCameraToView);
 	bool GetLockCameraToView() { return bMoveCamera; }
+
+	void AddOverlayWidget(TSharedRef<SWidget> Widget) {
+		OverlayWidgets.Add(Widget);
+		OnOverlayWidgetsChanged.Broadcast();
+	}
+	void RemoveOverlayWidget(TSharedRef<SWidget> Widget) {
+		OverlayWidgets.Remove(Widget);
+		OnOverlayWidgetsChanged.Broadcast();
+	}
+	TArray<TSharedRef<SWidget>> GetOverlayWidgets() {
+		return OverlayWidgets;
+	}
+
+	void SetCameraPreview(bool bInCameraPreview) { bCameraPreview = bInCameraPreview; SetSelectedSceneObject(GetSelectedSceneObject()); }
+	bool GetCameraPreview() { return bCameraPreview; }
 	
 	void SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor);
 	EFICAnimPlayerState GetAnimPlayer() { return AnimPlayerState; }

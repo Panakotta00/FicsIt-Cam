@@ -62,7 +62,7 @@ void UFICTransformInteraction::Initialize(UFICEditorContext* InContext) {
 
 		TransformGizmo = GizmoManager->CreateCustomTransformGizmo(Selection->GetGizmoSubElements(), this);
 		TransformGizmo->SetActiveTarget(TransformProxy);
-
+		
 		ValueChangedHandled = Context->GetEditorAttributes()[Context->GetSelectedSceneObject()]->OnValueChanged.AddLambda([this]() {
 			if (Context && TransformGizmo) {
 				IFICSceneObject* Selection = Cast<IFICSceneObject>(Context->GetSelectedSceneObject());

@@ -18,12 +18,14 @@ public:
 	USceneCaptureComponent2D* CaptureComponent = nullptr;
 	UPROPERTY()
 	UTextureRenderTarget2D* RenderTarget = nullptr;
-	FSlateImageBrush Brush = FSlateImageBrush("Meep", FVector2D(1,1), FColor::Green);
+	FSlateImageBrush CameraPreviewBrush = FSlateImageBrush("CameraPreview", FVector2D(1,1), FColor::Green);
 
 	UPROPERTY()
 	ULineBatchComponent* LineBatcher = nullptr;
 	UPROPERTY()
 	UBoxComponent* SelectionHitBox = nullptr;
+
+	TSharedPtr<SWidget> CameraPreview;
 	
 	AFICEditorCameraActor();
 	
@@ -37,4 +39,6 @@ public:
 	// End IFICSelectionInteractionTarget
 
 	void UpdateValues(TSharedRef<FFICEditorAttributeBase> Attribute);
+	TSharedRef<SWidget> GetCameraPreview();
+	void UpdateRenderTarget();
 };

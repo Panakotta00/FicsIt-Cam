@@ -22,6 +22,8 @@ public:
 	virtual void InitEditor(UFICEditorContext* Context) {}
 	virtual void UnloadEditor(UFICEditorContext* Context) {}
 	virtual void EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) {}
+	virtual void Select(UFICEditorContext* Context) {}
+	virtual void Unselect(UFICEditorContext* Context) {}
 
 	virtual bool Is3DSceneObject() { return false; }
 	virtual ETransformGizmoSubElements GetGizmoSubElements() { return ETransformGizmoSubElements::FullTranslateRotateScale; }

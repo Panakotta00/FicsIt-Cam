@@ -12,6 +12,9 @@ class AFICEditorCameraActor;
 UCLASS()
 class FICSITCAM_API UFICCamera : public UObject, public FTickableGameObject, public IFICSceneObject {
 	GENERATED_BODY()
+private:
+	TSharedPtr<SWidget> CameraPreviewWidget;
+	
 public:
 	UPROPERTY(SaveGame)
 	FString SceneObjectName = TEXT("Camera");
@@ -38,7 +41,7 @@ public:
 	UFICEditorContext* EditorContext = nullptr;
 	UPROPERTY()
 	AFICEditorCameraActor* EditorCameraActor = nullptr;
-
+	
 	UFICCamera() {
 		Active.SetDefaultValue(true);
 		
@@ -72,6 +75,8 @@ public:
 	virtual void InitEditor(UFICEditorContext* Context) override;
 	virtual void UnloadEditor(UFICEditorContext* Context) override;
 	virtual void EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) override;
+	virtual void Select(UFICEditorContext* Context) override;
+	virtual void Unselect(UFICEditorContext* Context) override;
 
 	virtual bool Is3DSceneObject() override;
 	virtual ETransformGizmoSubElements GetGizmoSubElements() { return ETransformGizmoSubElements::StandardTranslateRotate; }

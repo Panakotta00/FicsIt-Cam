@@ -47,6 +47,31 @@ void UFICCamera::EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorA
 	if (EditorContext->GetActiveCamera() == this) EditorContext->UpdateCharacterValues();
 }
 
+void UFICCamera::Select(UFICEditorContext* Context) {
+	if (Context->GetCameraPreview()) {
+		CameraPreviewWidget = SNew(SConstraintCanvas)
+		+SConstraintCanvas::Slot()
+		.Anchors(FAnchors(0.6, 0.6, 1,1))
+		.Offset(FMargin(0))[
+			SNew(SScaleBox)
+			.Stretch(EStretch::ScaleToFit)
+			.VAlign(VAlign_Bottom)
+			.HAlign(HAlign_Right)
+			.Content()[
+				EditorCameraActor->GetCameraPreview()
+			]
+		];
+		Context->AddOverlayWidget(CameraPreviewWidget.ToSharedRef());
+	}
+}
+
+void UFICCamera::Unselect(UFICEditorContext* Context) {
+	if (CameraPreviewWidget) {
+		Context->RemoveOverlayWidget(CameraPreviewWidget.ToSharedRef());
+		CameraPreviewWidget.Reset();
+	}
+}
+
 bool UFICCamera::Is3DSceneObject() {
 	return !!EditorContext;
 }

@@ -150,7 +150,9 @@ FFICFrameRange UFICEditorContext::GetActiveRange() {
 }
 
 void UFICEditorContext::SetSelectedSceneObject(UObject* SceneObject) {
+	if (SelectedSceneObject) Cast<IFICSceneObject>(SelectedSceneObject)->Unselect(this);
 	SelectedSceneObject = SceneObject;
+	if (SelectedSceneObject) Cast<IFICSceneObject>(SelectedSceneObject)->Select(this);
 	OnSceneObjectSelectionChanged.Broadcast();
 }
 

@@ -175,6 +175,7 @@ void AFICEditorSubsystem::Tick(float DeltaTime) {
 			}
 			else
 			{
+				//GetWorld()->LineBatcher->DrawLine(InputState.Mouse.WorldRay.Origin, InputState.Mouse.WorldRay.Origin + InputState.Mouse.WorldRay.Direction * 1000, FColor::Red, 0, 10, 10000);
 				ToolsContext->InputRouter->PostHoverInputEvent(InputState);
 			}
 

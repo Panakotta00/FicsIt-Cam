@@ -53,5 +53,16 @@ void SFICEditorSettings::Construct(const FArguments& InArgs, UFICEditorContext* 
 			})
 			.ToolTipText(FText::FromString(FString::Printf(TEXT("If enabled, viewport will be forced to use the aspect ratio of the resolution of the animation, causing black bars to appear."))))
 		]
+		+SVerticalBox::Slot().Padding(5).AutoHeight()[
+			SNew(SCheckBox)
+			.Content()[SNew(STextBlock).Text(FText::FromString("Enable Camera Preview"))]
+			.IsChecked_Lambda([this]() {
+				return Context->GetCameraPreview() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			})
+			.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
+				Context->SetCameraPreview(State == ECheckBoxState::Checked);
+			})
+			.ToolTipText(FText::FromString(FString::Printf(TEXT("If enabled, a small camera preview will be shown in the viewport when a camera is selected."))))
+		]
 	];
 }
