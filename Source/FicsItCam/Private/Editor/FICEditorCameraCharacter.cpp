@@ -396,6 +396,7 @@ void AFICEditorCameraCharacter::SetControlView(bool bInControlView, bool bIsTemp
 	bControlViewTemp = bIsTemporary;
 
 	APlayerController* Player = Cast<APlayerController>(Controller);
+	if (!Player) return;
 	if (bInControlView) {
 		if (bInControlView == bControlView) return;
 		LastCursorPos = FSlateApplication::Get().GetCursorPos();

@@ -16,43 +16,10 @@ void SFICSceneObjectOutliner::Construct(const FArguments& InArgs, UFICEditorCont
 	ChildSlot[
 		SNew(SVerticalBox)
 		+SVerticalBox::Slot().AutoHeight()[
-			SNew(SButton)
+			SAssignNew(WidgetAddButton, SButton)
 			.Text(FText::FromString("Add"))
 			.OnClicked_Lambda([this]() {
-				/*TSharedRef<SVerticalBox> List = SNew(SVerticalBox);
-				for (TObjectIterator<UParticleSystem> System; System; ++System) {
-					List->AddSlot()[
-						SNew(SButton)
-						.Text(FText::FromString(System->GetName()))
-						.OnClicked_Lambda([this]() {
-							FVector Pos = Context->GetScene()->GetWorld()->GetFirstPlayerController()->GetCharacter()->GetActorLocation();
-							UFICParticleSystem* System = NewObject<UFICParticleSystem>();
-							System->Position.X.SetDefaultValue(Pos.X);
-							System->Position.Y.SetDefaultValue(Pos.Y);
-							System->Position.Z.SetDefaultValue(Pos.Z);
-							Context->AddSceneObject(System);
-							return FReply::Handled();
-						})
-					];
-				}
-				FSlateApplication::Get().AddWindow(SNew(SWindow)
-					.Content()[
-						SNew(SScrollBox)
-						+SScrollBox::Slot()[
-							List
-						]
-					]);*/
-				FVector Pos = Context->GetPlayerCharacter()->GetActorLocation();
-				FRotator Rot = Context->GetPlayerCharacter()->GetControlRotation();
-				UFICCamera* Camera = NewObject<UFICCamera>();
-				Camera->Position.X.SetDefaultValue(Pos.X);
-				Camera->Position.Y.SetDefaultValue(Pos.Y);
-				Camera->Position.Z.SetDefaultValue(Pos.Z);
-				Camera->Rotation.Pitch.SetDefaultValue(Rot.Pitch);
-				Camera->Rotation.Yaw.SetDefaultValue(Rot.Yaw);
-				Camera->Rotation.Roll.SetDefaultValue(Rot.Roll);
-				Context->AddSceneObject(Camera);
-				
+				OpenAddSceneObjectMenu();
 				return FReply::Handled();
 			})
 		]
@@ -132,4 +99,23 @@ void SFICSceneObjectOutliner::UpdateSelection() {
 	if (Context->GetSelectedSceneObject()) {
 		SceneObjectListWidget->SetSelection(SceneObjectMap[Context->GetSelectedSceneObject()]);
 	}
+}
+
+void SFICSceneObjectOutliner::OpenAddSceneObjectMenu() {
+	FMenuBuilder MenuBuilder(true, NULL);
+	for (TObjectIterator<UClass> Class; Class; ++Class) {
+		if (!Class->ImplementsInterface(UFICSceneObject::StaticClass())) continue;
+		UObject* Obj = Class->GetDefaultObject();
+		IFICSceneObject* SceneObj = Cast<IFICSceneObject>(Obj);
+		MenuBuilder.AddMenuEntry(
+	        FText::FromString(SceneObj->GetSceneObjectName()),
+	        FText(),
+	        FSlateIcon(),
+			FExecuteAction::CreateLambda([Class, this]() {
+	            Context->AddSceneObject(NewObject<UObject>(Context->GetScene(), *Class));
+	        }));
+	}
+	FWidgetPath WidgetPath;
+	FSlateApplication::Get().GeneratePathToWidgetChecked(SharedThis(this), WidgetPath);
+	FSlateApplication::Get().PushMenu(SharedThis(this), WidgetPath, MenuBuilder.MakeWidget(), WidgetAddButton->GetCachedGeometry().GetAbsolutePositionAtCoordinates(FVector2D(0, 1)), FPopupTransitionEffect::ContextMenu);
 }

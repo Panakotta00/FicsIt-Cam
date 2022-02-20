@@ -19,6 +19,7 @@ public:
 	
 private:
 	UFICEditorContext* Context = nullptr;
+	TSharedPtr<SButton> WidgetAddButton;
 	TSharedPtr<SListView<TSharedPtr<FFICSceneObjectReference>>> SceneObjectListWidget;
 	FDelegateHandle OnSceneObjectsChangedDelegateHandle;
 	FDelegateHandle OnSelectionChangedDelegateHandle;
@@ -28,4 +29,6 @@ private:
 
 	void UpdateSceneObjects();
 	void UpdateSelection();
+
+	void OpenAddSceneObjectMenu();
 };
