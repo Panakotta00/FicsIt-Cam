@@ -46,7 +46,7 @@ void UFICTransformInteraction::Initialize(UFICEditorContext* InContext) {
 
 		IFICSceneObject* Selection = Cast<IFICSceneObject>(Context->GetSelectedSceneObject());
 
-		if (!Selection || !Selection->Is3DSceneObject()) {
+		if (!Selection || !Selection->Is3DSceneObject() || (Context->GetLockCameraToView() && Context->GetSelectedSceneObject() == Context->GetActiveCamera())) {
 			return;
 		}
 

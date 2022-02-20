@@ -53,7 +53,7 @@ public:
 	float FallBackValue = 0.0f;
 	
 	// Begin FFICAttribute
-	virtual FName GetAttributeType() { return FName(TEXT("FloatAttribute")); }
+	virtual FName GetAttributeType() const { return FName(TEXT("FloatAttribute")); }
 	
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const override;
 	virtual TMap<FICFrame, TSharedRef<FFICKeyframe>> GetKeyframes() override;

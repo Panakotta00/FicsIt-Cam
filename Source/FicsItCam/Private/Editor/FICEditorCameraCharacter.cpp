@@ -1,3 +1,5 @@
+// ReSharper disable CppUENonExistentInputAction
+// ReSharper disable CppUENonExistentInputAxis
 
 #include "Editor/FICEditorCameraCharacter.h"
 
@@ -80,15 +82,18 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 	
 		if (EditorContext) {
 			UFICCamera* CameraObject = EditorContext->GetActiveCamera();
-			if (EditorContext->bMoveCamera && CameraObject) {
+			if (EditorContext->GetLockCameraToView() && CameraObject) {
 				if (LastCameraSceneObject != CameraObject) {
 					LastCameraSceneObject = CameraObject;
 					UpdateValues();
 				}
 
 				FRotator RotOld = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
-				FVector Pos = GetActorLocation();
+				FVector PosOld = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
+				FVector PosNew = GetActorLocation();
 				FRotator RotNew = GetController()->GetControlRotation();
+
+				// Patch Rotation
 				FRotator RotOldN = RotOld;
 				while (RotOldN.Pitch < -180.0) RotOldN.Pitch += 360.0;
 				while (RotOldN.Pitch > 180.0) RotOldN.Pitch -= 360.0;
@@ -104,10 +109,14 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 				while (RotDiff.Roll < -180.0) RotDiff.Roll += 360.0;
 				while (RotDiff.Roll > 180.0) RotDiff.Roll -= 360.0;
 				RotNew = RotOld + RotDiff;
-		
-				FFICAttributePosition::ToEditorAttribute(Pos, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
-				FFICAttributeRotation::ToEditorAttribute(RotNew, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
 
+				FVector PosOldNewDiff = PosOld - PosNew;
+				FRotator RotOldNewDiff = RotOld - RotNew;
+				if (bWasChangedDirectly) EditorContext->bInAutoKeyframeSet = true;
+				FFICAttributePosition::ToEditorAttribute(PosNew, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
+				FFICAttributeRotation::ToEditorAttribute(RotNew, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
+				if (bWasChangedDirectly) EditorContext->bInAutoKeyframeSet = false;
+				
 				RotOld = RotNew;
 				
 				RotatorFix.Roll = RotOld.Roll;
@@ -118,6 +127,8 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 		}
 	
 		if (MyController) GetController()->SetControlRotation(RotatorFix);
+
+		bWasChangedDirectly = false;
 	}
 }
 
@@ -270,7 +281,7 @@ void AFICEditorCameraCharacter::PrevFrame() {
 }
 
 void AFICEditorCameraCharacter::ToggleAutoKeyframe() {
-	EditorContext->bAutoKeyframe = !EditorContext->bAutoKeyframe;
+	EditorContext->SetAutoKeyframe(!EditorContext->GetAutoKeyframe());
 }
 
 void AFICEditorCameraCharacter::ToggleShowPath() {
@@ -278,7 +289,7 @@ void AFICEditorCameraCharacter::ToggleShowPath() {
 }
 
 void AFICEditorCameraCharacter::ToggleLockCamera() {
-	EditorContext->bMoveCamera = !EditorContext->bMoveCamera;
+	EditorContext->SetLockCameraToView(!EditorContext->GetLockCameraToView());
 }
 #pragma optimize("", off)
 void AFICEditorCameraCharacter::RightMousePress() {
@@ -344,14 +355,23 @@ void AFICEditorCameraCharacter::OnLeftMouseUp() {
 }
 
 void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorContext) {
+	if (OnCurrentFrameChangedHandle.IsValid()) {
+		EditorContext->OnCurrentFrameChanged.Remove(OnCurrentFrameChangedHandle);
+		OnCurrentFrameChangedHandle = FDelegateHandle();
+	}
 	EditorContext = InEditorContext;
+	if (EditorContext) {
+		OnCurrentFrameChangedHandle = EditorContext->OnCurrentFrameChanged.AddLambda([this]() {
+			bWasChangedDirectly = true;
+		});
+	}
 }
 
 void AFICEditorCameraCharacter::UpdateValues() {
 	if (EditorContext && EditorContext->GetCamera()) {
 		FVector Pos = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
 		FRotator Rot = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
-		if (EditorContext->bMoveCamera) {
+		if (EditorContext->GetLockCameraToView()) {
 			SetActorLocation(Pos);
 			SetActorRotation(Rot);
 			if (GetController()) {

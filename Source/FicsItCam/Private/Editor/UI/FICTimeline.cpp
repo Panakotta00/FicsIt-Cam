@@ -431,10 +431,13 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	];
 
 	OnSceneObjectsChangedDelegateHandle = Context->OnSceneObjectsChanged.AddLambda([this]() {
-		Update();
+		UpdateEditorAttributes();
+	});
+	OnSceneSelectedSceneObjectChangedDelegateHandle = Context->OnSceneObjectSelectionChanged.AddLambda([this]() {
+		UpdateEditorAttributeSelection();
 	});
 
-	Update();
+	UpdateEditorAttributes();
 	
 	if (UFICCamera* Camera = Context->GetActiveCamera()) {
 		Context->GetEditorAttributes()[Camera]->bShowInGraph = true;
@@ -443,15 +446,21 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 
 void SFICTimelinePanel::UpdateLeafAttributes() {
 	SelectedLeafAttributes.Empty();
-	TFunction<void(TSharedRef<FFICEditorAttributeBase>)> AddLeaves;
-	AddLeaves = [this, &AddLeaves](TSharedRef<FFICEditorAttributeBase> Attribute) {
-		if (Attribute->GetChildAttributes().Num() < 1 && Attribute->bShowInGraph) SelectedLeafAttributes.Add(Attribute); 
-		for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attribute->GetChildAttributes()) {
-			AddLeaves(Child.Value);
+	TFunction<bool(TSharedPtr<FFICEditorAttributeReference>)> AddLeaves;
+	AddLeaves = [this, &AddLeaves](TSharedPtr<FFICEditorAttributeReference> Attribute) {
+		bool bHasLeafs = false;
+		if (Attribute->Attribute->GetChildAttributes().Num() < 1 && Attribute->Attribute->bShowInGraph) {
+			SelectedLeafAttributes.Add(Attribute->Attribute);
+			bHasLeafs = true;
 		}
+		for (TSharedPtr<FFICEditorAttributeReference> Child : Attribute->GetChildren()) {
+			bHasLeafs = AddLeaves(Child) || bHasLeafs;
+		}
+		if (bHasLeafs) AttributeTree->SetItemExpansion(Attribute, true);
+		return bHasLeafs;
 	};
 	for (TSharedPtr<FFICEditorAttributeReference> Item : Attributes) {
-		AddLeaves(Item->Attribute);
+		bool _  = AddLeaves(Item);
 	}
 	Graph->SetAttributes(SelectedLeafAttributes);
 	Graph->FitAll();
@@ -459,19 +468,43 @@ void SFICTimelinePanel::UpdateLeafAttributes() {
 
 SFICTimelinePanel::~SFICTimelinePanel() {
 	Context->OnSceneObjectsChanged.Remove(OnSceneObjectsChangedDelegateHandle);
+	Context->OnSceneObjectSelectionChanged.Remove(OnSceneSelectedSceneObjectChangedDelegateHandle);
 }
 
 void SFICTimelinePanel::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
 	SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
-
-	//ActiveRangeStart = FMath::Clamp(ActiveRangeStart, Context->GetScene()->AnimationRange.Begin, ActiveRangeEnd-1);
-	//ActiveRangeEnd = FMath::Clamp(ActiveRangeEnd, ActiveRangeStart+1, Context->GetScene()->AnimationRange.End);
 }
 
-void SFICTimelinePanel::Update() {
+void SFICTimelinePanel::UpdateEditorAttributes() {
 	Attributes.Empty();
 	for (TTuple<UObject*, TSharedRef<FFICEditorAttributeBase>> Attribute : Context->GetEditorAttributes()) {
 		Attributes.Add(MakeShared<FFICEditorAttributeReference>(Cast<IFICSceneObject>(Attribute.Key)->GetSceneObjectName(), Attribute.Value));
 	}
 	AttributeTree->RebuildList();
+	UpdateEditorAttributeSelection();
+}
+
+void SFICTimelinePanel::UpdateEditorAttributeSelection() {
+	TFunction<void(TSharedRef<FFICEditorAttributeBase>, bool)> SetAttributeGraph;
+	SetAttributeGraph = [&SetAttributeGraph](TSharedRef<FFICEditorAttributeBase> Attribute, bool bShowInGraph) {
+		Attribute->bShowInGraph = bShowInGraph;
+		for (TPair<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attribute->GetChildAttributes()) {
+			SetAttributeGraph(Child.Value, bShowInGraph);
+		}
+	};
+	SetAttributeGraph(Context->GetAllAttributes().ToSharedRef(), false);
+	
+	if (UObject* Selection = Context->GetSelectedSceneObject()) {
+		TSharedRef<FFICEditorAttributeBase> Attribute = Context->GetEditorAttributes()[Selection];
+		bool bFound = false;
+		TMap<FString, TSharedRef<FFICEditorAttributeBase>> Children = Attribute->GetChildAttributes();
+		for (const TPair<FString, TSharedRef<FFICEditorAttributeBase>> Child : Children) {
+			if (Child.Value->GetAttributeType() == FFICAttributePosition::TypeName) {
+				SetAttributeGraph(Child.Value, true);
+				bFound = true;
+			}
+		}
+		if (!bFound) SetAttributeGraph(Attribute, true);
+	}
+	UpdateLeafAttributes();
 }

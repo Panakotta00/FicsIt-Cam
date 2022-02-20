@@ -2,6 +2,10 @@
 
 #include "Data/Attributes/FICAttribute.h"
 
+FName FFICEditorAttributeBase::GetAttributeType() const {
+	return GetAttributeConst().GetAttributeType();
+}
+
 void FFICEditorAttributeBase::RemoveKeyframe(int64 Time) {
 	GetAttribute().RemoveKeyframe(Time);
 }

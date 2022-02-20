@@ -11,6 +11,8 @@ USTRUCT(BlueprintType)
 struct FFICAttributePosition : public FFICGroupAttribute {
 	GENERATED_BODY()
 public:
+	inline static const FName TypeName = FName(TEXT("PositionAttribute"));
+	
 	UPROPERTY(SaveGame)
 	FFICFloatAttribute X;
 	
@@ -27,6 +29,7 @@ public:
 	}
 
 	// Begin FFICAttribute
+	virtual FName GetAttributeType() const override { return TypeName; }
 	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute() override;
 	// End FFICAttribute
 

@@ -36,7 +36,7 @@ public:
 	bool FallBackValue = false;
 	
 	// Begin FFICAttribute
-	virtual FName GetAttributeType() { return FName(TEXT("AttributeBool")); }
+	virtual FName GetAttributeType() const { return FName(TEXT("AttributeBool")); }
 	
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const override;
 	virtual TMap<FICFrame, TSharedRef<FFICKeyframe>> GetKeyframes() override;

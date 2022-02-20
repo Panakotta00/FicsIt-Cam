@@ -268,6 +268,9 @@ void AFICEditorSubsystem::CloseEditor() {
 
 	// Shutdown Interactive Tools
 	ShutdownInteractiveTools();
+
+	// Focus back to viewport
+	Character->SetControlView(true);
 	
 	// Unload loaded Editor Context
 	Context->Unload();

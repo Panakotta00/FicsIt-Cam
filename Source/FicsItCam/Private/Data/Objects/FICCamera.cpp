@@ -52,10 +52,9 @@ bool UFICCamera::Is3DSceneObject() {
 }
 
 FTransform UFICCamera::GetSceneObjectTransform() {
-	if (EditorCameraActor) {
-		return EditorCameraActor->GetActorTransform();
-	}
-	return FTransform();
+	FVector Pos = FFICAttributePosition::FromEditorAttribute( EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Position"));
+	FRotator Rot = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Rotation"));
+	return FTransform(Rot, Pos);
 }
 
 void UFICCamera::SetSceneObjectTransform(FTransform InTransform) {

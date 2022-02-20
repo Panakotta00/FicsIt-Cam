@@ -13,7 +13,7 @@ struct FFICAttribute {
 
 	virtual ~FFICAttribute() = default;
 	
-	virtual FName GetAttributeType() { checkf(false, TEXT("Not Implemented!")); return FName(); }
+	virtual FName GetAttributeType() const { checkf(false, TEXT("Not Implemented!")); return FName(); }
 	
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const { return FIC_KF_NONE; }
 	virtual TMap<FICFrame, TSharedRef<FFICKeyframe>> GetKeyframes() { checkf(false, TEXT("Not Implemented!")); return TMap<FICFrame, TSharedRef<FFICKeyframe>>(); }

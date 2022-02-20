@@ -33,6 +33,8 @@ private:
 	bool bControlView = true;
 	bool bControlViewTemp = false;
 	FVector2D LastCursorPos;
+	bool bWasChangedDirectly = false;
+	FDelegateHandle OnCurrentFrameChangedHandle;
 	
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;

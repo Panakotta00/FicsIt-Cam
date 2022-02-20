@@ -25,9 +25,6 @@ TSharedRef<FFICEditorAttributeBase> FFICAttributeRotation::CreateEditorAttribute
 		+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
 			SNew(SFICVectorEditor, Context, Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Pitch"), Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Yaw"), Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Roll"))
 			.ShowKeyframeControls(true)
-			.AutoKeyframe_Lambda([Context]() {
-				return Context->bAutoKeyframe;
-			})
 			.Frame_Lambda([Context]() {
 				return Context->GetCurrentFrame();
 			})

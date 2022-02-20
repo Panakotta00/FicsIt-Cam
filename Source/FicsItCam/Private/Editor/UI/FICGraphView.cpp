@@ -236,12 +236,14 @@ void SFICGraphView::Update() {
 
 #pragma optimize("", off)
 void SFICGraphView::FitAll() {
-	FFICFrameRange Frames = FrameRange.Get();
+	FFICFrameRange Frames = FrameHighlightRange.Get();
 	FFICValueRange Values;
 	Values.Begin = TNumericLimits<FICValue>::Max();
 	Values.End = TNumericLimits<FICValue>::Lowest();
 	int MaxKeyframeCountOfAnyAttribute = 0;
 	for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
+		Values.Begin = FMath::Min3(Values.Begin, Attribute->GetValue(TNumericLimits<FICFrame>::Min()), Attribute->GetValue(TNumericLimits<FICFrame>::Max()));
+		Values.End = FMath::Max3(Values.End, Attribute->GetValue(TNumericLimits<FICFrame>::Min()), Attribute->GetValue(TNumericLimits<FICFrame>::Max()));
 		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attribute->GetAttribute().GetKeyframes();
 		for (TTuple<FICFrame, TSharedRef<FFICKeyframe>> Keyframe : Keyframes) {
 			TSharedRef<FFICKeyframe> KF = Keyframe.Value;
@@ -258,14 +260,12 @@ void SFICGraphView::FitAll() {
 	}
 	FICFrame FrameSpan = FMath::Max(Frames.Length(), 10ll);
 	FICValue ValueSpan = FMath::Max(Values.Length(), 1.0f);
-	FrameSpan = FrameSpan/10;
-	ValueSpan = ValueSpan/10.0;
-	if (MaxKeyframeCountOfAnyAttribute > 1) {
-		Frames.Begin -= FrameSpan;
-		Frames.End += FrameSpan;
-	}
+	FrameSpan = FrameSpan/5;
+	ValueSpan = FMath::Max(ValueSpan/10.0f, 1.0f);
+	Frames.Begin -= FrameSpan;
+	Frames.End += FrameSpan;
 	OnFrameRangeChanged.Execute(Frames);
-	if (MaxKeyframeCountOfAnyAttribute > 0) {
+	if (Attributes.Num() > 0) {
 		Values.Begin -= ValueSpan;
 		Values.End += ValueSpan;
 	} else {

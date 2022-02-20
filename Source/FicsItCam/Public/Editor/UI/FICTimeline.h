@@ -47,6 +47,7 @@ private:
 	FFICValueRange ActiveValueRange;
 
 	FDelegateHandle OnSceneObjectsChangedDelegateHandle;
+	FDelegateHandle OnSceneSelectedSceneObjectChangedDelegateHandle;
 	
 	void UpdateLeafAttributes();
 
@@ -57,5 +58,6 @@ public:
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 	// End SWidget
 
-	void Update();
+	void UpdateEditorAttributes();
+	void UpdateEditorAttributeSelection();
 };

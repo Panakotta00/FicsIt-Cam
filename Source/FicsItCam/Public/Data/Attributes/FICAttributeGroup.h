@@ -7,6 +7,8 @@ USTRUCT(BlueprintType)
 struct FFICGroupAttribute : public FFICAttribute {
 	GENERATED_BODY()
 	friend class FFICEditorAttributeGroup;
+public:
+	inline static const FName TypeName = FName(TEXT("GroupAttribute"));
 	
 protected:
 	TMap<FString, TSharedRef<FFICAttribute>> AttributeCache;
@@ -16,7 +18,7 @@ public:
 	virtual ~FFICGroupAttribute() override;
 	
 	// Begin FFICAttribute
-	virtual FName GetAttributeType() { return FName(TEXT("GroupAttribute")); }
+	virtual FName GetAttributeType() const { return TypeName; }
 	
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const override;
 	virtual TMap<FICFrame, TSharedRef<FFICKeyframe>> GetKeyframes() override;

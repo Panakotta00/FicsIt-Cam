@@ -27,6 +27,7 @@ enum EFICAnimPlayerState {
 };
 
 DECLARE_MULTICAST_DELEGATE(FFICSceneObjectsChanged)
+DECLARE_MULTICAST_DELEGATE(FFICCurrentFrameChanged)
 
 UCLASS()
 class UFICEditorContext : public UObject, public FTickableGameObject {
@@ -52,11 +53,13 @@ private:
 	
 	UObject* SelectedSceneObject = nullptr;
 	
-public:
-	bool bMoveCamera = true;
-	bool bShowPath = true;
 	bool bAutoKeyframe = false;
+	bool bMoveCamera = true;
+	
+public:
+	bool bShowPath = true;
 	bool bForceResolution = false;
+	bool bInAutoKeyframeSet = false;
 
 	float SensorWidthAdjust = 1.0f;
 
@@ -64,7 +67,8 @@ public:
 	
 	FFICSceneObjectsChanged OnSceneObjectsChanged;
 	FFICSceneObjectsChanged OnSceneObjectSelectionChanged;
-
+	FFICCurrentFrameChanged OnCurrentFrameChanged;
+		
 	UFICEditorContext();
 
 	// Begin FTickableGameObject
@@ -94,6 +98,12 @@ public:
 	void SetSelectedSceneObject(UObject* SceneObject);
 	UObject* GetSelectedSceneObject();
 
+	void SetAutoKeyframe(bool bAutokeyframe);
+	bool GetAutoKeyframe() { return bAutoKeyframe; }
+
+	void SetLockCameraToView(bool bInLockCameraToView);
+	bool GetLockCameraToView() { return bMoveCamera; }
+	
 	void SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor);
 	EFICAnimPlayerState GetAnimPlayer() { return AnimPlayerState; }
 	float GetAnimPlayerFactor() { return AnimPlayerFactor; }

@@ -25,9 +25,6 @@ TSharedRef<FFICEditorAttributeBase> FFICAttributePosition::CreateEditorAttribute
 		+SHorizontalBox::Slot().Padding(5).FillWidth(1)[
 			SNew(SFICVectorEditor, Context, Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("X"), Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Y"), Base->GetRef<TFICEditorAttribute<FFICFloatAttribute>>("Z"))
 			.ShowKeyframeControls(true)
-			.AutoKeyframe_Lambda([Context]() {
-				return Context->bAutoKeyframe;
-			})
 			.Frame_Lambda([Context]() {
 				return Context->GetCurrentFrame();
 			})

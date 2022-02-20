@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "Data/Attributes/FICAttribute.h"
 #include "Data/Attributes/FICKeyframe.h"
 
 class UFICEditorContext;
@@ -25,7 +26,12 @@ public:
 	
 	FFICEditorAttributeBase(FLinearColor GraphColor) : GraphColor(GraphColor) {}
 	virtual ~FFICEditorAttributeBase() = default;
-	
+
+	/**
+	 * Returns a Unique Type name for this editor attribute kind (kind of a replacement for RTTI)
+	 */
+	virtual FName GetAttributeType() const;
+
 	/**
 	 * Creates or Sets a/the keyframe at the given frame to the current value.
 	 */

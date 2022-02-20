@@ -24,6 +24,12 @@ void UFICEditorContext::Load(AFICEditorCameraCharacter* InEditorPlayerCharacter,
 	for (UObject* SceneObject : Scene->GetSceneObjects()) {
 		LoadSceneObject(SceneObject);
 	}
+
+	FFICFrameRange Range = InScene->AnimationRange;
+	FICFrame Len = Range.Length();
+	Range.Begin -= Len/5;
+	Range.End += Len/5;
+	SetActiveRange(Range);
 }
 
 void UFICEditorContext::Unload() {
@@ -62,6 +68,12 @@ void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 	EditorAttributes.Add(SceneObject, Attribute);
 	Attribute->OnValueChanged.AddLambda([this, Attribute, SceneObject]() {
 		Cast<IFICSceneObject>(SceneObject)->EditorUpdate(this, Attribute);
+		if (bAutoKeyframe && !bInAutoKeyframeSet) {
+			bInAutoKeyframeSet = true;
+			Attribute->SetKeyframe(GetCurrentFrame());
+			// TODO: Figure out why there is such a extreme frame drop when using
+			bInAutoKeyframeSet = false;
+		}
 	});
 	DataAttributeOnUpdateDelegateHandles.Add(SceneObject, Attribute->GetAttribute().OnUpdate.AddLambda([this, Attribute]() {
 		Attribute->UpdateValue(GetCurrentFrame());
@@ -72,6 +84,8 @@ void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 
 void UFICEditorContext::UnloadSceneObject(UObject* SceneObject) {
 	Cast<IFICSceneObject>(SceneObject)->UnloadEditor(this);
+	
+	if (GetSelectedSceneObject() == SceneObject) SetSelectedSceneObject(nullptr);
 	
 	AllAttributes->RemoveAttribute(FString::FromInt(SceneObject->GetUniqueID()));
 	EditorAttributes[SceneObject]->GetAttribute().OnUpdate.Remove(DataAttributeOnUpdateDelegateHandles[SceneObject]);
@@ -114,11 +128,13 @@ TSharedPtr<FFICEditorAttributeBase> UFICEditorContext::GetCameraEditor() {
 void UFICEditorContext::SetCurrentFrame(FICFrame inFrame) {
 	CurrentFrame = inFrame;
 
+	bInAutoKeyframeSet = true;
 	for (TTuple<UObject*, TSharedPtr<FFICEditorAttributeBase>> Attribute : EditorAttributes) {
 		Attribute.Value->UpdateValue(inFrame);
 	}
-	
 	UpdateCharacterValues();
+	OnCurrentFrameChanged.Broadcast();
+	bInAutoKeyframeSet = false;
 }
 
 int64 UFICEditorContext::GetCurrentFrame() const {
@@ -140,6 +156,15 @@ void UFICEditorContext::SetSelectedSceneObject(UObject* SceneObject) {
 
 UObject* UFICEditorContext::GetSelectedSceneObject() {
 	return SelectedSceneObject;
+}
+
+void UFICEditorContext::SetAutoKeyframe(bool bInAutoKeyframe) {
+	bAutoKeyframe = bInAutoKeyframe;
+}
+
+void UFICEditorContext::SetLockCameraToView(bool bInLockCameraToView) {
+	bMoveCamera = bInLockCameraToView;
+	OnSceneObjectsChanged.Broadcast();
 }
 
 void UFICEditorContext::UpdateCharacterValues() {

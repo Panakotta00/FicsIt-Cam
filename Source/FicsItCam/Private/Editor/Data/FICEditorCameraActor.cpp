@@ -52,8 +52,8 @@ void AFICEditorCameraActor::Tick(float DeltaSeconds) {
 			FColor Color = Active ? FColor::Green : FColor::Red;
 			FTransform Transform = GetActorTransform();
 			LineBatcher->DrawBox(FBox(FVector(-1, -1, -1), FVector(1, 1, 1)), Transform.GetScaled(FVector(60, 40, 40)).ToMatrixWithScale(), Color, SDPG_World);
-			LineBatcher->DrawDirectionalArrow(Transform.ToMatrixNoScale(), Color, 200, 20, SDPG_World);
-			LineBatcher->DrawLine(GetActorLocation(), GetActorTransform().TransformPositionNoScale(FVector(0, 0, 100)), Color, SDPG_World);
+			LineBatcher->DrawDirectionalArrow((FTransform(FVector(60, 0, 0)) * GetActorTransform()).ToMatrixNoScale(), Color, 100, 20, SDPG_World);
+			LineBatcher->DrawLine(GetActorTransform().TransformPositionNoScale(FVector(0, 0, 40)), GetActorTransform().TransformPositionNoScale(FVector(0, 0, 100)), Color, SDPG_World);
 		}
 	}
 }

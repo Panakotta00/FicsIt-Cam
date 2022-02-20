@@ -284,13 +284,13 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			if (KF) Context->SetCurrentFrame(Time);
 			return FReply::Handled();
 		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleAutoKeyframe"))) {
-			Context->bAutoKeyframe = !Context->bAutoKeyframe;
+			Context->SetLockCameraToView(!Context->GetLockCameraToView());
 			return FReply::Handled();
 		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleShowPath"))) {
 			Context->bShowPath = !Context->bShowPath;
 			return FReply::Handled();
 		} else if (IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleLockCamera"))) {
-			Context->bMoveCamera = !Context->bMoveCamera;
+			Context->SetLockCameraToView(!Context->GetLockCameraToView());
 			return FReply::Handled();
 		} else if (InKeyEvent.GetKey() == EKeys::Z && InKeyEvent.IsControlDown()) {
 			TSharedPtr<FFICChange> Change = Context->ChangeList.PopChange();
