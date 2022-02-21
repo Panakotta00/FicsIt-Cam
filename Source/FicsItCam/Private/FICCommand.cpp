@@ -9,6 +9,8 @@
 #include "Editor/FICEditorSubsystem.h"
 #include "Misc/DefaultValueHelper.h"
 #include "Runtime/FICTimelapseCamera.h"
+#include "Runtime/Process/FICRuntimeProcess.h"
+#include "Runtime/Process/FICRuntimeProcessPlayScene.h"
 
 AFICCommand::AFICCommand() {
 	bOnlyUsableByPlayer = true;
@@ -25,8 +27,8 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		
 	if (Arguments[0] == "list") {
 		Sender->SendChatMessage(TEXT("List of Animations:"));
-		for (const TPair<FString, AFICAnimation*>& Entry : SubSys->StoredAnimations) {
-			Sender->SendChatMessage(Entry.Key);
+		for (TActorIterator<AFICScene> Scene(GetWorld()); Scene; ++Scene) {
+			Sender->SendChatMessage(Scene->SceneName);
 		}
 		return EExecutionStatus::COMPLETED;
 	}
@@ -35,25 +37,22 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			Sender->SendChatMessage(TEXT("Syntax: /fic create <name>"), FColor::Red);
 			return EExecutionStatus::BAD_ARGUMENTS;
 		}
-		if (SubSys->StoredAnimations.Contains(Arguments[1])) {
+		if (SubSys->FindSceneByName(Arguments[1])) {
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' already exists.");
 		} else {
 			FVector Pos = Sender->GetPlayer()->PlayerCameraManager->GetCameraLocation();
 			FRotator Rot = Sender->GetPlayer()->PlayerCameraManager->GetCameraRotation();
 			float FOV = Sender->GetPlayer()->PlayerCameraManager->GetFOVAngle();
-			AFICAnimation* Anim = GetWorld()->SpawnActor<AFICAnimation>();
-			Anim->Name = Arguments[1];
-			Anim->PosX.SetDefaultValue(Pos.X);
-			Anim->PosY.SetDefaultValue(Pos.Y);
-			Anim->PosZ.SetDefaultValue(Pos.Z);
-			Anim->RotPitch.SetDefaultValue(Rot.Pitch);
-			Anim->RotYaw.SetDefaultValue(Rot.Yaw);
-			Anim->RotRoll.SetDefaultValue(Rot.Roll);
-			Anim->FOV.SetDefaultValue(FOV);
+			AFICScene* Scene = GetWorld()->SpawnActor<AFICScene>();
 			FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
-			Anim->ResolutionWidth = Resolution.X;
-			Anim->ResolutionHeight = Resolution.Y;
-			SubSys->StoredAnimations.Add(Arguments[1], Anim);
+			Scene->ResolutionWidth = Resolution.X;
+			Scene->ResolutionHeight = Resolution.Y;
+			Scene->SceneName = Arguments[1];
+			UFICCamera* Camera = NewObject<UFICCamera>(Scene);
+			Scene->AddSceneObject(Camera);
+			Camera->Position.SetDefaultValue(Pos);
+			Camera->Rotation.SetDefaultValue(Rot);
+			Camera->FOV.SetDefaultValue(FOV);
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' created.");
 		}
 		return EExecutionStatus::COMPLETED;
@@ -63,9 +62,9 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			Sender->SendChatMessage(TEXT("Syntax: /fic delete <name>"), FColor::Red);
 			return EExecutionStatus::BAD_ARGUMENTS;
 		}
-		AFICAnimation** Anim = SubSys->StoredAnimations.Find(Arguments[1]);
-		if (SubSys->StoredAnimations.Remove(Arguments[1])) {
-			if (Anim) (*Anim)->Destroy();
+		AFICScene* Scene = SubSys->FindSceneByName(Arguments[1]);
+		if (Scene) {
+			Scene->Destroy();
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' deleted.");
 			return EExecutionStatus::COMPLETED;
 		} else {
@@ -78,12 +77,12 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			Sender->SendChatMessage(TEXT("Syntax: /fic edit <name>"), FColor::Red);
 			return EExecutionStatus::BAD_ARGUMENTS;
 		}
-		AFICAnimation** FoundAnimation = SubSys->StoredAnimations.Find(Arguments[1]);
-		if (!FoundAnimation) {
+		AFICScene* Scene = SubSys->FindSceneByName(Arguments[1]);
+		if (!Scene) {
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' not found.");
 			return EExecutionStatus::COMPLETED;
 		} else {
-			AFICEditorSubsystem::GetFICEditorSubsystem(*FoundAnimation)->OpenEditor((*FoundAnimation)->CreateScene());
+			AFICEditorSubsystem::GetFICEditorSubsystem(Scene)->OpenEditor(Scene);
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' opened for edit.");
 			return EExecutionStatus::COMPLETED;
 		}
@@ -93,12 +92,14 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			Sender->SendChatMessage(TEXT("Syntax: /fic play <name>"), FColor::Red);
 			return EExecutionStatus::BAD_ARGUMENTS;
 		}
-		AFICAnimation** FoundAnimation = SubSys->StoredAnimations.Find(Arguments[1]);
-		if (!FoundAnimation) {
+		AFICScene* Scene = SubSys->FindSceneByName(Arguments[1]);
+		if (!Scene) {
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' not found.");
 			return EExecutionStatus::BAD_ARGUMENTS;
 		}
-		SubSys->PlayAnimation(*FoundAnimation);
+		UFICRuntimeProcessPlayScene* Play = NewObject<UFICRuntimeProcessPlayScene>(SubSys);
+		Play->Scene = Scene;
+		SubSys->StartProcess(Play);
 		Sender->SendChatMessage("Playing Animation '" + Arguments[1] + "'.");
 		return EExecutionStatus::COMPLETED;
 	}
@@ -107,12 +108,14 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			Sender->SendChatMessage(TEXT("Syntax: /fic render <name>"), FColor::Red);
 			return EExecutionStatus::BAD_ARGUMENTS;
 		}
-		AFICAnimation** FoundAnimation = SubSys->StoredAnimations.Find(Arguments[1]);
-		if (!FoundAnimation) {
+		AFICScene* Scene = SubSys->FindSceneByName(Arguments[1]);
+		if (!Scene) {
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' not found.");
 			return EExecutionStatus::BAD_ARGUMENTS;
 		}
-		SubSys->PlayAnimation(*FoundAnimation, true);
+		/*UFICRuntimeProcessRenderScene* Render = NewObject<UFICRuntimeProcessRenderScene>(SubSys);
+		Render->Scene = Scene;
+		SubSys->StartProcess(Render);*/
 		Sender->SendChatMessage("Rendering Animation '" + Arguments[1] + "'.");
 		return EExecutionStatus::COMPLETED;
 	}

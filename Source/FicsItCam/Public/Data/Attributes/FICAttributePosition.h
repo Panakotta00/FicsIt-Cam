@@ -33,12 +33,18 @@ public:
 	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute() override;
 	// End FFICAttribute
 
-	FVector Get(FICFrame Frame) {
+	FVector Get(FICFrameFloat Frame) {
 		return FVector(
 			X.GetValue(Frame),
 			Y.GetValue(Frame),
 			Z.GetValue(Frame)
 		);
+	}
+
+	void SetDefaultValue(const FVector& Pos) {
+		X.SetDefaultValue(Pos.X);
+		Y.SetDefaultValue(Pos.Y);
+		Z.SetDefaultValue(Pos.Z);
 	}
 
 	static FVector FromEditorAttribute(FFICEditorAttributeGroup& Attribute);

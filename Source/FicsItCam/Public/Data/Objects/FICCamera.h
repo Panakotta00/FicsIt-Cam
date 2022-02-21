@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FGSaveInterface.h"
 #include "Data/Attributes/FICAttributeBool.h"
 #include "Data/Attributes/FICAttributePosition.h"
 #include "Data/Attributes/FICAttributeRotation.h"
@@ -10,7 +11,7 @@
 class AFICEditorCameraActor;
 
 UCLASS()
-class FICSITCAM_API UFICCamera : public UObject, public FTickableGameObject, public IFICSceneObject {
+class FICSITCAM_API UFICCamera : public UObject, public FTickableGameObject, public IFICSceneObject, public IFGSaveInterface {
 	GENERATED_BODY()
 private:
 	TSharedPtr<SWidget> CameraPreviewWidget;
@@ -60,6 +61,10 @@ public:
 	virtual bool IsTickable() const override { return true; }
 	virtual TStatId GetStatId() const override { return UObject::GetStatID(); }
 	// End FTickableGameObject
+
+	// Begin IFGSaveInterface
+	virtual bool ShouldSave_Implementation() const override { return true; }
+	// End IFGSaveInterface
 
 	// Begin IFICEditorSceneObject-Interface
 	virtual FString GetSceneObjectName() override {

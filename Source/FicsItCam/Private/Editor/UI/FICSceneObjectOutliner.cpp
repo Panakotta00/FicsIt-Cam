@@ -1,5 +1,6 @@
 #include "Editor/UI/FICSceneObjectOutliner.h"
 
+#include "FICSubsystem.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICKeyframeControl.h"
 
@@ -112,7 +113,7 @@ void SFICSceneObjectOutliner::OpenAddSceneObjectMenu() {
 	        FText(),
 	        FSlateIcon(),
 			FExecuteAction::CreateLambda([Class, this]() {
-	            Context->AddSceneObject(NewObject<UObject>(Context->GetScene(), *Class));
+	            Context->AddSceneObject(NewObject<UObject>(AFICSubsystem::GetFICSubsystem(Context), *Class));
 	        }));
 	}
 	FWidgetPath WidgetPath;

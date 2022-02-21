@@ -1,18 +1,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FGSaveInterface.h"
 #include "FICTypes.h"
 #include "Objects/FICCamera.h"
 #include "FICScene.generated.h"
 
 UCLASS()
-class FICSITCAM_API AFICScene : public AActor {
+class FICSITCAM_API AFICScene : public AActor, public IFGSaveInterface {
 	GENERATED_BODY()
 private:
 	UPROPERTY(SaveGame)
 	TArray<UObject*> SceneObjects;
 
 public:
+	UPROPERTY(SaveGame)
+	FString SceneName = "Unnamed";
+	
 	UPROPERTY(SaveGame)
 	FFICFrameRange AnimationRange = FFICFrameRange(1, 300);
 	
@@ -32,6 +36,12 @@ public:
 
 	UPROPERTY(SaveGame)
 	bool bBulletTime = false;
+
+	// Begin IFGSaveInterface
+	//virtual void GatherDependencies_Implementation(TArray<UObject*>& out_dependentObjects) override { out_dependentObjects.Append(SceneObjects); }
+	virtual bool ShouldSave_Implementation() const override { return true; }
+	virtual void PostLoadGame_Implementation(int32 saveVersion, int32 gameVersion) override;
+	// End IFGSaveInterface
 	
 	TArray<UObject*> GetSceneObjects() {
 		return SceneObjects;
@@ -45,4 +55,6 @@ public:
 	void RemoveSceneObject(UObject* Object) {
 		SceneObjects.Remove(Object);
 	}
+
+	UFICCamera* GetActiveCamera(FICFrameFloat Time);
 };

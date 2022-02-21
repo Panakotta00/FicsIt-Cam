@@ -6,10 +6,12 @@
 #include "IImageWrapper.h"
 #include "FICSubsystem.generated.h"
 
+class UFICRuntimeProcess;
+class AFICScene;
 class AFICTimelapseCamera;
 class UFICEditorContext;
 class AFICAnimation;
-class AFICCameraCharacter;
+class AFICRuntimeProcessorCharacter;
 USTRUCT()
 struct FFICRenderRequest{
 	GENERATED_BODY()
@@ -44,24 +46,23 @@ UCLASS()
 class AFICSubsystem : public AModSubsystem, public IFGSaveInterface {
 	GENERATED_BODY()
 private:
-	UPROPERTY()
-	AFICCameraCharacter* Camera = nullptr;
-
-	UPROPERTY()
-	AFICAnimation* ActiveAnimation = nullptr;
-
 	TQueue<TSharedPtr<FFICRenderRequest>> RenderRequestQueue;
+
+	UPROPERTY()
+	UFICRuntimeProcess* ActiveRuntimeProcess = nullptr;
+	
+	UPROPERTY()
+	AFICRuntimeProcessorCharacter* RuntimeProcessorCharacter = nullptr;
+	UPROPERTY()
+	ACharacter* OriginalPlayerCharacter = nullptr;
 	
 public:
 	UPROPERTY(BlueprintReadWrite, SaveGame, Category="FicsIt-Cam")
-	TMap<FString, AFICAnimation*> StoredAnimations;
-
-	UPROPERTY(BlueprintReadWrite, SaveGame, Category="FicsIt-Cam")
 	TMap<FString, AFICTimelapseCamera*> TimelapseCameras;
 	
-	UPROPERTY()
-	TSet<AFICAnimation*> VisibleAnimations;
-
+	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam", meta=(WorldContext = "WorldContextObject"))
+	static AFICSubsystem* GetFICSubsystem(UObject* WorldContext);
+	
 	AFICSubsystem();
 	
 	// Begin AActor
@@ -73,19 +74,14 @@ public:
 	// Begin IFGSaveInterface
 	virtual bool ShouldSave_Implementation() const override;
 	// End IFGSaveInterface
-
-	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam", meta=(WorldContext = "WorldContextObject"))
-	static AFICSubsystem* GetFICSubsystem(UObject* WorldContext);
-
-	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
-	void PlayAnimation(AFICAnimation* Path, bool bDoRendering = false);
 	
-	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam")
-	void StopAnimation();
-	
-	void AddVisibleAnimation(AFICAnimation* Path);
+	void StartProcess(UFICRuntimeProcess* InProcess);
+	void StopProcess();
+	UFICRuntimeProcess* GetActiveProcess() { return ActiveRuntimeProcess; }
 
-	void CreateCamera();
+	AFICRuntimeProcessorCharacter* GetRuntimeProcessorCharacter() { return RuntimeProcessorCharacter; }
 	
 	void SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget);
+
+	AFICScene* FindSceneByName(const FString& InSceneName);
 };

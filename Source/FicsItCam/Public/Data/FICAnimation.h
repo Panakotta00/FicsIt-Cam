@@ -97,6 +97,8 @@ public:
 		AFICScene* Scene = GetWorld()->SpawnActor<AFICScene>();
 		Scene->AddSceneObject(Camera);
 
+		Scene->SceneName = Name;
+		
 		Scene->AnimationRange.Begin = AnimationStart;
 		Scene->AnimationRange.End = AnimationEnd;
 

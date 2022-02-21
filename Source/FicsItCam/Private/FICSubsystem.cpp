@@ -6,10 +6,12 @@
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 #include "Editor/FICEditorContext.h"
+#include "Editor/FICEditorSubsystem.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/World.h"
-#include "Runtime/FICCameraCharacter.h"
+#include "Runtime/FICRuntimeProcessorCharacter.h"
 #include "Runtime/FICTimelapseCamera.h"
+#include "Runtime/Process/FICRuntimeProcess.h"
 
 FFICAsyncImageCompressAndSave::FFICAsyncImageCompressAndSave(TSharedPtr<IImageWrapper> Image, FString Path) : Image(Image), Path(Path) {}
 
@@ -24,6 +26,13 @@ void FFICAsyncImageCompressAndSave::DoWork() {
 	UE_LOG(LogTemp, Warning, TEXT("Save in %f seconds."), FPlatformTime::Seconds()-start);
 }
 
+AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
+	UWorld* WorldObject = GEngine->GetWorldFromContextObjectChecked(WorldContext);
+	USubsystemActorManager* SubsystemActorManager = WorldObject->GetSubsystem<USubsystemActorManager>();
+	check(SubsystemActorManager);
+	return SubsystemActorManager->GetSubsystemActor<AFICSubsystem>();
+}
+
 AFICSubsystem::AFICSubsystem() {
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorTickEnabled(true);
@@ -32,8 +41,10 @@ AFICSubsystem::AFICSubsystem() {
 void AFICSubsystem::BeginPlay() {
 	Super::BeginPlay();
 
-	for (TTuple<FString, AFICAnimation*> Anim : StoredAnimations) {
-		Anim.Value->Name = Anim.Key;
+	// Convert deprecated AFICAnimation Actors to Scene Actors
+	for (TActorIterator<AFICAnimation> Animation(GetWorld()); Animation; ++Animation) {
+		Animation->CreateScene();
+		Animation->Destroy();
 	}
 
 	for (TTuple<FString, AFICTimelapseCamera*> Cam : TimelapseCameras) {
@@ -64,39 +75,35 @@ void AFICSubsystem::Tick(float DeltaSeconds) {
 
 void AFICSubsystem::EndPlay(const EEndPlayReason::Type EndPlayReason) {
 	Super::EndPlay(EndPlayReason);
-	
-	if (Camera) Camera->Destroy();
-	Camera = nullptr;
 }
 
 bool AFICSubsystem::ShouldSave_Implementation() const {
 	return true;
 }
 
-AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
-	UWorld* WorldObject = GEngine->GetWorldFromContextObjectChecked(WorldContext);
-	USubsystemActorManager* SubsystemActorManager = WorldObject->GetSubsystem<USubsystemActorManager>();
-	check(SubsystemActorManager);
-	return SubsystemActorManager->GetSubsystemActor<AFICSubsystem>();
+void AFICSubsystem::StartProcess(UFICRuntimeProcess* InProcess) {
+	StopProcess();
+	ActiveRuntimeProcess = InProcess;
+	OriginalPlayerCharacter = GetWorld()->GetFirstPlayerController()->GetCharacter();
+	RuntimeProcessorCharacter = GetWorld()->SpawnActor<AFICRuntimeProcessorCharacter>();
+	GetWorld()->GetFirstPlayerController()->Possess(RuntimeProcessorCharacter);
+	RuntimeProcessorCharacter->Initialize(ActiveRuntimeProcess);
+	ActiveRuntimeProcess->Initialize(RuntimeProcessorCharacter);
 }
 
-void AFICSubsystem::PlayAnimation(AFICAnimation* Path, bool bDoRender) {
-	CreateCamera();
-	if (!Camera || !Path) return;
-	Camera->StartAnimation(Path, bDoRender);
-}
+void AFICSubsystem::StopProcess() {
+	if (!ActiveRuntimeProcess) return;
 
-void AFICSubsystem::StopAnimation() {
-	if (!Camera) return;
-	Camera->StopAnimation();
-}
+	AFICRuntimeProcessorCharacter* Character = RuntimeProcessorCharacter;
+	RuntimeProcessorCharacter = nullptr;
 
-void AFICSubsystem::AddVisibleAnimation(AFICAnimation* Path) {
-	if (Path) VisibleAnimations.Add(Path);
-}
-
-void AFICSubsystem::CreateCamera() {
-	if (!Camera) Camera = GetWorld()->SpawnActor<AFICCameraCharacter>();
+	ActiveRuntimeProcess->Shutdown(Character);
+	Character->Shutdown();
+	GetWorld()->GetFirstPlayerController()->Possess(OriginalPlayerCharacter);
+	Character->Destroy();
+	
+	OriginalPlayerCharacter = nullptr;
+	ActiveRuntimeProcess = nullptr;
 }
 
 void AFICSubsystem::SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget) {
@@ -133,4 +140,11 @@ void AFICSubsystem::SaveRenderTargetAsJPG(const FString& FilePath, UTextureRende
 
 	RenderRequestQueue.Enqueue(RenderRequest);
 	RenderRequest->RenderFence.BeginFence();
+}
+
+AFICScene* AFICSubsystem::FindSceneByName(const FString& InSceneName) {
+	for (TActorIterator<AFICScene> Scene(GetWorld()); Scene; ++Scene) {
+		if (Scene->SceneName == InSceneName) return *Scene;
+	}
+	return nullptr;
 }

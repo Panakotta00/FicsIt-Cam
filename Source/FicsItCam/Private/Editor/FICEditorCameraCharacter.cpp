@@ -192,7 +192,6 @@ void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
 	Super::PossessedBy(NewController);
 
 	if (bReposses) return;
-	AFICEditorSubsystem* SubSys = AFICEditorSubsystem::GetFICEditorSubsystem(this);
 	if (NewController) NewController->DisableInput(Cast<APlayerController>(NewController));
 }
 
