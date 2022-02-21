@@ -59,6 +59,8 @@ private:
 	bool bAutoKeyframe = false;
 	bool bMoveCamera = true;
 	bool bCameraPreview = false;
+
+	bool bBlockValueUpdate = false;
 	
 public:
 	bool bShowPath = true;
@@ -138,6 +140,8 @@ public:
 	bool IsViewportCameraControl() {
 		return bViewportCameraControl;
 	}
+
+	void ToggleCurrentKeyframes();
 
 	/**
 	 * Called after the Context Object got created.

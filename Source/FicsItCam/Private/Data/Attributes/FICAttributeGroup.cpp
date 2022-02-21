@@ -15,7 +15,9 @@ TMap<FICFrame, TSharedRef<FFICKeyframe>> FFICGroupAttribute::GetKeyframes() {
 }
 
 FFICGroupAttribute::~FFICGroupAttribute() {
-	// TODO: Maybe remove Update Delegates from Children
+	for (const TPair<FString, FFICAttribute*>& Attrib : Children) {
+		Attrib.Value->OnUpdate.Remove(UpdateDelegateHandles[Attrib.Key]);
+	}
 }
 
 EFICKeyframeType FFICGroupAttribute::GetAllowedKeyframeTypes() const {
@@ -71,10 +73,13 @@ TSharedRef<FFICEditorAttributeBase> FFICGroupAttribute::CreateEditorAttribute() 
 
 void FFICGroupAttribute::AddChildAttribute(FString Name, FFICAttribute* Attribute) {
 	Children.Add(Name, Attribute);
-	// TODO: Maybe add Update Delegate to Attribute
+	UpdateDelegateHandles.Add(Name, Attribute->OnUpdate.AddLambda([this]() {
+		OnUpdate.Broadcast();
+	}));
 }
 
 void FFICGroupAttribute::RemoveChildAttribute(FString Name) {
+	Children[Name]->OnUpdate.Remove(UpdateDelegateHandles[Name]);
 	Children.Remove(Name);
-	// TODO: Maybe add Update Delegate to Attribute
+	UpdateDelegateHandles.Remove(Name);
 }

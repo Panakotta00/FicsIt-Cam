@@ -316,7 +316,7 @@ void AFICEditorCameraCharacter::ChangedKeyframe() {
 	auto Change = MakeShared<FFICChange_Group>();
 	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(EditorContext, TNumericLimits<int64>::Min(), EditorContext->GetCurrentFrame()));
 	BEGIN_ATTRIB_CHANGE(EditorContext->GetAllAttributes()->GetAttribute())
-	// TODO: Toggle All keyframes (dynamic check if all attributes have keyframe and if is different from current value
+	EditorContext->ToggleCurrentKeyframes();
 	END_ATTRIB_CHANGE(Change)
 	EditorContext->ChangeList.PushChange(Change);
 }

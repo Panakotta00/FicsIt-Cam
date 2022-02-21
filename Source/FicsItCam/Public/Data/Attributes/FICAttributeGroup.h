@@ -13,6 +13,7 @@ public:
 protected:
 	TMap<FString, TSharedRef<FFICAttribute>> AttributeCache;
 	TMap<FString, FFICAttribute*> Children;
+	TMap<FString, FDelegateHandle> UpdateDelegateHandles;
 
 public:
 	virtual ~FFICGroupAttribute() override;

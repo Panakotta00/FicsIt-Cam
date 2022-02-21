@@ -7,11 +7,11 @@ FFICEditorAttributeGroupDynamic::FFICEditorAttributeGroupDynamic(TMap<FString, T
 		GroupAttribute.AddChildAttribute(Attribute.Key, &Attribute.Value->GetAttribute());
 	}
 	
-	GroupAttribute.OnUpdate.AddLambda([this]() {
+	/*GroupAttribute.OnUpdate.AddLambda([this]() {
 		for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attribute : Attributes) {
 			Attribute.Value->GetAttribute().OnUpdate.Broadcast();
 		}
-	});
+	});*/
 }
 
 const FFICAttribute& FFICEditorAttributeGroupDynamic::GetAttributeConst() const {

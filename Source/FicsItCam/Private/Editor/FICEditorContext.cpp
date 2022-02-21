@@ -18,12 +18,13 @@ void UFICEditorContext::Load(AFICEditorCameraCharacter* InEditorPlayerCharacter,
 	EditorPlayerCharacter = InEditorPlayerCharacter;
 	Scene = InScene;
 
-	SetCurrentFrame(Scene->AnimationRange.Begin);
 	AllAttributes = MakeShared<FFICEditorAttributeGroupDynamic>();
 
 	for (UObject* SceneObject : Scene->GetSceneObjects()) {
 		LoadSceneObject(SceneObject);
 	}
+	
+	SetCurrentFrame(Scene->AnimationRange.Begin);
 
 	FFICFrameRange Range = InScene->AnimationRange;
 	FICFrame Len = Range.Length();
@@ -71,11 +72,11 @@ void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 		if (bAutoKeyframe && !bInAutoKeyframeSet) {
 			bInAutoKeyframeSet = true;
 			Attribute->SetKeyframe(GetCurrentFrame());
-			// TODO: Figure out why there is such a extreme frame drop when using
 			bInAutoKeyframeSet = false;
 		}
 	});
 	DataAttributeOnUpdateDelegateHandles.Add(SceneObject, Attribute->GetAttribute().OnUpdate.AddLambda([this, Attribute]() {
+		if (bBlockValueUpdate) return;
 		Attribute->UpdateValue(GetCurrentFrame());
 	}));
 
@@ -129,9 +130,7 @@ void UFICEditorContext::SetCurrentFrame(FICFrame inFrame) {
 	CurrentFrame = inFrame;
 
 	bInAutoKeyframeSet = true;
-	for (TTuple<UObject*, TSharedPtr<FFICEditorAttributeBase>> Attribute : EditorAttributes) {
-		Attribute.Value->UpdateValue(inFrame);
-	}
+	AllAttributes->UpdateValue(inFrame);
 	UpdateCharacterValues();
 	OnCurrentFrameChanged.Broadcast();
 	bInAutoKeyframeSet = false;
@@ -173,3 +172,12 @@ void UFICEditorContext::UpdateCharacterValues() {
 	if (bMoveCamera) EditorPlayerCharacter->UpdateValues();
 }
 
+void UFICEditorContext::ToggleCurrentKeyframes() {
+	if (!GetSelectedSceneObject()) return;
+	TSharedRef<FFICEditorAttributeBase> Attribute = GetEditorAttributes()[GetSelectedSceneObject()];
+	bBlockValueUpdate = true;
+	if (Attribute->HasChanged(GetCurrentFrame()) || !Attribute->AllKeyframesSet(GetCurrentFrame())) Attribute->SetKeyframe(GetCurrentFrame());
+	else Attribute->RemoveKeyframe(GetCurrentFrame());
+	bBlockValueUpdate = false;
+	SetCurrentFrame(GetCurrentFrame());
+}

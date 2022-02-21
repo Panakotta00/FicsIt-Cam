@@ -83,7 +83,20 @@ public:
 	/**
 	 * Returns a map of child attributes and names
 	 */
-	virtual TMap<FString, TSharedRef<FFICEditorAttributeBase>> GetChildAttributes() { return TMap<FString, TSharedRef<FFICEditorAttributeBase>>(); };
+	virtual TMap<FString, TSharedRef<FFICEditorAttributeBase>> GetChildAttributes() { return TMap<FString, TSharedRef<FFICEditorAttributeBase>>(); }
+
+	/**
+	 * Returns true if every child attribute and this attribute has a keyframe at the given frame
+	 */
+	bool AllKeyframesSet(FICFrame Frame) {
+		if (!GetKeyframe(Frame).IsValid()) return false;
+		for (const TPair<FString, TSharedRef<FFICEditorAttributeBase>>& Attribute : GetChildAttributes()) {
+			if (!Attribute.Value->AllKeyframesSet(Frame)) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	/**
 	 * Creates and returns a slate widget used to change the attributes details in the details panel
@@ -127,7 +140,7 @@ public:
 	
 	virtual bool HasChanged(FICFrame Time) const override {
 		typename AttribType::ValueType Value = Attribute.GetValue(Time);
-		return FMath::Abs(Value - CurrentValue) > 0.0001;
+		return !FMath::IsNearlyZero(Value - CurrentValue, 0.001f);
 	}
 	
 	virtual const FFICAttribute& GetAttributeConst() const override {

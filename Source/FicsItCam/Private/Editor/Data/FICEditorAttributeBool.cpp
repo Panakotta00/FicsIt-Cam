@@ -61,8 +61,10 @@ TSharedRef<SWidget> FFICEditorAttributeBool::CreateDetailsWidget(UFICEditorConte
 }
 
 void FFICEditorAttributeBool::SetActiveValue(bool InValue) {
+	if (ActiveValue == InValue) return;
 	ActiveValue = InValue;
 	OnValueChanged.Broadcast();
+	if (!IsAnimated()) Attribute->SetDefaultValue(ActiveValue);
 }
 
 bool FFICEditorAttributeBool::GetActiveValue() const {

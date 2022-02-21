@@ -257,7 +257,7 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			auto Change = MakeShared<FFICChange_Group>();
 			Change->PushChange(MakeShared<FFICChange_ActiveFrame>(Context, TNumericLimits<int64>::Min(), Context->GetCurrentFrame()));
 			BEGIN_ATTRIB_CHANGE(Context->GetAllAttributes()->GetAttribute())
-			// TODO: Toggle All keyframes (dynamic check if all attributes have keyframe and if is different from current value
+			Context->ToggleCurrentKeyframes();
 			END_ATTRIB_CHANGE(Change)
 			Context->ChangeList.PushChange(Change);
 			return FReply::Handled();
