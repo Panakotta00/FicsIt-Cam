@@ -15,59 +15,10 @@ void UFICRuntimeProcessPlayScene::Initialize(AFICRuntimeProcessorCharacter* InCh
 		InCharacter->Camera->SetAspectRatio(Scene->ResolutionHeight / Scene->ResolutionWidth);
 	}
 
-	/*
-	if (bDoRender) {
-		RenderTarget->InitCustomFormat(Animation->ResolutionWidth, Animation->ResolutionHeight, EPixelFormat::PF_B8G8R8A8, true);
-		RenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
-		RenderTarget->TargetGamma = 3.3f;
-		RenderTarget->UpdateResourceImmediate();
-	}
-
-	if (Animation->bBulletTime) SetTimeDilation(0);
-	*/
+	Progress = (float)Scene->AnimationRange.Begin / (float)Scene->FPS;
 }
 
 void UFICRuntimeProcessPlayScene::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaTime) {
-
-	//double Start = FPlatformTime::Seconds();
-	/*if (bDoRender) {
-		if(GetWorld()->IsLevelStreamingRequestPending(GetWorld()->GetFirstPlayerController())) return;
-		
-		Time = Progress;
-		Progress += 1;
-
-		if (!Animation->bBulletTime) SetTimeDilation(1.0f/Animation->FPS/DeltaSeconds);
-	} else {
-	if (bDoRender) {
-		FMinimalViewInfo ViewInfo;
-		Camera->GetCameraView(0, ViewInfo);
-		CaptureComponent->SetCameraView(ViewInfo);
-		FWeightedBlendables Blendables = CaptureComponent->PostProcessSettings.WeightedBlendables;
-		CaptureComponent->PostProcessSettings = ViewInfo.PostProcessSettings;
-		CaptureComponent->PostProcessSettings.WeightedBlendables = Blendables;
-		CaptureComponent->PostProcessBlendWeight = Camera->PostProcessBlendWeight;
-		CaptureComponent->MaxViewDistanceOverride = TNumericLimits<float>::Max();
-		CaptureComponent->CaptureScene();
-		
-		FString FSP;
-		// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
-		if (FSP.IsEmpty()) {
-			FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/") TEXT("FicsItCam/"), Animation->Name);
-		}
-
-		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-		if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
-
-		FSP = FPaths::Combine(FSP, FString::FromInt((int)Progress) + TEXT(".jpeg"));
-
-		AFICSubsystem::GetFICSubsystem(this)->SaveRenderTargetAsJPG(FSP, RenderTarget);
-	if (!Animation->bBulletTime)
-		Cast<APlayerController>(GetController())->SetPause(false);
-		if (Animation->GetEndOfAnimation() < Progress / Animation->FPS) {
-			StopAnimation();
-		}
-	*/
-	
 	FICFrameFloat Time = Progress * Scene->FPS;
 	UFICCamera* Camera = Scene->GetActiveCamera(Time);
 	FVector Pos = Camera->Position.Get(Time);

@@ -8,6 +8,6 @@ class UFICRuntimeProcess : public UObject {
 	GENERATED_BODY()
 public:
 	virtual void Initialize(AFICRuntimeProcessorCharacter* InCharacter) {}
-	virtual void Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaTime) {}
+	virtual void Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {}
 	virtual void Shutdown(AFICRuntimeProcessorCharacter* InCharacter) {}
 };

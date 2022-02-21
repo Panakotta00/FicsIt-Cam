@@ -11,6 +11,7 @@
 #include "Runtime/FICTimelapseCamera.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
 #include "Runtime/Process/FICRuntimeProcessPlayScene.h"
+#include "Runtime/Process/FICRuntimeProcessRenderScene.h"
 
 AFICCommand::AFICCommand() {
 	bOnlyUsableByPlayer = true;
@@ -40,9 +41,6 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 		if (SubSys->FindSceneByName(Arguments[1])) {
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' already exists.");
 		} else {
-			FVector Pos = Sender->GetPlayer()->PlayerCameraManager->GetCameraLocation();
-			FRotator Rot = Sender->GetPlayer()->PlayerCameraManager->GetCameraRotation();
-			float FOV = Sender->GetPlayer()->PlayerCameraManager->GetFOVAngle();
 			AFICScene* Scene = GetWorld()->SpawnActor<AFICScene>();
 			FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
 			Scene->ResolutionWidth = Resolution.X;
@@ -50,9 +48,7 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			Scene->SceneName = Arguments[1];
 			UFICCamera* Camera = NewObject<UFICCamera>(Scene);
 			Scene->AddSceneObject(Camera);
-			Camera->Position.SetDefaultValue(Pos);
-			Camera->Rotation.SetDefaultValue(Rot);
-			Camera->FOV.SetDefaultValue(FOV);
+			Camera->InitDefaultValues();
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' created.");
 		}
 		return EExecutionStatus::COMPLETED;
@@ -113,9 +109,9 @@ EExecutionStatus AFICCommand::ExecuteCommand_Implementation(UCommandSender* Send
 			Sender->SendChatMessage("Animation '" + Arguments[1] + "' not found.");
 			return EExecutionStatus::BAD_ARGUMENTS;
 		}
-		/*UFICRuntimeProcessRenderScene* Render = NewObject<UFICRuntimeProcessRenderScene>(SubSys);
+		UFICRuntimeProcessRenderScene* Render = NewObject<UFICRuntimeProcessRenderScene>(SubSys);
 		Render->Scene = Scene;
-		SubSys->StartProcess(Render);*/
+		SubSys->StartProcess(Render);
 		Sender->SendChatMessage("Rendering Animation '" + Arguments[1] + "'.");
 		return EExecutionStatus::COMPLETED;
 	}

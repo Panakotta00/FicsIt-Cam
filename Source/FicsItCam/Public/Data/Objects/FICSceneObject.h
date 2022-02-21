@@ -18,6 +18,7 @@ public:
 	virtual void SetSceneObjectName(FString Name) = 0;
 	
 	virtual FFICAttribute& GetRootAttribute() = 0;
+	virtual void InitDefaultValues() {}
 
 	virtual void InitEditor(UFICEditorContext* Context) {}
 	virtual void UnloadEditor(UFICEditorContext* Context) {}

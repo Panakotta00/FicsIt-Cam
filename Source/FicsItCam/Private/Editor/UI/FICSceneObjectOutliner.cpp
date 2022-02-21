@@ -113,7 +113,9 @@ void SFICSceneObjectOutliner::OpenAddSceneObjectMenu() {
 	        FText(),
 	        FSlateIcon(),
 			FExecuteAction::CreateLambda([Class, this]() {
-	            Context->AddSceneObject(NewObject<UObject>(AFICSubsystem::GetFICSubsystem(Context), *Class));
+				UObject* SceneObject = NewObject<UObject>(AFICSubsystem::GetFICSubsystem(Context), *Class);
+	            Context->AddSceneObject(SceneObject);
+				Cast<IFICSceneObject>(SceneObject)->InitDefaultValues();
 	        }));
 	}
 	FWidgetPath WidgetPath;

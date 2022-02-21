@@ -10,7 +10,7 @@ AFICEditorCameraActor::AFICEditorCameraActor() {
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("RootComponent"));
 	
 	CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("CaptureComponent"));
-	CaptureComponent->SetupAttachment(GetRootComponent());
+	CaptureComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("RenderTarget"));
 	RenderTarget->InitAutoFormat(320, 320);
 	CaptureComponent->TextureTarget = RenderTarget;
@@ -26,12 +26,12 @@ AFICEditorCameraActor::AFICEditorCameraActor() {
 	PrimaryActorTick.bCanEverTick = true;
 
 	LineBatcher = CreateDefaultSubobject<ULineBatchComponent>(TEXT("LineBatcher"));
-	LineBatcher->SetupAttachment(RootComponent);
+	LineBatcher->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	LineBatcher->SetMobility(EComponentMobility::Movable);
 	
 	SelectionHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SelectionHitBox"));
 	SelectionHitBox->InitBoxExtent(FVector(60.f,40.f,40.f));
-	SelectionHitBox->SetupAttachment(RootComponent);
+	SelectionHitBox->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	SelectionHitBox->SetMobility(EComponentMobility::Movable);
 	SelectionHitBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	SelectionHitBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel10, ECollisionResponse::ECR_Block);

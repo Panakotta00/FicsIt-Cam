@@ -45,6 +45,8 @@ public:
 	
 	UFICCamera() {
 		Active.SetDefaultValue(true);
+		Aperture.SetDefaultValue(10);
+		FocusDistance.SetDefaultValue(10000);
 		
 		LensSettings.AddChildAttribute(TEXT("FOV"), &FOV);
 		LensSettings.AddChildAttribute(TEXT("Aperture"), &Aperture);
@@ -76,6 +78,7 @@ public:
 	virtual FFICAttribute& GetRootAttribute() override {
 		return RootAttribute;
 	}
+	virtual void InitDefaultValues() override;
 
 	virtual void InitEditor(UFICEditorContext* Context) override;
 	virtual void UnloadEditor(UFICEditorContext* Context) override;

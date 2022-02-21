@@ -1,20 +1,17 @@
 #pragma once
-#include "FICRuntimeProcess.h"
 
-#include "FICRuntimeProcessPlayScene.generated.h"
-
-class AFICCaptureCamera;
+#include "FICRuntimeProcessPlayScene.h"
+#include "FICRUntimeProcessRenderScene.generated.h"
 
 UCLASS()
-class UFICRuntimeProcessPlayScene : public UFICRuntimeProcess {
+class UFICRuntimeProcessRenderScene : public UFICRuntimeProcessPlayScene {
 	GENERATED_BODY()
-protected:
-	float Progress = 0.0f;
-	
 public:
 	UPROPERTY()
-	AFICScene* Scene = nullptr;
-	
+	AFICCaptureCamera* CaptureCamera = nullptr;
+
+	FICFrame FrameProgress = 0;
+
 	// Begin UFICRuntimeProcess
 	virtual void Initialize(AFICRuntimeProcessorCharacter* InCharacter) override;
 	virtual void Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) override;

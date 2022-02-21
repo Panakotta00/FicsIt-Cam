@@ -10,7 +10,7 @@ AFICTimelapseCamera::AFICTimelapseCamera() {
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>("RenderTarget");
 	
 	CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>("CaptureComponent");
-	CaptureComponent->SetupAttachment(RootComponent);
+	CaptureComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	CaptureComponent->bCaptureEveryFrame = false;
 	CaptureComponent->bCaptureOnMovement = false;
 	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;

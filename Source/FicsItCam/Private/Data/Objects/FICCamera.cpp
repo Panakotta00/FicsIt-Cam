@@ -25,6 +25,16 @@ void UFICCamera::SetSceneObjectName(FString Name) {
 	SceneObjectName = Name;
 }
 
+void UFICCamera::InitDefaultValues() {
+	APlayerController* Player = Cast<APlayerController>(AFICEditorSubsystem::GetFICEditorSubsystem(this)->GetEditorPlayerCharacter()->GetController()); 
+	FVector Pos = Player->PlayerCameraManager->GetCameraLocation();
+	FRotator Rot = Player->PlayerCameraManager->GetCameraRotation();
+	float FOVVal = Player->PlayerCameraManager->GetFOVAngle();
+	Position.SetDefaultValue(Pos);
+	Rotation.SetDefaultValue(Rot);
+	FOV.SetDefaultValue(FOVVal);
+}
+
 void UFICCamera::InitEditor(UFICEditorContext* Context) {
 	EditorContext = Context;
 
