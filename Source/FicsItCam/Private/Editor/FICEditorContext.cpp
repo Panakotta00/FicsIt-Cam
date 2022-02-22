@@ -69,9 +69,16 @@ void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 	EditorAttributes.Add(SceneObject, Attribute);
 	Attribute->OnValueChanged.AddLambda([this, Attribute, SceneObject]() {
 		Cast<IFICSceneObject>(SceneObject)->EditorUpdate(this, Attribute);
-		if (bAutoKeyframe && !bInAutoKeyframeSet) {
+		if (bAutoKeyframe && !bInAutoKeyframeSet && AutoKeyframeChangeRef) {
 			bInAutoKeyframeSet = true;
+			bBlockValueUpdate = true;
+			FFICChange::ChangeStack.Push(FChangeStackEntry(&Attribute->GetAttribute(), Attribute->GetAttribute().Get()));
+
 			Attribute->SetKeyframe(GetCurrentFrame());
+
+			FChangeStackEntry StackEntry = FFICChange::ChangeStack.Pop();
+			ChangeList.PushChange(MakeShared<FFICChange_Attribute>(StackEntry.Key, StackEntry.Value, FFICChangeSource(AutoKeyframeChangeRef, FString::FromInt(GetCurrentFrame()))));
+			bBlockValueUpdate = false;
 			bInAutoKeyframeSet = false;
 		}
 	});

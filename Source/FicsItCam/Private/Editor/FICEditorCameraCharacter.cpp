@@ -113,8 +113,12 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 				FVector PosOldNewDiff = PosOld - PosNew;
 				FRotator RotOldNewDiff = RotOld - RotNew;
 				if (bWasChangedDirectly) EditorContext->bInAutoKeyframeSet = true;
+				EditorContext->CommitAutoKeyframe(this);
+				bChangedByMovement = true;
 				FFICAttributePosition::ToEditorAttribute(PosNew, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
 				FFICAttributeRotation::ToEditorAttribute(RotNew, EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
+				bChangedByMovement = false;
+				EditorContext->CommitAutoKeyframe(nullptr);
 				if (bWasChangedDirectly) EditorContext->bInAutoKeyframeSet = false;
 				
 				RotOld = RotNew;
@@ -327,7 +331,9 @@ void AFICEditorCameraCharacter::Zoom(float Value) {
 		float Delta = Value;
 		if (bIsSprinting) Delta *= 2;
 		TFICEditorAttribute<FFICFloatAttribute> FOV = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV");
+		EditorContext->CommitAutoKeyframe(this);
 		FOV.SetValue(FOV.GetValue() + Delta);
+		EditorContext->CommitAutoKeyframe(nullptr);
 	} else if (bChangeSpeed) {
 		float Delta = Value * 100;
 		if (bIsSprinting) Delta *= 2;
@@ -367,7 +373,7 @@ void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorCont
 }
 
 void AFICEditorCameraCharacter::UpdateValues() {
-	if (EditorContext && EditorContext->GetCamera()) {
+	if (EditorContext && EditorContext->GetCamera() && !bChangedByMovement) {
 		FVector Pos = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
 		FRotator Rot = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
 		if (EditorContext->GetLockCameraToView()) {

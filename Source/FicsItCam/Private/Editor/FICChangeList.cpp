@@ -37,7 +37,14 @@ void FFICChange_ActiveFrame::UndoChange() {
 	EditorContext->SetCurrentFrame(FromFrame);
 }
 
-void FFICChangeList::PushChange(TSharedPtr<FFICChange> InChange) {
+void FFICChangeList::PushChange(TSharedRef<FFICChange> InChange) {
+	if (Changes.Num() > 0) {
+		TSharedRef<FFICChange> Change = Changes[Changes.Num()-1];
+		if (Change->IsStackable(InChange)) {
+			Change->Stack(InChange);
+			return;
+		}
+	}
 	if (Changes.Num() > ChangeIndex+1) Changes.RemoveAt(ChangeIndex+1, Changes.Num() - ChangeIndex - 1);
 	Changes.Push(InChange);
 

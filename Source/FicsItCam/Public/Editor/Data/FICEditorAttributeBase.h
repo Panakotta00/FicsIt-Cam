@@ -186,11 +186,15 @@ public:
 			.MaxSliderValue(TOptional<float>())
 			.LinearDeltaSensitivity(10)
 			.AllowSpin(true)
-			.OnValueChanged_Lambda([this](typename AttribType::ValueType Val) {
+			.OnValueChanged_Lambda([this, Context](typename AttribType::ValueType Val) {
+				Context->CommitAutoKeyframe((uint8*)this);
 				SetValue(Val);
+				Context->CommitAutoKeyframe(nullptr);
 			})
-			.OnValueCommitted_Lambda([this](typename AttribType::ValueType Val, auto) {
+			.OnValueCommitted_Lambda([this, Context](typename AttribType::ValueType Val, auto) {
+				Context->CommitAutoKeyframe((uint8*)this);
 				SetValue(Val);
+				Context->CommitAutoKeyframe(nullptr);
 			})
 			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<typename AttribType::ValueType>>())
 		]

@@ -31,6 +31,8 @@ struct FFICChange {
 	virtual void RedoChange() = 0;
 	virtual void UndoChange() = 0;
 	virtual FName ChangeType() = 0;
+	virtual bool IsStackable(TSharedRef<FFICChange> InChange) { return false; }
+	virtual void Stack(TSharedRef<FFICChange> InChange) {}
 };
 
 struct FFICChange_ActiveFrame : public FFICChange {
@@ -45,12 +47,26 @@ struct FFICChange_ActiveFrame : public FFICChange {
 	virtual FName ChangeType() override { return FName(TEXT("ActiveFrame")); }
 };
 
+struct FFICChangeSource {
+	void* SourcePtr = nullptr;
+	FString SourceKey;
+
+	FFICChangeSource(void* InSourcePtr = nullptr, FString InSourceKey = TEXT("")) : SourcePtr(InSourcePtr), SourceKey(InSourceKey) {}
+
+	bool IsValid() { return !!SourcePtr; }
+
+	bool operator==(const FFICChangeSource& Other) {
+		return SourcePtr == Other.SourcePtr && SourceKey == Other.SourceKey;
+	}
+};
+
 struct FFICChange_Attribute : public FFICChange {
 	FFICAttribute* Attribute;
 	TSharedRef<FFICAttribute> FromAttribute;
 	TSharedRef<FFICAttribute> ToAttribute;
+	FFICChangeSource ChangeSource;
 
-	FFICChange_Attribute(FFICAttribute* InAttribute, TSharedRef<FFICAttribute> InFromAttribute) : Attribute(InAttribute), FromAttribute(InFromAttribute), ToAttribute(Attribute->Get()) {}
+	FFICChange_Attribute(FFICAttribute* InAttribute, TSharedRef<FFICAttribute> InFromAttribute, FFICChangeSource ChangeSource = FFICChangeSource()) : Attribute(InAttribute), FromAttribute(InFromAttribute), ToAttribute(Attribute->Get()), ChangeSource(ChangeSource) {}
 
 	virtual void RedoChange() override {
 		Attribute->Set(ToAttribute);
@@ -63,37 +79,48 @@ struct FFICChange_Attribute : public FFICChange {
 	virtual FName ChangeType() override {
 		return FName(TEXT("Attribute"));
 	}
+
+	virtual bool IsStackable(TSharedRef<FFICChange> InChange) override {
+		if (InChange->ChangeType() == ChangeType() && ChangeSource.IsValid()) {
+			return ChangeSource == StaticCastSharedRef<FFICChange_Attribute>(InChange)->ChangeSource;
+		}
+		return false;
+	}
+
+	virtual void Stack(TSharedRef<FFICChange> InChange) override {
+		ToAttribute = StaticCastSharedRef<FFICChange_Attribute>(InChange)->ToAttribute;
+	}
 };
 
 struct FFICChange_Group : public FFICChange {
-	TSet<TSharedPtr<FFICChange>> Changes;
-	
+	TSet<TSharedRef<FFICChange>> Changes;
+		
 	virtual void RedoChange() override {
-		for (TSharedPtr<FFICChange> Change : Changes) Change->RedoChange();
+		for (TSharedRef<FFICChange> Change : Changes) Change->RedoChange();
 	}
 
 	virtual void UndoChange() override {
-		for (TSharedPtr<FFICChange> Change : Changes) Change->UndoChange();
+		for (TSharedRef<FFICChange> Change : Changes) Change->UndoChange();
 	}
 
 	virtual FName ChangeType() override {
 		return FName(TEXT("Group"));
 	}
 
-	void PushChange(TSharedPtr<FFICChange> InChange) {
+	void PushChange(TSharedRef<FFICChange> InChange) {
 		Changes.Add(InChange);
 	}
 };
 
 class FFICChangeList {
 private:
-	TArray<TSharedPtr<FFICChange>> Changes;
+	TArray<TSharedRef<FFICChange>> Changes;
 	int ChangeIndex = -1;
 
 	int MaxChanges = 50;
 	
 public:
-	void PushChange(TSharedPtr<FFICChange> InChange);
+	void PushChange(TSharedRef<FFICChange> InChange);
 	TSharedPtr<FFICChange> PushChange();
 	TSharedPtr<FFICChange> PopChange();
 	TSharedPtr<FFICChange> PeakChange();

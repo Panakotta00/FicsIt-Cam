@@ -34,6 +34,7 @@ private:
 	bool bControlViewTemp = false;
 	FVector2D LastCursorPos;
 	bool bWasChangedDirectly = false;
+	bool bChangedByMovement = false;
 	FDelegateHandle OnCurrentFrameChangedHandle;
 	
 	UPROPERTY()

@@ -44,10 +44,14 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	        .LinearDeltaSensitivity(1)
 	        .AllowSpin(true)
 			.OnValueChanged_Lambda([this](float Value) {
+				Context->CommitAutoKeyframe((uint8*)this + 1);
 				XAttr->SetValue(Value);
+				Context->CommitAutoKeyframe(nullptr);
 			})
 			.OnValueCommitted_Lambda([this](float Value, ETextCommit::Type) {
+				Context->CommitAutoKeyframe((uint8*)this + 1);
 				XAttr->SetValue(Value);
+				Context->CommitAutoKeyframe(nullptr);
 			})
 			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 		]
@@ -81,10 +85,14 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	        .LinearDeltaSensitivity(1)
 	        .AllowSpin(true)
 			.OnValueChanged_Lambda([this](float Value) {
-				return YAttr->SetValue(Value);
+				Context->CommitAutoKeyframe((uint8*)this + 2);
+				YAttr->SetValue(Value);
+				Context->CommitAutoKeyframe(nullptr);
 			})
 	        .OnValueCommitted_Lambda([this](float Value, ETextCommit::Type) {
-		        return YAttr->SetValue(Value);
+	        	Context->CommitAutoKeyframe((uint8*)this + 2);
+		        YAttr->SetValue(Value);
+				Context->CommitAutoKeyframe(nullptr);
 	        })
 			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 	    ]
@@ -118,10 +126,14 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 			.MaxSliderValue(TOptional<float>())
 	        .LinearDeltaSensitivity(1)
 			.OnValueChanged_Lambda([this](float Value) {
+	        	Context->CommitAutoKeyframe((uint8*)this + 3);
 				ZAttr->SetValue(Value);
+	        	Context->CommitAutoKeyframe(nullptr);
 			})
 	        .OnValueCommitted_Lambda([this](float Value, ETextCommit::Type) {
+	        	Context->CommitAutoKeyframe((uint8*)this + 3);
 		        ZAttr->SetValue(Value);
+	        	Context->CommitAutoKeyframe(nullptr);
 	        })
 			.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
 	    ]

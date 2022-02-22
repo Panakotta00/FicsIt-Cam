@@ -45,8 +45,10 @@ TSharedRef<SWidget> FFICEditorAttributeBool::CreateDetailsWidget(UFICEditorConte
 	return SNew(SHorizontalBox)
 	+SHorizontalBox::Slot().AutoWidth()[
 		SNew(SCheckBox)
-		.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
+		.OnCheckStateChanged_Lambda([this, Context](ECheckBoxState State) {
+			Context->CommitAutoKeyframe((uint8*)this);
 			SetActiveValue(State == ECheckBoxState::Checked);
+			Context->CommitAutoKeyframe(nullptr);
 		})
 		.IsChecked_Lambda([this]() {
 			return GetActiveValue() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;

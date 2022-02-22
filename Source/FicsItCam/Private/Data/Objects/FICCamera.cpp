@@ -95,7 +95,9 @@ FTransform UFICCamera::GetSceneObjectTransform() {
 void UFICCamera::SetSceneObjectTransform(FTransform InTransform) {
 	if (EditorCameraActor) {
 		EditorCameraActor->SetActorTransform(InTransform);
+		EditorContext->CommitAutoKeyframe(this);
 		FFICAttributePosition::ToEditorAttribute(InTransform.GetLocation(), EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Position"));
 		FFICAttributeRotation::ToEditorAttribute(InTransform.GetRotation().Rotator(), EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Rotation"));
+		EditorContext->CommitAutoKeyframe(nullptr);
 	}
 }

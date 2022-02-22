@@ -2,7 +2,6 @@
 
 #include "FICChangeList.h"
 #include "FICEditorCameraCharacter.h"
-#include "Data/FICAnimation.h"
 #include "Data/FICEditorAttributeGroupDynamic.h"
 #include "Data/FICScene.h"
 #include "UI/FICEditor.h"
@@ -61,6 +60,7 @@ private:
 	bool bCameraPreview = false;
 
 	bool bBlockValueUpdate = false;
+	void* AutoKeyframeChangeRef = nullptr;
 	
 public:
 	bool bShowPath = true;
@@ -142,6 +142,10 @@ public:
 	}
 
 	void ToggleCurrentKeyframes();
+
+	void CommitAutoKeyframe(void* Ref) {
+		AutoKeyframeChangeRef = Ref;
+	}
 
 	/**
 	 * Called after the Context Object got created.
