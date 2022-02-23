@@ -5,8 +5,8 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/FICCaptureCamera.h"
 
-void UFICRuntimeProcessRenderScene::Initialize(AFICRuntimeProcessorCharacter* InCharacter) {
-	Super::Initialize(InCharacter);
+void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InCharacter) {
+	Super::Start(InCharacter);
 
 	CaptureCamera = GetWorld()->SpawnActor<AFICCaptureCamera>();
 	CaptureCamera->RenderTarget->InitCustomFormat(Scene->ResolutionWidth, Scene->ResolutionHeight, EPixelFormat::PF_B8G8R8A8, true);
@@ -48,9 +48,9 @@ void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharac
 	++FrameProgress;
 }
 
-void UFICRuntimeProcessRenderScene::Shutdown(AFICRuntimeProcessorCharacter* InCharacter) {
-	Super::Shutdown(InCharacter);
-
+void UFICRuntimeProcessRenderScene::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
+	Super::Stop(InCharacter);
+	
 	CaptureCamera->Destroy();
 	CaptureCamera = nullptr;
 }

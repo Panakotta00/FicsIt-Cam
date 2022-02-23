@@ -1,10 +1,8 @@
 ﻿#include "FICSubsystem.h"
 
-#include <Subsystem/SubsystemActorManager.h>
-
-#include "FICCommand.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "Command/FICCommand.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -50,6 +48,13 @@ void AFICSubsystem::BeginPlay() {
 	for (TTuple<FString, AFICTimelapseCamera*> Cam : TimelapseCameras) {
 		Cam.Value->Name = Cam.Key;
 	}
+
+	// Discover Commands
+	for (TObjectIterator<UClass> Class; Class; ++Class) {
+		if (!Class->IsChildOf<UFICCommand>() || *Class == UFICCommand::StaticClass()) continue;
+		UFICCommand* CMD = Class->GetDefaultObject<UFICCommand>();
+		Commands.FindOrAdd(CMD->ParentCommand).Add(CMD->CommandName, CMD);
+	}
 }
 
 void AFICSubsystem::Tick(float DeltaSeconds) {
@@ -71,6 +76,10 @@ void AFICSubsystem::Tick(float DeltaSeconds) {
 			}
 		}
 	}
+
+	for (UFICRuntimeProcess* RuntimeProcess : ActiveRuntimeProcesses) {
+		RuntimeProcess->Tick(RuntimeProcess->NeedsRuntimeProcessCharacter() ? GetRuntimeProcessorCharacter() : nullptr, DeltaSeconds);
+	}
 }
 
 void AFICSubsystem::EndPlay(const EEndPlayReason::Type EndPlayReason) {
@@ -81,29 +90,81 @@ bool AFICSubsystem::ShouldSave_Implementation() const {
 	return true;
 }
 
-void AFICSubsystem::StartProcess(UFICRuntimeProcess* InProcess) {
-	StopProcess();
-	ActiveRuntimeProcess = InProcess;
+bool AFICSubsystem::CreateRuntimeProcess(FString Key, UFICRuntimeProcess* InProcess, bool bStartAutomatically) {
+	RemoveRuntimeProcess(InProcess);
+	RuntimeProcesses.Add(Key, InProcess);
+	InProcess->Initialize();
+	if (bStartAutomatically) {
+		if (!StartRuntimeProcess(InProcess)) {
+			RemoveRuntimeProcess(InProcess);
+			return false;
+		}
+	}
+	return true;
+}
+
+bool AFICSubsystem::RemoveRuntimeProcess(UFICRuntimeProcess* Process) {
+	if (!Process) return false;
+
+	StopRuntimeProcess(Process);
+
+	ActiveRuntimeProcesses.Remove(Process);
+	Process->Shutdown();
+	
+	RuntimeProcesses.Remove(FindRuntimeProcessKey(Process));
+	
+	return true;
+}
+
+bool AFICSubsystem::StartRuntimeProcess(UFICRuntimeProcess* Process) {
+	if (!Process) return false;
+
+	AFICRuntimeProcessorCharacter* Character = nullptr;
+	if (Process->NeedsRuntimeProcessCharacter()) {
+		Character = GetRuntimeProcessorCharacter();
+		if (Character) return false;
+		CreateRuntimeProcessorCharacter(Process);
+		Character = GetRuntimeProcessorCharacter();
+	}
+	
+	ActiveRuntimeProcesses.Add(Process);
+	
+	Process->Start(Character);
+
+	return true;
+}
+
+bool AFICSubsystem::StopRuntimeProcess(UFICRuntimeProcess* Process) {
+	if (!Process) return false;
+
+	if (!ActiveRuntimeProcesses.Contains(Process)) return false;
+	
+	AFICRuntimeProcessorCharacter* Character = nullptr;
+	if (Process->NeedsRuntimeProcessCharacter()) {
+		Character = RuntimeProcessorCharacter;
+		RuntimeProcessorCharacter = nullptr;
+	}
+
+	Process->Stop(Character);
+	ActiveRuntimeProcesses.Remove(Process);
+	
+	if (Character) DestoryRuntimeProcessorCharacter(Character);
+	
+	return true;
+}
+
+void AFICSubsystem::CreateRuntimeProcessorCharacter(UFICRuntimeProcess* RuntimeProcess) {
 	OriginalPlayerCharacter = GetWorld()->GetFirstPlayerController()->GetCharacter();
 	RuntimeProcessorCharacter = GetWorld()->SpawnActor<AFICRuntimeProcessorCharacter>();
 	GetWorld()->GetFirstPlayerController()->Possess(RuntimeProcessorCharacter);
-	RuntimeProcessorCharacter->Initialize(ActiveRuntimeProcess);
-	ActiveRuntimeProcess->Initialize(RuntimeProcessorCharacter);
+	RuntimeProcessorCharacter->Initialize(RuntimeProcess);
 }
 
-void AFICSubsystem::StopProcess() {
-	if (!ActiveRuntimeProcess) return;
-
-	AFICRuntimeProcessorCharacter* Character = RuntimeProcessorCharacter;
-	RuntimeProcessorCharacter = nullptr;
-
-	ActiveRuntimeProcess->Shutdown(Character);
+void AFICSubsystem::DestoryRuntimeProcessorCharacter(AFICRuntimeProcessorCharacter* Character) {
 	Character->Shutdown();
 	GetWorld()->GetFirstPlayerController()->Possess(OriginalPlayerCharacter);
 	Character->Destroy();
-	
 	OriginalPlayerCharacter = nullptr;
-	ActiveRuntimeProcess = nullptr;
 }
 
 void AFICSubsystem::SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget) {
@@ -147,4 +208,20 @@ AFICScene* AFICSubsystem::FindSceneByName(const FString& InSceneName) {
 		if (Scene->SceneName == InSceneName) return *Scene;
 	}
 	return nullptr;
+}
+
+UFICRuntimeProcess* AFICSubsystem::FindRuntimeProcess(const FString& InKey) {
+	for (const TPair<FString, UFICRuntimeProcess*>& Process : GetRuntimeProcesses()) {
+		if (Process.Key == InKey) return Process.Value;
+	}
+	return nullptr;
+}
+
+FString AFICSubsystem::FindRuntimeProcessKey(UFICRuntimeProcess* InProcess) {
+	for (const TPair<FString, UFICRuntimeProcess*> RuntimeProcess : RuntimeProcesses) {
+		if (RuntimeProcess.Value == InProcess) {
+			return RuntimeProcess.Key;
+		}
+	}
+	return TEXT("");
 }

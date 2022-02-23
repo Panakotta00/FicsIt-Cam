@@ -4,6 +4,7 @@
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Runtime/FICCameraReference.h"
 #include "FICUtils.generated.h"
 
 UCLASS(Abstract)
@@ -19,6 +20,12 @@ public:
 
 	UFUNCTION()
 	static float BezierInterpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVector2D P3, float t);
+
+	UFUNCTION()
+	static FFICCameraSettingsSnapshot CreateCameraSettingsSnapshotFromView(UObject* WorldContext);
+
+	UFUNCTION()
+	static bool IsValidFICObjectName(const FString& InName);
 };
 
 

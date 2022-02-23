@@ -6,6 +6,10 @@
 #include "FICSubsystem.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
 
+void AFICRuntimeProcessorCharacter::StopProcess() {
+	AFICSubsystem::GetFICSubsystem(this)->RemoveRuntimeProcess(RuntimeProcess);
+}
+
 AFICRuntimeProcessorCharacter::AFICRuntimeProcessorCharacter() {
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorTickEnabled(true);
@@ -28,7 +32,7 @@ void AFICRuntimeProcessorCharacter::BeginPlay() {
 }
 
 void AFICRuntimeProcessorCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
-	PlayerInputComponent->BindAction("FicsItCam.StopAnimation", EInputEvent::IE_Pressed, AFICSubsystem::GetFICSubsystem(this), &AFICSubsystem::StopProcess);
+	PlayerInputComponent->BindAction("FicsItCam.StopAnimation", EInputEvent::IE_Pressed, this, &AFICRuntimeProcessorCharacter::StopProcess);
 }
 
 void AFICRuntimeProcessorCharacter::PossessedBy(AController* NewController) {
@@ -56,9 +60,9 @@ void AFICRuntimeProcessorCharacter::UnPossessed() {
 		PlayerController->GetHUD<AFGHUD>()->SetPumpiMode(false);
 		OldController->EnableInput(PlayerController);
 
-		// Force Close the editor
+		// Force Remove Process
 		AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(this);
-		if (SubSys->GetRuntimeProcessorCharacter() == this) SubSys->StopProcess();
+		if (SubSys->GetRuntimeProcessorCharacter() == this) SubSys->RemoveRuntimeProcess(RuntimeProcess);
 		// TODO: Try to do recover
 	}
 }
@@ -73,9 +77,6 @@ void AFICRuntimeProcessorCharacter::Shutdown() {
 
 void AFICRuntimeProcessorCharacter::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
-
-	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(this);
-	if (UFICRuntimeProcess* Process = SubSys->GetActiveProcess()) Process->Tick(this, DeltaSeconds);
 }
 
 void AFICRuntimeProcessorCharacter::SetTimeDilation(float InTimeDilation) {

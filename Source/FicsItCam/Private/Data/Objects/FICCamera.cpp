@@ -26,7 +26,7 @@ void UFICCamera::SetSceneObjectName(FString Name) {
 }
 
 void UFICCamera::InitDefaultValues() {
-	APlayerController* Player = Cast<APlayerController>(AFICEditorSubsystem::GetFICEditorSubsystem(this)->GetEditorPlayerCharacter()->GetController()); 
+	APlayerController* Player = GetWorld()->GetFirstPlayerController(); 
 	FVector Pos = Player->PlayerCameraManager->GetCameraLocation();
 	FRotator Rot = Player->PlayerCameraManager->GetCameraRotation();
 	float FOVVal = Player->PlayerCameraManager->GetFOVAngle();

@@ -20,6 +20,9 @@ private:
 
 	bool bIsRepossesing = false;
 
+	UFUNCTION()
+	void StopProcess();
+
 public:
 	UPROPERTY()
 	UCameraComponent* Camera = nullptr;

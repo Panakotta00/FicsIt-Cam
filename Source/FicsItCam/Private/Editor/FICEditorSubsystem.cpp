@@ -1,6 +1,7 @@
 #include "Editor/FICEditorSubsystem.h"
 
 #include "FGColoredInstanceMeshProxy.h"
+#include "FGGameUserSettings.h"
 #include "FGInputLibrary.h"
 #include "FGProductionIndicatorInstanceComponent.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
@@ -279,6 +280,7 @@ void AFICEditorSubsystem::CloseEditor() {
 	// Swap PlayerCharacter to FG Player Character 
 	GetWorld()->GetFirstPlayerController()->Possess(OriginalPlayerCharacter);
 	UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
+	UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 	
 	// Remove Editor UI
 	GameOverlay->RemoveSlot(EditorWidget.ToSharedRef());

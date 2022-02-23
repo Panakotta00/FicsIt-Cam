@@ -12,6 +12,8 @@ class AFICTimelapseCamera;
 class UFICEditorContext;
 class AFICAnimation;
 class AFICRuntimeProcessorCharacter;
+class UFICCommand;
+
 USTRUCT()
 struct FFICRenderRequest{
 	GENERATED_BODY()
@@ -48,13 +50,17 @@ class AFICSubsystem : public AModSubsystem, public IFGSaveInterface {
 private:
 	TQueue<TSharedPtr<FFICRenderRequest>> RenderRequestQueue;
 
-	UPROPERTY()
-	UFICRuntimeProcess* ActiveRuntimeProcess = nullptr;
+	UPROPERTY(SaveGame)
+	TMap<FString, UFICRuntimeProcess*> RuntimeProcesses;
+	UPROPERTY(SaveGame)
+	TSet<UFICRuntimeProcess*> ActiveRuntimeProcesses;
 	
 	UPROPERTY()
 	AFICRuntimeProcessorCharacter* RuntimeProcessorCharacter = nullptr;
 	UPROPERTY()
 	ACharacter* OriginalPlayerCharacter = nullptr;
+
+	TMap<TSubclassOf<UFICCommand>, TMap<FString, UFICCommand*>> Commands;
 	
 public:
 	UPROPERTY(BlueprintReadWrite, SaveGame, Category="FicsIt-Cam")
@@ -74,14 +80,31 @@ public:
 	// Begin IFGSaveInterface
 	virtual bool ShouldSave_Implementation() const override;
 	// End IFGSaveInterface
+
+	const TMap<TSubclassOf<UFICCommand>, TMap<FString, UFICCommand*>>& GetCommands() { return Commands; }
 	
-	void StartProcess(UFICRuntimeProcess* InProcess);
-	void StopProcess();
-	UFICRuntimeProcess* GetActiveProcess() { return ActiveRuntimeProcess; }
+	bool CreateRuntimeProcess(FString Key, UFICRuntimeProcess* InProcess, bool bStartAutomatically = false);
+	bool RemoveRuntimeProcess(UFICRuntimeProcess* Process);
+	bool StartRuntimeProcess(UFICRuntimeProcess* Process);
+	bool StopRuntimeProcess(UFICRuntimeProcess* Process);
+	const TMap<FString, UFICRuntimeProcess*>& GetRuntimeProcesses() { return RuntimeProcesses; }
+	const TSet<UFICRuntimeProcess*>& GetActiveRuntimeProcesses() { return ActiveRuntimeProcesses; }
+	TMap<FString, UFICRuntimeProcess*> GetActiveRuntimeProcessesMap() {
+		TMap<FString, UFICRuntimeProcess*> Map;
+		for (const TPair<FString, UFICRuntimeProcess*>& Process : RuntimeProcesses) {
+			if (ActiveRuntimeProcesses.Contains(Process.Value)) Map.Add(Process.Key, Process.Value);
+		}
+		return Map;
+	}
+
+	void CreateRuntimeProcessorCharacter(UFICRuntimeProcess* RuntimeProcess);
+	void DestoryRuntimeProcessorCharacter(AFICRuntimeProcessorCharacter* Character);
 
 	AFICRuntimeProcessorCharacter* GetRuntimeProcessorCharacter() { return RuntimeProcessorCharacter; }
 	
 	void SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget);
 
 	AFICScene* FindSceneByName(const FString& InSceneName);
+	UFICRuntimeProcess* FindRuntimeProcess(const FString& InKey);
+	FString FindRuntimeProcessKey(UFICRuntimeProcess* InProcess);
 };

@@ -2,9 +2,14 @@
 
 #include "CineCameraComponent.h"
 #include "FICSubsystem.h"
-#include "Runtime/FICCaptureCamera.h"
+#include "Command/CommandSender.h"
 
-void UFICRuntimeProcessPlayScene::Initialize(AFICRuntimeProcessorCharacter* InCharacter) {
+void UFICRuntimeProcessPlayScene::Initialize() {
+	Super::Initialize();
+	Progress = (float)Scene->AnimationRange.Begin / (float)Scene->FPS;
+}
+
+void UFICRuntimeProcessPlayScene::Start(AFICRuntimeProcessorCharacter* InCharacter) {
 	InCharacter->SetCamera(true, Scene->bUseCinematic);
 	if (Scene->bUseCinematic) {
 		UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(InCharacter->Camera);
@@ -14,8 +19,6 @@ void UFICRuntimeProcessPlayScene::Initialize(AFICRuntimeProcessorCharacter* InCh
 	} else {
 		InCharacter->Camera->SetAspectRatio(Scene->ResolutionHeight / Scene->ResolutionWidth);
 	}
-
-	Progress = (float)Scene->AnimationRange.Begin / (float)Scene->FPS;
 }
 
 void UFICRuntimeProcessPlayScene::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaTime) {
@@ -38,9 +41,10 @@ void UFICRuntimeProcessPlayScene::Tick(AFICRuntimeProcessorCharacter* InCharacte
 		CineCamera->FocusSettings.ManualFocusDistance = FocusDistance;
 	}
 
-	if (Time > Scene->AnimationRange.End) AFICSubsystem::GetFICSubsystem(this)->StopProcess();
+	if (Time > Scene->AnimationRange.End) AFICSubsystem::GetFICSubsystem(this)->RemoveRuntimeProcess(this);
 	Progress += DeltaTime;
 }
 
-void UFICRuntimeProcessPlayScene::Shutdown(AFICRuntimeProcessorCharacter* InCharacter) {
-}
+void UFICRuntimeProcessPlayScene::Stop(AFICRuntimeProcessorCharacter* InCharacter) {}
+
+void UFICRuntimeProcessPlayScene::Shutdown() {}

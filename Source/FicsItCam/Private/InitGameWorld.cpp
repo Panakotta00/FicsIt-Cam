@@ -3,12 +3,12 @@
 #include "FGGameInstance.h"
 #include "FGGameState.h"
 #include "FGPlayerController.h"
-#include "FICCommand.h"
+#include "FICChatCommand.h"
 #include "FICSubsystem.h"
 
 UInitGameWorldFicsItCam::UInitGameWorldFicsItCam() {
 	bRootModule = true;
-	mChatCommands.Add(AFICCommand::StaticClass());
+	mChatCommands.Add(AFICChatCommand::StaticClass());
 	ModSubsystems.Add(AFICSubsystem::StaticClass());
 	ModSubsystems.Add(AFICEditorSubsystem::StaticClass());
 }

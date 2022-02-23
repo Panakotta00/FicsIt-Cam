@@ -1,14 +1,14 @@
 ﻿#pragma once
 
 #include "command/ChatCommandLibrary.h"
-#include "FICCommand.generated.h"
+#include "FICChatCommand.generated.h"
 
 UCLASS()
-class AFICCommand : public AChatCommandInstance {
+class AFICChatCommand : public AChatCommandInstance {
 	GENERATED_BODY()
 	
 public:
-	AFICCommand();
+	AFICChatCommand();
 
 	// Begin AChatCommandInstance
 	virtual EExecutionStatus ExecuteCommand_Implementation(UCommandSender* Sender, const TArray<FString>& Arguments, const FString& Label) override;

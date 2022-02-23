@@ -48,3 +48,21 @@ float UFICUtils::BezierInterpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVe
 	} while (FMath::Abs(t - CurrentT) > 0.001 && Increments++ < 100);
 	return CurrentV;
 }
+
+FFICCameraSettingsSnapshot UFICUtils::CreateCameraSettingsSnapshotFromView(UObject* WorldContext) {
+	FFICCameraSettingsSnapshot Snapshot;
+	APlayerCameraManager* CameraManager = WorldContext->GetWorld()->GetFirstPlayerController()->PlayerCameraManager;
+	Snapshot.Location = CameraManager->GetCameraLocation();
+	Snapshot.Rotation = CameraManager->GetCameraRotation();
+	Snapshot.FOV = CameraManager->GetFOVAngle();
+	return Snapshot;
+}
+
+bool UFICUtils::IsValidFICObjectName(const FString& InName) {
+	static FRegexPattern Pattern(TEXT("^\\w+$"));
+	FRegexMatcher Match(Pattern, InName);
+	if (Match.FindNext()) {
+		return true;
+	}
+	return false;
+}
