@@ -116,7 +116,7 @@ AFICEditorCameraActor::AFICEditorCameraActor() {
 	SelectionHitBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 
 	CameraPathComponent = CreateDefaultSubobject<UFICEditorCameraPathComponent>(TEXT("CameraPathComponent"));
-	CameraPathComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
+	CameraPathComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
 void AFICEditorCameraActor::BeginPlay() {
