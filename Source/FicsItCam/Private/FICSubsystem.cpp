@@ -86,8 +86,42 @@ void AFICSubsystem::EndPlay(const EEndPlayReason::Type EndPlayReason) {
 	Super::EndPlay(EndPlayReason);
 }
 
+void AFICSubsystem::PreSaveGame_Implementation(int32 saveVersion, int32 gameVersion) {
+	TSet<UFICRuntimeProcess*> RunningProcesses = ActiveRuntimeProcesses;
+	for (UFICRuntimeProcess* Process : RunningProcesses) {
+		StopRuntimeProcess(Process);
+	}
+
+	TMap<FString, UFICRuntimeProcess*> Processes = RuntimeProcesses;
+	for (const TPair<FString, UFICRuntimeProcess*>& Process : Processes) {
+		if (Process.Value->IsPersistent()) {
+			Process.Value->PreSave();
+		} else {
+			RemoveRuntimeProcess(Process.Value);
+		}
+	}
+}
+
 bool AFICSubsystem::ShouldSave_Implementation() const {
 	return true;
+}
+
+void AFICSubsystem::PostLoadGame_Implementation(int32 saveVersion, int32 gameVersion) {
+	ActiveRuntimeProcesses.Remove(nullptr);
+	TMap<FString, UFICRuntimeProcess*> Processes = RuntimeProcesses;
+	for (const TPair<FString, UFICRuntimeProcess*>& Process : Processes) {
+		if (Process.Value) {
+			Process.Value->PostLoad();
+		} else {
+			RuntimeProcesses.Remove(Process.Key);
+		}
+	}
+	
+	TSet<UFICRuntimeProcess*> RunningProcesses = ActiveRuntimeProcesses;
+	ActiveRuntimeProcesses.Empty();
+	for (UFICRuntimeProcess* Process : RunningProcesses) {
+		StartRuntimeProcess(Process);
+	}
 }
 
 bool AFICSubsystem::CreateRuntimeProcess(FString Key, UFICRuntimeProcess* InProcess, bool bStartAutomatically) {

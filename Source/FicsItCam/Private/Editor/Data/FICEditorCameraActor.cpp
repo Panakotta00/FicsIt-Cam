@@ -6,6 +6,84 @@
 #include "Editor/Data/FICEditorAttributeBool.h"
 #include "Engine/TextureRenderTarget2D.h"
 
+UFICEditorCameraPathComponent::UFICEditorCameraPathComponent() {
+	bAutoActivate = true;
+	bTickInEditor = true;
+	PrimaryComponentTick.bCanEverTick = true;
+
+	SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+
+	bUseEditorCompositing = true;
+	SetGenerateOverlapEvents(false);
+		
+	bIgnoreStreamingManagerUpdate = true;
+}
+
+/*FPrimitiveSceneProxy* UFICEditorCameraPathComponent::CreateSceneProxy() {
+	return new FFICEditorCameraPathSceneProxy(this, FramePoints, KeyframePoints, Hovered);
+}*/
+
+FFICEditorCameraPathSceneProxy::FFICEditorCameraPathSceneProxy(const UFICEditorCameraPathComponent* InComponent, const TArray<FVector>& FramePoints, const TSet<int64> KeyframePoints, int64 Hovered) : FPrimitiveSceneProxy(InComponent)/*, FramePoints(FramePoints), KeyframePoints(KeyframePoints), Hovered(Hovered)*/ {
+	bWillEverBeLit = false;
+}
+
+SIZE_T FFICEditorCameraPathSceneProxy::GetTypeHash() const {
+	static size_t UniquePointer;
+	return reinterpret_cast<size_t>(&UniquePointer);
+}
+
+/*void FFICEditorCameraPathSceneProxy::GetDynamicMeshElements(const TArray<const FSceneView*>& Views, const FSceneViewFamily& ViewFamily, uint32 VisibilityMap, FMeshElementCollector& Collector) const {
+	for (int32 ViewIndex = 0; ViewIndex < Views.Num(); ViewIndex++) {
+		if (VisibilityMap & (1 << ViewIndex)) {
+			const FSceneView* View = Views[ViewIndex];
+			FPrimitiveDrawInterface* PDI = Collector.GetPDI(ViewIndex);
+
+			if (FramePoints.Num() > 0) {
+				const FVector& PrevPoint = FramePoints[0];
+				for (int32 i = 1; i < FramePoints.Num(); ++i) {
+					const FVector& Point = FramePoints[1];
+					PDI->DrawLine(PrevPoint, Point,  FColor::Red, SDPG_World, 5);
+
+					FColor PointColor = FColor::Blue;
+					bool bIsKeyframe = KeyframePoints.Contains(i);
+					if (Hovered == i) PointColor = FColor::Green; 
+					else if (bIsKeyframe) PointColor = FColor::Yellow;
+					if (bIsKeyframe || Hovered == i || PrevPoint != Point) PDI->DrawPoint(Point, PointColor, 20, SDPG_World);
+				}
+			}
+		}
+	}
+}
+
+FPrimitiveViewRelevance FFICEditorCameraPathSceneProxy::GetViewRelevance(const FSceneView* View) const {
+	FPrimitiveViewRelevance ViewRelevance;
+	ViewRelevance.bDrawRelevance = IsShown(View);
+	ViewRelevance.bDynamicRelevance = true;
+	ViewRelevance.bSeparateTranslucency = ViewRelevance.bNormalTranslucency = true;
+	return ViewRelevance;
+}*/
+
+uint32 FFICEditorCameraPathSceneProxy::GetMemoryFootprint() const {
+	return sizeof(*this) + GetAllocatedSize();
+}
+
+/*uint32 FFICEditorCameraPathSceneProxy::GetAllocatedSize() const {
+	return FPrimitiveSceneProxy::GetAllocatedSize() + FramePoints.GetAllocatedSize() + KeyframePoints.GetAllocatedSize();
+}*/
+
+void UFICEditorCameraPathComponent::UpdateFramePoints() {
+	FramePoints.SetNumUninitialized(EditorContext->GetScene()->AnimationRange.Length());
+	FramePoints.SetNumUninitialized(0, false);
+	KeyframePoints.Empty();
+	for (int64 Time : EditorContext->GetScene()->AnimationRange) {
+		bool bIsKeyframe = EditorContext->GetEditorAttributes()[Camera]->Get<FFICEditorAttributeBase>("Position").GetKeyframe(Time).IsValid();
+		FVector Loc = FFICAttributePosition::FromEditorAttribute(EditorContext->GetEditorAttributes()[Camera]->Get<FFICEditorAttributeGroup>("Position"), Time);
+		if (bIsKeyframe) KeyframePoints.Add(FramePoints.Num());
+		FramePoints.Add(Loc);
+	}
+}
+
+
 AFICEditorCameraActor::AFICEditorCameraActor() {
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("RootComponent"));
 	
@@ -36,6 +114,9 @@ AFICEditorCameraActor::AFICEditorCameraActor() {
 	SelectionHitBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	SelectionHitBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel10, ECollisionResponse::ECR_Block);
 	SelectionHitBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+
+	CameraPathComponent = CreateDefaultSubobject<UFICEditorCameraPathComponent>(TEXT("CameraPathComponent"));
+	CameraPathComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
 }
 
 void AFICEditorCameraActor::BeginPlay() {
@@ -68,6 +149,8 @@ void AFICEditorCameraActor::Tick(float DeltaSeconds) {
 		CameraPreview.Reset();
 		CaptureComponent->bCaptureEveryFrame = false;
 	}
+
+	CameraPathComponent->UpdateFramePoints();
 }
 
 UObject* AFICEditorCameraActor::Select() {

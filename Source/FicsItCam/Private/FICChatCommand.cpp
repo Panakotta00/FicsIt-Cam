@@ -45,16 +45,16 @@ EExecutionStatus AFICChatCommand::ExecuteCommand_Implementation(UCommandSender* 
 	}
 		
 	Sender->SendChatMessage(TEXT("No valid Subcommand!"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic list"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic create <name>"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic delete <name>"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic edit <name>"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic play <name>"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic render <name>"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic timelapse list"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic timelapse create <name> <seconds per frame>"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic timelapse delete <name>"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic timelapse start <name>"), FColor::Red);
-	Sender->SendChatMessage(TEXT("/fic timelapse stop <name>"), FColor::Red);
+	TFunction<void(TSubclassOf<UFICCommand>)> PrintCommands;
+	PrintCommands = [this, Sender, SubSys, &PrintCommands](TSubclassOf<UFICCommand> InCMD) {
+		if (InCMD) {
+			UFICCommand* Command = InCMD->GetDefaultObject<UFICCommand>();
+			if (Command->bFinal) Sender->SendChatMessage(Command->CommandSyntax, FColor::Red);
+		}
+		for (const TPair<FString, UFICCommand*>& SubCommand : SubSys->GetCommands()[InCMD]) {
+			PrintCommands(SubCommand.Value->GetClass());
+		}
+	};
+	PrintCommands(CMD);
 	return EExecutionStatus::BAD_ARGUMENTS;
 }

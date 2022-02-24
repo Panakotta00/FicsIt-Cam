@@ -6,7 +6,7 @@
 
 void UFICCamera::Tick(float DeltaTime) {
 	// Draw Path
-	if (EditorContext && EditorContext->bShowPath) {
+	/*if (EditorContext && EditorContext->bShowPath) {
 		FVector PrevLoc = FVector::ZeroVector;
 		FRotator PrevRot = FRotator::ZeroRotator;
 		for (int64 Time : EditorContext->GetScene()->AnimationRange) {
@@ -17,6 +17,28 @@ void UFICCamera::Tick(float DeltaTime) {
 				EditorContext->GetScene()->GetWorld()->LineBatcher->DrawLine(PrevLoc, Loc, FColor::Red, SDPG_World, 5);
 			}
 			PrevLoc = Loc;
+		}
+	}*/
+
+	if (EditorContext && EditorContext->bShowPath && EditorCameraActor) {
+		TArray<FVector>& FramePoints = EditorCameraActor->CameraPathComponent->FramePoints;
+		TSet<int64>& KeyframePoints = EditorCameraActor->CameraPathComponent->KeyframePoints;
+		int64& Hovered = EditorCameraActor->CameraPathComponent->Hovered;
+		if (FramePoints.Num() > 0) {
+			FVector* PrevPoint = nullptr;
+			for (int32 i = 0; i < FramePoints.Num(); ++i) {
+				FVector* Point = &FramePoints[i];
+
+				FColor PointColor = FColor::Blue;
+				bool bIsKeyframe = KeyframePoints.Contains(i);
+				if (Hovered == i) PointColor = FColor::Green; 
+				else if (bIsKeyframe) PointColor = FColor::Yellow;
+				if (bIsKeyframe || Hovered == i || !PrevPoint || *PrevPoint != *Point) EditorContext->GetScene()->GetWorld()->LineBatcher->DrawLine(*Point, *Point, PointColor, SDPG_World, 20);
+
+				if (PrevPoint) EditorContext->GetScene()->GetWorld()->LineBatcher->DrawLine(*PrevPoint, *Point,  FColor::Red, SDPG_World, 5);
+
+				PrevPoint = Point;
+			}
 		}
 	}
 }
@@ -39,8 +61,7 @@ void UFICCamera::InitEditor(UFICEditorContext* Context) {
 	EditorContext = Context;
 
 	EditorCameraActor = Context->GetScene()->GetWorld()->SpawnActor<AFICEditorCameraActor>();
-	EditorCameraActor->EditorContext = EditorContext;
-	EditorCameraActor->Camera = this;
+	EditorCameraActor->Initialize(EditorContext, this);
 	EditorCameraActor->UpdateValues(Context->GetEditorAttributes()[this]);
 }
 
