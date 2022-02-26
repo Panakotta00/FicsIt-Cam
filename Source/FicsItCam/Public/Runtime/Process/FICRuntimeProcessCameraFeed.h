@@ -8,7 +8,7 @@
 #include "FICRuntimeProcessCameraFeed.generated.h"
 
 UCLASS()
-class UFICRuntimeProcessCameraFeed : public UFICRuntimeProcess {
+class UFICRuntimeProcessCameraFeed : public UFICRuntimeProcess, public IFGSaveInterface {
 	GENERATED_BODY()
 public:
 	UPROPERTY(SaveGame)
@@ -29,10 +29,16 @@ public:
 
 	void SaveWindowSettings();
 	void LoadWindowSettings();
+	
 public:
+	// Begin IFGSaveInterface
+	virtual bool ShouldSave_Implementation() const override { return true; }
+	// End IFGSaveInterface
+	
 	// Begin UFICRuntimeProcess
 	virtual void Start(AFICRuntimeProcessorCharacter* InCharacter) override;
 	virtual void Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) override;
 	virtual void Stop(AFICRuntimeProcessorCharacter* InCharacter) override;
+	virtual bool IsPersistent() override { return true; }
 	// End UFICRuntimeProcess
 };

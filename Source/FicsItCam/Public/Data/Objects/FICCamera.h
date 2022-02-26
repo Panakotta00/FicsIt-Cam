@@ -2,16 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "FGSaveInterface.h"
+#include "FICSceneObject3D.h"
+#include "FICSceneObjectActive.h"
 #include "Data/Attributes/FICAttributeBool.h"
 #include "Data/Attributes/FICAttributePosition.h"
 #include "Data/Attributes/FICAttributeRotation.h"
 #include "Data/Objects/FICSceneObject.h"
 #include "FICCamera.generated.h"
 
+class AFICScene;
 class AFICEditorCameraActor;
 
 UCLASS()
-class FICSITCAM_API UFICCamera : public UObject, public FTickableGameObject, public IFICSceneObject, public IFGSaveInterface {
+class FICSITCAM_API UFICCamera : public UObject, public FTickableGameObject, public IFICSceneObject, public IFICSceneObject3D, public IFICSceneObjectActive, public IFGSaveInterface {
 	GENERATED_BODY()
 private:
 	TSharedPtr<SWidget> CameraPreviewWidget;
@@ -36,8 +39,7 @@ public:
 	FFICFloatAttribute FocusDistance;
 
 	FFICGroupAttribute LensSettings;
-	FFICGroupAttribute RootAttribute;
-
+	
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
 	UPROPERTY()
@@ -68,27 +70,28 @@ public:
 	virtual bool ShouldSave_Implementation() const override { return true; }
 	// End IFGSaveInterface
 
-	// Begin IFICEditorSceneObject-Interface
-	virtual FString GetSceneObjectName() override {
-		return SceneObjectName;
-	}
-
-	virtual void SetSceneObjectName(FString Name) override;
+	// Begin IFICSceneObject-Interface
+	virtual FString GetSceneObjectName() override { return SceneObjectName; }
+	virtual void SetSceneObjectName(FString Name) override { SceneObjectName = Name; }
 	
-	virtual FFICAttribute& GetRootAttribute() override {
-		return RootAttribute;
-	}
-	virtual void InitDefaultValues() override;
-
+	virtual UObject* CreateNewObject(UObject* InOuter, AFICScene* InScene) override;
+	
 	virtual void InitEditor(UFICEditorContext* Context) override;
-	virtual void UnloadEditor(UFICEditorContext* Context) override;
+	virtual void ShutdownEditor(UFICEditorContext* Context) override;
 	virtual void EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) override;
 	virtual void Select(UFICEditorContext* Context) override;
 	virtual void Unselect(UFICEditorContext* Context) override;
+	// End IFICSceneObject-Interface
 
-	virtual bool Is3DSceneObject() override;
+	// Begin IFICSceneObject3D
+	virtual bool Is3DSceneObject() override { return !!EditorContext; }
 	virtual ETransformGizmoSubElements GetGizmoSubElements() { return ETransformGizmoSubElements::StandardTranslateRotate; }
 	virtual FTransform GetSceneObjectTransform() override;
 	virtual void SetSceneObjectTransform(FTransform InTransform) override;
-	// End IFICEditorSceneObject-Interface
+	// End IFICSceneObject3D
+
+	// Begin IFICSceneObjectActive
+	virtual FString GetActiveType() { return TEXT("Camera"); }
+	virtual FFICAttributeBool& GetActiveAttribute() { return Active; }
+	// End IFICSceneObjectActive
 };

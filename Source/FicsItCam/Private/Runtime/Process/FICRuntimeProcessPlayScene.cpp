@@ -19,6 +19,16 @@ void UFICRuntimeProcessPlayScene::Start(AFICRuntimeProcessorCharacter* InCharact
 	} else {
 		InCharacter->Camera->SetAspectRatio(Scene->ResolutionHeight / Scene->ResolutionWidth);
 	}
+
+	for (UObject* SceneObject : Scene->GetSceneObjects()) {
+		Cast<IFICSceneObject>(SceneObject)->InitAnimation();
+	}
+
+	ActiveSceneObjectManager.Initialize(Scene);
+	ActiveSceneObjectManager.IsSceneObjectActive.BindLambda([this](UObject* SceneObject, FICFrameFloat Frame) {
+		IFICSceneObjectActive* Active = Cast<IFICSceneObjectActive>(SceneObject);
+		return Active->GetActiveAttribute().GetValue(Frame);
+	});
 }
 
 void UFICRuntimeProcessPlayScene::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaTime) {
@@ -41,10 +51,21 @@ void UFICRuntimeProcessPlayScene::Tick(AFICRuntimeProcessorCharacter* InCharacte
 		CineCamera->FocusSettings.ManualFocusDistance = FocusDistance;
 	}
 
+	ActiveSceneObjectManager.UpdateActiveObjects(Time);
+
+	for (UObject* SceneObject : Scene->GetSceneObjects()) {
+		Cast<IFICSceneObject>(SceneObject)->TickAnimation(Time);
+	}
+	
 	if (Time > Scene->AnimationRange.End) AFICSubsystem::GetFICSubsystem(this)->RemoveRuntimeProcess(this);
 	Progress += DeltaTime;
 }
 
-void UFICRuntimeProcessPlayScene::Stop(AFICRuntimeProcessorCharacter* InCharacter) {}
+void UFICRuntimeProcessPlayScene::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
+	ActiveSceneObjectManager.Shutdown();
+	for (UObject* SceneObject : Scene->GetSceneObjects()) {
+		Cast<IFICSceneObject>(SceneObject)->ShutdownAnimation();
+	}
+}
 
 void UFICRuntimeProcessPlayScene::Shutdown() {}

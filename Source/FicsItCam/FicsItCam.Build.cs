@@ -38,5 +38,7 @@ public class FicsItCam : ModuleRules
 			PublicDependencyModuleNames.AddRange(new string[] {"OnlineBlueprintSupport", "AnimGraph"});
 		}
         PublicDependencyModuleNames.AddRange(new string[] {"FactoryGame", "SML"});
+        
+        OptimizeCode = CodeOptimization.Never;
     }
 }

@@ -43,11 +43,8 @@ void UFICCamera::Tick(float DeltaTime) {
 	}
 }
 
-void UFICCamera::SetSceneObjectName(FString Name) {
-	SceneObjectName = Name;
-}
-
-void UFICCamera::InitDefaultValues() {
+UObject* UFICCamera::CreateNewObject(UObject* InOuter, AFICScene* InScene) {
+	UFICCamera* Camera = NewObject<UFICCamera>(InOuter);
 	APlayerController* Player = GetWorld()->GetFirstPlayerController(); 
 	FVector Pos = Player->PlayerCameraManager->GetCameraLocation();
 	FRotator Rot = Player->PlayerCameraManager->GetCameraRotation();
@@ -55,6 +52,7 @@ void UFICCamera::InitDefaultValues() {
 	Position.SetDefaultValue(Pos);
 	Rotation.SetDefaultValue(Rot);
 	FOV.SetDefaultValue(FOVVal);
+	return Camera;
 }
 
 void UFICCamera::InitEditor(UFICEditorContext* Context) {
@@ -65,7 +63,7 @@ void UFICCamera::InitEditor(UFICEditorContext* Context) {
 	EditorCameraActor->UpdateValues(Context->GetEditorAttributes()[this]);
 }
 
-void UFICCamera::UnloadEditor(UFICEditorContext* Context) {
+void UFICCamera::ShutdownEditor(UFICEditorContext* Context) {
 	if (EditorCameraActor) {
 		EditorCameraActor->Destroy();
 		EditorCameraActor = nullptr;
@@ -101,10 +99,6 @@ void UFICCamera::Unselect(UFICEditorContext* Context) {
 		Context->RemoveOverlayWidget(CameraPreviewWidget.ToSharedRef());
 		CameraPreviewWidget.Reset();
 	}
-}
-
-bool UFICCamera::Is3DSceneObject() {
-	return !!EditorContext;
 }
 
 FTransform UFICCamera::GetSceneObjectTransform() {

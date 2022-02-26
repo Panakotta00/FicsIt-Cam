@@ -2,6 +2,7 @@
 
 #include "FICChangeList.h"
 #include "FICEditorCameraCharacter.h"
+#include "Data/FICActiveSceneObjectManager.h"
 #include "Data/FICEditorAttributeBool.h"
 #include "Data/FICEditorAttributeGroupDynamic.h"
 #include "Data/FICScene.h"
@@ -47,6 +48,7 @@ private:
 	TSharedPtr<FFICEditorAttributeGroupDynamic> AllAttributes;
 	TMap<UObject*, TSharedRef<FFICEditorAttributeBase>> EditorAttributes;
 	TMap<UObject*, FDelegateHandle> DataAttributeOnUpdateDelegateHandles;
+	TMap<FFICAttribute*, TSharedRef<FFICEditorAttributeBase>> EditorAttributeMap;
 
 	EFICAnimPlayerState AnimPlayerState = FIC_PLAY_PAUSED;
 	float AnimPlayerDelta = 0.0f;
@@ -62,6 +64,8 @@ private:
 
 	bool bBlockValueUpdate = false;
 	void* AutoKeyframeChangeRef = nullptr;
+
+	FFICActiveSceneObjectManager ActiveSceneObjectManager;
 	
 public:
 	bool bShowPath = true;
@@ -95,22 +99,6 @@ public:
 	TSharedPtr<FFICEditorAttributeBase> GetCameraEditor();
 	UFICCamera* GetActiveCamera() {
 		return GetCamera();
-	}
-
-	template<typename T>
-	T* GetActiveSceneObject() {
-		for (UObject* Object : GetScene()->GetSceneObjects()) {
-			T* Obj = Cast<T>(Object);
-			if (!Obj) continue;
-			TSharedRef<FFICEditorAttributeBase> Attrib = GetEditorAttributes()[Object];
-			if (Attrib->GetAttributeType() != TEXT("GroupAttribute")) return Obj;
-			Attrib = StaticCastSharedRef<FFICEditorAttributeGroup>(Attrib)->GetRef<FFICEditorAttributeBase>(TEXT("Active"));
-			if (Attrib->GetAttributeType() != TEXT("AttributeBool")) return Obj;
-			if (StaticCastSharedRef<FFICEditorAttributeBool>(Attrib)->GetActiveValue()) {
-				return Obj;
-			}
-		}
-		return nullptr;
 	}
 	
 	void SetCurrentFrame(int64 inFrame);

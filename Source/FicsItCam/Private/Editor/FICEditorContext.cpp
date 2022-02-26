@@ -31,12 +31,22 @@ void UFICEditorContext::Load(AFICEditorCameraCharacter* InEditorPlayerCharacter,
 	Range.Begin -= Len/5;
 	Range.End += Len/5;
 	SetActiveRange(Range);
+
+	ActiveSceneObjectManager.Initialize(InScene);
+	ActiveSceneObjectManager.IsSceneObjectActive.BindLambda([this](UObject* SceneObject, FICFrameFloat Frame) {
+		IFICSceneObjectActive* Active = Cast<IFICSceneObjectActive>(SceneObject);
+		TSharedRef<FFICEditorAttributeBase>* Attrib = EditorAttributeMap.Find(&Active->GetActiveAttribute());
+		if (!Attrib) return false;
+		return StaticCastSharedRef<FFICEditorAttributeBool>(*Attrib)->GetActiveValue();
+	});
 }
 
 void UFICEditorContext::Unload() {
+	ActiveSceneObjectManager.Shutdown();
 	for (UObject* SceneObject : Scene->GetSceneObjects()) {
 		UnloadSceneObject(SceneObject);
 	}
+	Scene = nullptr;
 }
 
 UFICEditorContext::UFICEditorContext() {}
@@ -55,6 +65,13 @@ void UFICEditorContext::Tick(float DeltaTime) {
 			break;
 		default: ;
 		}
+
+		for (UObject* SceneObject : GetScene()->GetSceneObjects()) {
+			IFICSceneObject* ActiveSceneObject = Cast<IFICSceneObject>(SceneObject);
+			if (ActiveSceneObject) {
+				ActiveSceneObject->TickEditor(this, GetEditorAttributes()[SceneObject]); 
+			}
+		}
 	}
 }
 
@@ -67,6 +84,14 @@ void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 	Attribute->UpdateValue(GetCurrentFrame());
 	AllAttributes->AddAttribute(FString::FromInt(SceneObject->GetUniqueID()), Attribute);
 	EditorAttributes.Add(SceneObject, Attribute);
+	TFunction<void(TSharedRef<FFICEditorAttributeBase>)> AddEditAttrib;
+	AddEditAttrib = [this, &AddEditAttrib](TSharedRef<FFICEditorAttributeBase> Attrib) {
+		EditorAttributeMap.Add(&Attrib->GetAttribute(), Attrib);
+		for (const TPair<FString, TSharedRef<FFICEditorAttributeBase>>& Child : Attrib->GetChildAttributes()) {
+			AddEditAttrib(Child.Value);
+		}
+	};
+	AddEditAttrib(Attribute);
 	Attribute->OnValueChanged.AddLambda([this, Attribute, SceneObject]() {
 		Cast<IFICSceneObject>(SceneObject)->EditorUpdate(this, Attribute);
 		if (bAutoKeyframe && !bInAutoKeyframeSet && AutoKeyframeChangeRef) {
@@ -81,6 +106,11 @@ void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 			bBlockValueUpdate = false;
 			bInAutoKeyframeSet = false;
 		}
+		
+		if (!bInAutoKeyframeSet) {
+			IFICSceneObjectActive* SceneObjectActive = Cast<IFICSceneObjectActive>(SceneObject);
+			if (SceneObjectActive) ActiveSceneObjectManager.UpdateActiveObjects(GetCurrentFrame());
+		}
 	});
 	DataAttributeOnUpdateDelegateHandles.Add(SceneObject, Attribute->GetAttribute().OnUpdate.AddLambda([this, Attribute]() {
 		if (bBlockValueUpdate) return;
@@ -88,17 +118,29 @@ void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 	}));
 
 	Cast<IFICSceneObject>(SceneObject)->InitEditor(this);
+
+	ActiveSceneObjectManager.UpdateActiveObjects(GetCurrentFrame());
 }
 
 void UFICEditorContext::UnloadSceneObject(UObject* SceneObject) {
-	Cast<IFICSceneObject>(SceneObject)->UnloadEditor(this);
+	Cast<IFICSceneObject>(SceneObject)->ShutdownEditor(this);
 	
 	if (GetSelectedSceneObject() == SceneObject) SetSelectedSceneObject(nullptr);
 	
 	AllAttributes->RemoveAttribute(FString::FromInt(SceneObject->GetUniqueID()));
 	EditorAttributes[SceneObject]->GetAttribute().OnUpdate.Remove(DataAttributeOnUpdateDelegateHandles[SceneObject]);
+	TFunction<void(TSharedRef<FFICEditorAttributeBase>)> RemoveEditAttrib;
+	RemoveEditAttrib = [this, &RemoveEditAttrib](TSharedRef<FFICEditorAttributeBase> Attrib) {
+		EditorAttributeMap.Remove(&Attrib->GetAttribute());
+		for (const TPair<FString, TSharedRef<FFICEditorAttributeBase>>& Child : Attrib->GetChildAttributes()) {
+			RemoveEditAttrib(Child.Value);
+		}
+	};
+	RemoveEditAttrib(EditorAttributes[SceneObject]);
 	EditorAttributes.Remove(SceneObject);
 	DataAttributeOnUpdateDelegateHandles.Remove(SceneObject);
+
+	ActiveSceneObjectManager.UpdateActiveObjects(GetCurrentFrame());
 }
 
 void UFICEditorContext::AddSceneObject(UObject* SceneObject) {
@@ -141,6 +183,8 @@ void UFICEditorContext::SetCurrentFrame(FICFrame inFrame) {
 	UpdateCharacterValues();
 	OnCurrentFrameChanged.Broadcast();
 	bInAutoKeyframeSet = false;
+
+	ActiveSceneObjectManager.UpdateActiveObjects(inFrame);
 }
 
 int64 UFICEditorContext::GetCurrentFrame() const {

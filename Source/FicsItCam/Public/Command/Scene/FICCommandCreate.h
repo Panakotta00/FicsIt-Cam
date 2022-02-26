@@ -31,9 +31,8 @@ public:
 		Scene->ResolutionWidth = Resolution.X;
 		Scene->ResolutionHeight = Resolution.Y;
 		Scene->SceneName = InArgs[0];
-		UFICCamera* Camera = NewObject<UFICCamera>(Scene);
-		Scene->AddSceneObject(Camera);
-		Camera->InitDefaultValues();
+		UFICCamera* CDO = UFICCamera::StaticClass()->GetDefaultObject<UFICCamera>();
+		if (CDO) Scene->AddSceneObject(CDO->CreateNewObject(AFICEditorSubsystem::GetFICEditorSubsystem(this), Scene));
 		
 		InSender->SendChatMessage(FString::Printf(TEXT("Scene '%s' created."), *InArgs[0]));
 		return EExecutionStatus::COMPLETED;

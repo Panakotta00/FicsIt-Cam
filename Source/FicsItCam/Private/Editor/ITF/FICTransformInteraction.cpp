@@ -44,7 +44,7 @@ void UFICTransformInteraction::Initialize(UFICEditorContext* InContext) {
 			TransformProxy = nullptr;
 		}
 
-		IFICSceneObject* Selection = Cast<IFICSceneObject>(Context->GetSelectedSceneObject());
+		IFICSceneObject3D* Selection = Cast<IFICSceneObject3D>(Context->GetSelectedSceneObject());
 
 		if (!Selection || !Selection->Is3DSceneObject() || (Context->GetLockCameraToView() && Context->GetSelectedSceneObject() == Context->GetActiveCamera())) {
 			return;
@@ -53,8 +53,8 @@ void UFICTransformInteraction::Initialize(UFICEditorContext* InContext) {
 		TransformProxy = NewObject<UTransformProxy>(this);
 		TransformProxy->SetTransform(Selection->GetSceneObjectTransform());
 		TransformProxy->OnTransformChanged.AddLambda([this](UTransformProxy* Proxy, FTransform Transform) {
-			IFICSceneObject* Selection = Cast<IFICSceneObject>(Context->GetSelectedSceneObject());
-			if (!Selection || !Selection->Is3DSceneObject() || bInGizmoInteraction) return;
+			IFICSceneObject3D* Selection = Cast<IFICSceneObject3D>(Context->GetSelectedSceneObject());
+			if (!Selection || bInGizmoInteraction) return;
 			bInGizmoInteraction = true;
 			Selection->SetSceneObjectTransform(Transform);
 			bInGizmoInteraction = false;
@@ -65,7 +65,7 @@ void UFICTransformInteraction::Initialize(UFICEditorContext* InContext) {
 		
 		ValueChangedHandled = Context->GetEditorAttributes()[Context->GetSelectedSceneObject()]->OnValueChanged.AddLambda([this]() {
 			if (Context && TransformGizmo) {
-				IFICSceneObject* Selection = Cast<IFICSceneObject>(Context->GetSelectedSceneObject());
+				IFICSceneObject3D* Selection = Cast<IFICSceneObject3D>(Context->GetSelectedSceneObject());
 
 				if (Selection && Selection->Is3DSceneObject() && !bInGizmoInteraction) {
 					bInGizmoInteraction = true;

@@ -5,7 +5,7 @@
 #include "FICRuntimeProcessTimelapseCamera.generated.h"
 
 UCLASS()
-class UFICRuntimeProcessTimelapseCamera : public UFICRuntimeProcess {
+class UFICRuntimeProcessTimelapseCamera : public UFICRuntimeProcess, public IFGSaveInterface {
 	GENERATED_BODY()
 public:
 	UPROPERTY(SaveGame)
@@ -23,6 +23,10 @@ public:
 	FDateTime CaptureStart;
 	UPROPERTY()
 	int CaptureIncrement;
+
+	// Begin IFGSaveInterface
+	virtual bool ShouldSave_Implementation() const override { return true; }
+	// End IFGSaveInterface
 	
 	// Begin UFICRuntimeProcess
 	virtual void Start(AFICRuntimeProcessorCharacter* InCharacter) override;
