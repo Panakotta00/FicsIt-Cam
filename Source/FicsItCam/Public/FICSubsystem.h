@@ -53,6 +53,8 @@ private:
 	UPROPERTY(SaveGame)
 	TMap<FString, UFICRuntimeProcess*> RuntimeProcesses;
 	UPROPERTY(SaveGame)
+	TSet<UFICRuntimeProcess*> PersistentActiveRuntimeProcesses;
+	UPROPERTY()
 	TSet<UFICRuntimeProcess*> ActiveRuntimeProcesses;
 	
 	UPROPERTY()

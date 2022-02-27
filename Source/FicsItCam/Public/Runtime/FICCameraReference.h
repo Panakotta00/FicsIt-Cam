@@ -61,6 +61,7 @@ public:
 	AFICScene* GetScene(UObject* WorldContext) const;
 	FICFrameFloat GetTime(UObject* WorldContext, UFICRuntimeProcessPlayScene** OptOutRuntimePlay = nullptr) const;
 	UFICCamera* GetCamera(UObject* WorldContext, UFICRuntimeProcessPlayScene** OptOutRuntimePlay = nullptr, FICFrameFloat* OptOutTime = nullptr) const;
+	bool IsAnimated() const { return bUsePlay; }
 
 	FFICCameraSettingsSnapshot GetSnapshot(UObject* WorldContext) const;
 };

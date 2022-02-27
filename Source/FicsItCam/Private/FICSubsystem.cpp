@@ -39,6 +39,12 @@ AFICSubsystem::AFICSubsystem() {
 void AFICSubsystem::BeginPlay() {
 	Super::BeginPlay();
 
+	// Resume Persisted Runtime Processes
+	ActiveRuntimeProcesses.Empty();
+	for (UFICRuntimeProcess* Process : PersistentActiveRuntimeProcesses) {
+		StartRuntimeProcess(Process);
+	}
+
 	// Convert deprecated AFICAnimation Actors to Scene Actors
 	for (TActorIterator<AFICAnimation> Animation(GetWorld()); Animation; ++Animation) {
 		Animation->CreateScene();
@@ -84,20 +90,20 @@ void AFICSubsystem::Tick(float DeltaSeconds) {
 
 void AFICSubsystem::EndPlay(const EEndPlayReason::Type EndPlayReason) {
 	Super::EndPlay(EndPlayReason);
-}
 
-void AFICSubsystem::PreSaveGame_Implementation(int32 saveVersion, int32 gameVersion) {
 	TSet<UFICRuntimeProcess*> RunningProcesses = ActiveRuntimeProcesses;
 	for (UFICRuntimeProcess* Process : RunningProcesses) {
 		StopRuntimeProcess(Process);
 	}
+}
 
-	TMap<FString, UFICRuntimeProcess*> Processes = RuntimeProcesses;
-	for (const TPair<FString, UFICRuntimeProcess*>& Process : Processes) {
+void AFICSubsystem::PreSaveGame_Implementation(int32 saveVersion, int32 gameVersion) {
+	PersistentActiveRuntimeProcesses = ActiveRuntimeProcesses;
+	for (const TPair<FString, UFICRuntimeProcess*>& Process : RuntimeProcesses) {
 		if (Process.Value->IsPersistent()) {
-			Process.Value->PreSave();
-		} else {
-			RemoveRuntimeProcess(Process.Value);
+			if (!Process.Value->PreSave()) {
+				PersistentActiveRuntimeProcesses.Remove(Process.Value);
+			}
 		}
 	}
 }
@@ -107,7 +113,7 @@ bool AFICSubsystem::ShouldSave_Implementation() const {
 }
 
 void AFICSubsystem::PostLoadGame_Implementation(int32 saveVersion, int32 gameVersion) {
-	ActiveRuntimeProcesses.Remove(nullptr);
+	PersistentActiveRuntimeProcesses.Remove(nullptr);
 	TMap<FString, UFICRuntimeProcess*> Processes = RuntimeProcesses;
 	for (const TPair<FString, UFICRuntimeProcess*>& Process : Processes) {
 		if (Process.Value) {
@@ -115,12 +121,6 @@ void AFICSubsystem::PostLoadGame_Implementation(int32 saveVersion, int32 gameVer
 		} else {
 			RuntimeProcesses.Remove(Process.Key);
 		}
-	}
-	
-	TSet<UFICRuntimeProcess*> RunningProcesses = ActiveRuntimeProcesses;
-	ActiveRuntimeProcesses.Empty();
-	for (UFICRuntimeProcess* Process : RunningProcesses) {
-		StartRuntimeProcess(Process);
 	}
 }
 

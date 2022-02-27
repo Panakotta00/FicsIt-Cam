@@ -10,6 +10,7 @@ AFICCaptureCamera::AFICCaptureCamera() {
 	CaptureComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("RenderTarget"));
 	RenderTarget->InitAutoFormat(100, 100);
+	RenderTarget->TargetGamma = 1;
 	CaptureComponent->TextureTarget = RenderTarget;
 
 	CaptureComponent->bCaptureEveryFrame = false;
@@ -35,6 +36,8 @@ void AFICCaptureCamera::SetCamera(bool bEnabled, bool bCinematic) {
 			Camera = NewObject<UCameraComponent>();
 		}
 		Camera->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		Camera->PostProcessSettings.VignetteIntensity = 0;
+		Camera->PostProcessSettings.DepthOfFieldVignetteSize = 0;
 	}
 }
 
@@ -45,9 +48,9 @@ void AFICCaptureCamera::CopyCameraData(UCameraComponent* InCamera) {
 	FMinimalViewInfo ViewInfo;
 	InCamera->GetCameraView(0, ViewInfo);
 	CaptureComponent->SetCameraView(ViewInfo);
-	FWeightedBlendables Blendables = CaptureComponent->PostProcessSettings.WeightedBlendables;
-	CaptureComponent->PostProcessSettings = ViewInfo.PostProcessSettings;
-	CaptureComponent->PostProcessSettings.WeightedBlendables = Blendables;
+	//FWeightedBlendables Blendables = CaptureComponent->PostProcessSettings.WeightedBlendables;
+	CaptureComponent->PostProcessSettings = InCamera->PostProcessSettings;
+	//CaptureComponent->PostProcessSettings.WeightedBlendables = Blendables;
 	CaptureComponent->PostProcessBlendWeight = InCamera->PostProcessBlendWeight;
 	CaptureComponent->MaxViewDistanceOverride = TNumericLimits<float>::Max();
 }

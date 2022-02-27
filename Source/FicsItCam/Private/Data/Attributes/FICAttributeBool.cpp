@@ -41,6 +41,10 @@ void FFICAttributeBool::RecalculateKeyframe(FICFrame Time) {
 	OnUpdate.Broadcast();
 }
 
+FICValue FFICAttributeBool::GetFloatValue(FICFrameFloat Time) {
+	return GetValue(Time) ? 1.0f : 0.0f;
+}
+
 void FFICAttributeBool::Set(TSharedRef<FFICAttribute> InAttrib) {
 	FOnUpdate OnUpdateBuf = OnUpdate;
 	if (InAttrib->GetAttributeType() == GetAttributeType()) {

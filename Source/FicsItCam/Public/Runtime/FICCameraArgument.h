@@ -93,7 +93,7 @@ struct FFICCameraArgument {
 			CineCamera->CurrentAperture = CameraSettings.Aperture;
 			CineCamera->FocusSettings.ManualFocusDistance = CameraSettings.FocusDistance;
 		}
-		CaptureCamera->CopyCameraData(CaptureCamera->Camera);
+		//CaptureCamera->CopyCameraData(CaptureCamera->Camera);
 	}
 
 	static FFICCameraArgument FromCli(UCommandSender* InSender, const FFICCameraReference& CameraRef, const FString& Name, TArray<FString> Array) {

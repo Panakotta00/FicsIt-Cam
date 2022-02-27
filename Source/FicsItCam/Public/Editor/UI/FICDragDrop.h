@@ -40,11 +40,11 @@ class FFICGraphKeyframeDragDrop : public FFICGraphDragDrop {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICGraphKeyframeDragDrop, FFICGraphDragDrop)
 
-	TSharedPtr<SFICKeyframeControl> KeyframeControl;
+	TSharedPtr<SFICGraphViewKeyframe> GraphKeyframe;
 	TSharedPtr<FFICAttribute> AttribBegin;
 
-	FFICGraphKeyframeDragDrop(TSharedRef<SFICGraphView> GraphView, TSharedRef<SFICKeyframeControl> KeyframeControl, FPointerEvent InitEvent) : FFICGraphDragDrop(GraphView, InitEvent), KeyframeControl(KeyframeControl) {
-		AttribBegin = KeyframeControl->GetAttribute()->GetAttribute().Get();
+	FFICGraphKeyframeDragDrop(TSharedRef<SFICGraphView> GraphView, TSharedRef<SFICGraphViewKeyframe> Keyframe, FPointerEvent InitEvent) : FFICGraphDragDrop(GraphView, InitEvent), GraphKeyframe(Keyframe) {
+		AttribBegin = Keyframe->GetAttribute().Get();
 		FDragDropOperation::SetDecoratorVisibility(true);
 		bCreateNewWindow = false;
 	}
@@ -61,10 +61,10 @@ class FFICGraphKeyframeHandleDragDrop : public FFICGraphDragDrop {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICGraphKeyframeHandleDragDrop, FFICGraphDragDrop)
 
-	TSharedPtr<SFICKeyframeHandle> KeyframeHandle;
+	TSharedPtr<SFICGraphViewKeyframeHandle> KeyframeHandle;
 	TSharedPtr<FFICAttribute> AttribBegin;
 
-	FFICGraphKeyframeHandleDragDrop(TSharedRef<SFICKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent);
+	FFICGraphKeyframeHandleDragDrop(TSharedRef<SFICGraphViewKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent);
 
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;

@@ -44,7 +44,8 @@ public:
 	virtual void RemoveKeyframe(FICFrame Time) override;
 	virtual void MoveKeyframe(FICFrame From, FICFrame To) override;
 	virtual void RecalculateKeyframe(FICFrame Time) override;
-
+	virtual FICValue GetFloatValue(FICFrameFloat Time) override;
+	
 	virtual void Set(TSharedRef<FFICAttribute> InAttrib) override;
 	virtual TSharedRef<FFICAttribute> Get() override;
 

@@ -21,6 +21,7 @@ struct FFICAttribute {
 	virtual void RemoveKeyframe(FICFrame Time) { checkf(false, TEXT("Not Implemented!")); }
 	virtual void MoveKeyframe(FICFrame From, FICFrame To) { checkf(false, TEXT("Not Implemented!")); }
 	virtual void RecalculateKeyframe(FICFrame Time) { checkf(false, TEXT("Not Implemented!")); }
+	virtual FICValue GetFloatValue(FICFrameFloat Time) { checkf(false, TEXT("Not Implemented!")); return 0.0f; }
 	
 	virtual void Set(TSharedRef<FFICAttribute> InAttrib) { checkf(false, TEXT("Not Implemented!")); }
 	virtual TSharedRef<FFICAttribute> Get() { checkf(false, TEXT("Not Implemented!")); return MakeShareable<FFICAttribute>(nullptr); }

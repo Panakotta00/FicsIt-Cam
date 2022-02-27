@@ -1,7 +1,8 @@
 #include "Runtime/Process/FICRuntimeProcessCameraFeed.h"
 
+#include "FGCharacterPlayer.h"
+#include "FGCineCameraComponent.h"
 #include "FICSubsystem.h"
-#include "Command/CommandSender.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/FICCaptureCamera.h"
@@ -43,17 +44,28 @@ void UFICRuntimeProcessCameraFeed::Start(AFICRuntimeProcessorCharacter* InCharac
 	LoadWindowSettings();
 
 	Camera->CaptureComponent->bCaptureEveryFrame = true;
+
+	Camera->CopyCameraData(Cast<UCameraComponent>(Cast<AFGCharacterPlayer>(GetWorld()->GetFirstPlayerController()->GetCharacter())->GetComponentByClass(UCameraComponent::StaticClass())));
 }
 
 void UFICRuntimeProcessCameraFeed::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {
-	CameraArgument.UpdateCameraSettings(Camera);
 	Camera->CopyCameraData(Camera->Camera);
+	CameraArgument.UpdateCameraSettings(Camera);
+	/*if (CameraArgument.CameraReference.IsAnimated()) {
+	} else {
+//		FSlateApplication::Get().GetGameViewport()->GetViewportInterface().Pin()->GetViewportRenderTargetTexture()-> 
+	}*/
 }
 
 void UFICRuntimeProcessCameraFeed::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
 	SaveWindowSettings();
-	if (Window) Window->DestroyWindowImmediately();
+	if (Window) {
+		Window->DestroyWindowImmediately();
+		Window->SetContent(SNew(SBox));
+		Window.Reset();
+	}
 	Camera->CaptureComponent->bCaptureEveryFrame = false;
 	Camera->Destroy();
 	Camera = nullptr;
+	Brush = FSlateImageBrush("CameraFeed", FVector2D(1,1));
 }
