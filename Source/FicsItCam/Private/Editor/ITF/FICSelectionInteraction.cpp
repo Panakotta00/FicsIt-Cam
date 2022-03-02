@@ -105,7 +105,7 @@ bool UFICSelectionInteraction::OnUpdateHover(const FInputDeviceRay& DevicePos) {
 }
 
 void UFICSelectionInteraction::OnEndHover() {
-	if (LastHovered) LastHovered->EditorCameraActor->CameraPathComponent->Hovered = TNumericLimits<int64>::Min();
+	if (LastHovered && LastHovered->EditorCameraActor) LastHovered->EditorCameraActor->CameraPathComponent->Hovered = TNumericLimits<int64>::Min();
 	LastHovered = nullptr;
 }
 

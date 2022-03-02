@@ -67,7 +67,7 @@ public:
 
 	SFICGraphView* GetGraphView() { return GraphView; }
 	UFICEditorContext* GetContext();
-	FICFrame GetFrame() { return Frame; }
+	FICFrame GetFrame() const { return Frame; }
 	FFICAttribute& GetAttribute() { return *Attribute; }
 	TSharedPtr<FFICKeyframe> GetKeyframe() const;
 };
@@ -95,6 +95,7 @@ public:
 
 private:
 	static FSlateColorBrush DefaultAnimationBrush;
+	static FSlateColorBrush DefaultSelectionBrush;
 	
 	TSlotlessChildren<SFICGraphViewKeyframe> Children;
 
@@ -110,6 +111,10 @@ private:
 
 	TArray<TSharedRef<FFICEditorAttributeBase>> Attributes;
 	TMap<TSharedRef<FFICEditorAttributeBase>, FDelegateHandle> DelegateHandles;
+
+	TSet<TPair<FFICAttribute*, FICFrame>> SelectedKeyframes;
+	TSet<TPair<FFICAttribute*, FICFrame>> SelectedWithBox;
+	FBox2D BoxSelection;
 
 public:
 	UFICEditorContext* Context = nullptr;
@@ -129,9 +134,21 @@ public:
 	virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) override;
 	virtual FReply OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) override;
 	virtual bool IsInteractable() const override;
+	virtual bool SupportsKeyboardFocus() const override { return true; }
 	virtual FChildren* GetChildren() override;
 	virtual void OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const override;
 	// End SWidget
+
+	const TSet<TPair<FFICAttribute*, int64>>& GetSelection();
+	void SetSelection(const TSet<TPair<FFICAttribute*, FICFrame>>& InSelection);
+	void AddKeyframeToSelection(FFICAttribute& InAttribute, FICFrame InFrame);
+	void RemoveKeyframeFromSelection(FFICAttribute& InAttribute, FICFrame InFrame);
+	bool IsKeyframeSelected(FFICAttribute& InAttribute, FICFrame InFrame);
+	void ToggleKeyframeSelection(FFICAttribute& InAttribute, FICFrame InFrame, const FModifierKeysState* InModifiers = nullptr);
+	void BeginBoxSelection(const FModifierKeysState& InModifiers);
+	void EndBoxSelection(const FModifierKeysState& InModifiers);
+	void SetBoxSelection(FBox2D InBox, const FModifierKeysState& InModifiers);
+	FBox2D GetSelectionBox() { return BoxSelection; }
 
 	void SetAttributes(const TArray<TSharedRef<FFICEditorAttributeBase>>& InAttributes);
 	void Update();

@@ -18,7 +18,7 @@ void FFICGraphDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	if (DragDropEvent.IsControlDown()) CursorDelta.Y = 0;
 	if (DragDropEvent.IsShiftDown()) CursorDelta.X = 0;
 	
-	KommulativeDelta += CursorDelta;
+	CumulativeDelta += CursorDelta;
 	
 	float TimelinePerLocal, ValuePerLocal;
 	FFICFrameRange FrameRange = GraphView->GetFrameRange();
@@ -27,8 +27,11 @@ void FFICGraphDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	ValuePerLocal = (float)ValueRange.Length() / GraphView->GetCachedGeometry().Size.Y;
 	ValueDiff = ValuePerLocal * CursorDelta.Y;
 	TimelinePerLocal = (float)FrameRange.Length() / GraphView->GetCachedGeometry().Size.X;
-	TimelineDiff = TimelinePerLocal * KommulativeDelta.X;
-	KommulativeDelta.X -= (int64)TimelineDiff / TimelinePerLocal;
+	TimelineDiff = FMath::RoundToDouble(TimelinePerLocal * CumulativeDelta.X);
+	CumulativeDelta.X -= (float)TimelineDiff / TimelinePerLocal;
+
+	CumulativeTimelineDiff += TimelineDiff;
+	CumulativeValueDiff += ValueDiff;
 }
 
 void FFICGraphPanDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
@@ -41,45 +44,65 @@ void FFICGraphPanDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	GraphView->SetValueRange(ValueRange + ValueDiff);
 }
 
+FFICGraphSelectionDragDrop::FFICGraphSelectionDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent): FFICGraphDragDrop(GraphView, InitEvent) {
+	GraphView->BeginBoxSelection(InitEvent.GetModifierKeys());
+}
+
+void FFICGraphSelectionDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
+	FFICGraphDragDrop::OnDragged(DragDropEvent);
+	
+	FFICFrameRange FrameRange(TimelineStart, TimelineStart + CumulativeTimelineDiff);
+	FFICValueRange ValueRange(ValueStart, ValueStart - CumulativeValueDiff);
+	FBox2D Box(FVector2D(FrameRange.Begin, ValueRange.Begin), FVector2D(FrameRange.End, ValueRange.End));
+	GraphView->SetBoxSelection(Box, DragDropEvent.GetModifierKeys());
+}
+
+void FFICGraphSelectionDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
+	FFICGraphDragDrop::OnDrop(bDropWasHandled, MouseEvent);
+	GraphView->EndBoxSelection(MouseEvent.GetModifierKeys());
+}
+
 void FFICGraphKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FFICGraphDragDrop::OnDragged(DragDropEvent);
+	double start = FPlatformTime::Seconds();
+	for (TTuple<FFICAttribute*, TSharedRef<FFICAttribute>> Snapshot : OldAttributeState) {
+		Snapshot.Key->Set(Snapshot.Value);
+	}
 
-	TSharedPtr<FFICKeyframe> Keyframe = GraphKeyframe->GetKeyframe();
-	FICValue NewValue = Keyframe->GetValue() - ValueDiff;
-	if (DragDropEvent.IsControlDown()) NewValue = ValueStart;
-	Keyframe->SetValue(NewValue);
-	
-	FICFrame NewFrame = GraphKeyframe->GetFrame() + TimelineDiff;
-	if (DragDropEvent.IsShiftDown()) NewFrame = TimelineStart;
-	FFICAttribute* Attribute = &GraphKeyframe->GetAttribute();
-	Attribute->MoveKeyframe(GraphKeyframe->GetFrame(), NewFrame);
-	Attribute->RecalculateAllKeyframes();
-	GraphKeyframe = GraphView->FindKeyframeControl(&GraphKeyframe->GetAttribute(), NewFrame);
-}
-
-TSharedPtr<SWidget> FFICGraphKeyframeDragDrop::GetDefaultDecorator() const {
-	return SNew(SBorder)
-		.BorderImage( FCoreStyle::Get().GetBrush("ToolTip.BrightBackground") )
-		.Padding(FMargin(11.0f))[
-			SNew(STextBlock)
-			.ColorAndOpacity( FLinearColor::Black )
-			.WrapTextAt_Static( &SToolTip::GetToolTipWrapWidth )
-			.Text_Lambda([this]() {
-				return FText::FromString(FString::Printf(TEXT("Frame: %lld\nValue: %i\n\nShift: Fixed Frame\nCTRL: Fixed Value"), GraphKeyframe->GetFrame(), static_cast<int>(GraphKeyframe->GetAttribute().GetFloatValue(GraphKeyframe->GetFrame()))));
-			})
-		];
-}
-
-FVector2D FFICGraphKeyframeDragDrop::GetDecoratorPosition() const {
-                                                    	return FSlateApplication::Get().GetCursorPos() + FVector2D(20, 20);
+	TMap<FFICAttribute*, TArray<FICFrame>> Movements;
+	for (const TPair<FFICAttribute*, FICFrame>& Keyframe : OldKeyframes) {
+		Movements.FindOrAdd(Keyframe.Key).Add(Keyframe.Value);
+	}
+	TSet<TPair<FFICAttribute*, FICFrame>> Selection;
+	double start2 = FPlatformTime::Seconds();
+	for (TPair<FFICAttribute*, TArray<FICFrame>>& Movement : Movements) {
+		FFICAttribute::FOnUpdate Update = Movement.Key->OnUpdate;
+		Movement.Key->OnUpdate = FFICAttribute::FOnUpdate();
+		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Movement.Key->GetKeyframes();
+		Movement.Value.Sort();
+		int32 Step = (CumulativeTimelineDiff>0) ? -1 : 1;
+		for (int32 Index = (Step<0) ? Movement.Value.Num()-1 : 0; Movement.Value.IsValidIndex(Index); Index += Step) {
+			TSharedRef<FFICKeyframe>* KeyframePtr = Keyframes.Find(Movement.Value[Index]);
+			if (!KeyframePtr) continue;
+			TSharedRef<FFICKeyframe>& Keyframe = *KeyframePtr;
+			Keyframe->SetValue(Keyframe->GetValue() - CumulativeValueDiff);
+			Movement.Key->MoveKeyframe(Movement.Value[Index], Movement.Value[Index] + CumulativeTimelineDiff);
+			Selection.Add(TPair<FFICAttribute*, FICFrame>(Movement.Key, Movement.Value[Index] + CumulativeTimelineDiff));
+		}
+		Movement.Key->RecalculateAllKeyframes();
+		Movement.Key->OnUpdate = Update;
+		Movement.Key->OnUpdate.Broadcast();
+	}
+	GraphView->SetSelection(Selection);
 }
 
 void FFICGraphKeyframeDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
 	FFICGraphDragDrop::OnDrop(bDropWasHandled, MouseEvent);
 	auto Change = MakeShared<FFICChange_Group>();
-	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(GraphKeyframe->GetContext(), TimelineStart, GraphKeyframe->GetFrame()));
-	Change->PushChange(MakeShared<FFICChange_Attribute>(&GraphKeyframe->GetAttribute(), AttribBegin.ToSharedRef()));
-	GraphKeyframe->GetContext()->ChangeList.PushChange(Change);
+	for (const TPair<FFICAttribute*, TSharedRef<FFICAttribute>>& State : OldAttributeState) {
+		Change->PushChange(MakeShared<FFICChange_Attribute>(State.Key, State.Value));
+	}
+	GraphView->Context->ChangeList.PushChange(Change);
 }
 
 FFICGraphKeyframeHandleDragDrop::FFICGraphKeyframeHandleDragDrop(TSharedRef<SFICGraphViewKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent) : FFICGraphDragDrop(SharedThis(KeyframeHandle->GetGraphKeyframe()->GetGraphView()), InitEvent), KeyframeHandle(KeyframeHandle) {

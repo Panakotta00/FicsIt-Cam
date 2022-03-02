@@ -138,6 +138,10 @@ struct FFICValueRange {
 	FFICValueRange operator-(FICValue Value) const {
 		return FFICValueRange(Begin - Value, End - Value);
 	}
+
+	bool IsInRange(FICValue InValue) {
+		return Begin <= InValue && InValue <= End;
+	}
 };
 
 struct FFICValueTime {

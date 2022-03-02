@@ -74,6 +74,7 @@ bool FFICAttributeBool::GetValue(FICFrameFloat Time) {
 	bool Value = FallBackValue;
 	for (TTuple<FICFrame, FFICKeyframeBool> Keyframe : Keyframes) {
 		if (Keyframe.Key > Frame && Keyframe.Key <= Time) {
+			Frame = Keyframe.Key;
 			Value = Keyframe.Value.Value;
 		}
 	}

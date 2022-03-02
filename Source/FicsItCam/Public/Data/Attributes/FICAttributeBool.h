@@ -14,7 +14,7 @@ struct FFICKeyframeBool : public FFICKeyframe {
 	FFICKeyframeBool(bool Value) : FFICKeyframe(FIC_KF_STEP), Value(Value) {}
 
 	virtual FICValue GetValue() const override { return Value ? 1.0f : 0.0f; }
-	virtual void SetValue(FICValue InValue) override { Value = FMath::IsNearlyZero(InValue); }
+	virtual void SetValue(FICValue InValue) override { Value = !FMath::IsNearlyZero(FMath::Clamp(InValue, 0.0f, 1.0f)); }
 	virtual FFICValueTimeFloat GetInControl() override { return FFICValueTimeFloat(0, 0); }
 	virtual void SetInControl(const FFICValueTimeFloat& InInControl) override { }
 	virtual FFICValueTimeFloat GetOutControl() { return FFICValueTimeFloat(0, 0); }
@@ -63,7 +63,9 @@ private:
 	FICFrame Frame;
 
 public:
-	FFICKeyframeBoolTrampoline(FFICAttributeBool* Attribute, FICFrame Frame) : Attribute(Attribute), Frame(Frame) {}
+	FFICKeyframeBoolTrampoline(FFICAttributeBool* Attribute, FICFrame Frame) : Attribute(Attribute), Frame(Frame) {
+		KeyframeType = EFICKeyframeType::FIC_KF_STEP;
+	}
 
 	FFICKeyframeBool* GetKeyframe() const { if (this) return &Attribute->Keyframes[Frame]; return nullptr; }
 	
