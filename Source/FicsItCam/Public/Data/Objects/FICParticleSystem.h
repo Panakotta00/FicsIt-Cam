@@ -9,10 +9,10 @@
 #include "Data/Attributes/FICAttributeRotation.h"
 #include "Data/Objects/FICSceneObject.h"
 #include "Editor/ITF/FICSelectionInteraction.h"
-#include "Particles/ParticleSystem.h"
-#include "Particles/ParticleSystemComponent.h"
 #include "FICParticleSystem.generated.h"
 
+class UNiagaraComponent;
+class UNiagaraSystemComponent;
 class AFICParticleSystemActor;
 class USphereComponent;
 
@@ -32,7 +32,7 @@ public:
 	FFICAttributeRotation Rotation;
 
 	UPROPERTY(SaveGame)
-	UParticleSystem* ParticleSystem = nullptr;
+	UObject* ParticleSystem = nullptr;
 	
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
@@ -83,7 +83,7 @@ public:
 	virtual AActor* GetActor() override;
 	// End IFICSceneObject3D
 
-	void SetParticleSystem(UParticleSystem* InParticleSystem);
+	void SetParticleSystem(UObject* InParticleSystem);
 };
 
 UCLASS()
@@ -92,16 +92,22 @@ class FICSITCAM_API AFICParticleSystemActor : public AActor, public IFICSelectio
 
 public:
 	UPROPERTY()
-	UParticleSystemComponent* ParticleSystemComponent;
+	USceneComponent* ParticleSystemComponent = nullptr;
+	UPROPERTY()
+	UParticleSystemComponent* ParticleComponent = nullptr;
+	UPROPERTY()
+	UNiagaraComponent* NiagaraComponent = nullptr;
 	UPROPERTY()
 	USphereComponent* Collision;
 
 	UPROPERTY()
-	class UFICParticleSystem* ParticleSystem = nullptr;
+	class UFICParticleSystem* ParticleSystemSceneObject = nullptr;
 
 	AFICParticleSystemActor();
 
 	// Begin IFICSelectionInteractionTarget
-	virtual UObject* Select() { return ParticleSystem; }
+	virtual UObject* Select() { return ParticleSystemSceneObject; }
 	// End IFICSelectionInteractionTarget
+
+	void SetParticleSystem(UObject* System);
 };

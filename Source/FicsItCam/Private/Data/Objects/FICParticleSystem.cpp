@@ -1,13 +1,12 @@
 #include "Data/Objects/FICParticleSystem.h"
 
+#include "NiagaraComponent.h"
 #include "Data/Objects/FICWorldSettings.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICParticleSystemSelection.h"
 
 AFICParticleSystemActor::AFICParticleSystemActor() {
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
-	ParticleSystemComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	Collision = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
 	Collision->InitSphereRadius(40.f);
 	Collision->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
@@ -15,6 +14,31 @@ AFICParticleSystemActor::AFICParticleSystemActor() {
 	Collision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	Collision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel10, ECollisionResponse::ECR_Block);
 	Collision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+
+	ParticleComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleComponent"));
+	ParticleComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
+	NiagaraComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+}
+
+void AFICParticleSystemActor::SetParticleSystem(UObject* System) {
+	UParticleSystem* ParticleSystem = Cast<UParticleSystem>(System);
+	UNiagaraSystem* NiagaraSystem = Cast<UNiagaraSystem>(System);
+	if (ParticleSystem) {
+		NiagaraComponent->Deactivate();
+		ParticleComponent->SetTemplate(ParticleSystem);
+		ParticleComponent->Activate(true);
+		ParticleSystemComponent = ParticleComponent;
+	} else if (NiagaraSystem) {
+		ParticleComponent->Deactivate();
+		NiagaraComponent->SetAsset(NiagaraSystem);
+		NiagaraComponent->Activate(true);
+		ParticleSystemComponent = NiagaraComponent;
+	} else {
+		NiagaraComponent->Deactivate();
+		ParticleComponent->Deactivate();
+		ParticleSystemComponent = nullptr;
+	}
 }
 
 void UFICParticleSystem::Tick(float DeltaTime) {
@@ -48,7 +72,8 @@ TSharedRef<SWidget> UFICParticleSystem::CreateDetailsWidget(UFICEditorContext* I
 		]
 		+SHorizontalBox::Slot().FillWidth(1)[
 			SNew(SFICParticleSystemSelection, EditorContext)
-			.OnSelectionChanged_Lambda([this](UParticleSystem* System) {
+			.System(ParticleSystem)
+			.OnSelectionChanged_Lambda([this](UObject* System) {
 				SetParticleSystem(System);
 			})
 		]
@@ -60,8 +85,8 @@ void UFICParticleSystem::InitEditor(UFICEditorContext* Context) {
 	FRotator Rot = Rotation.Get(Context->GetCurrentFrame());
 	ParticleSystemActor = GetWorld()->SpawnActor<AFICParticleSystemActor>(Pos, Rot);
 	EditorContext = Context;
-	ParticleSystemActor->ParticleSystemComponent->SetTemplate(ParticleSystem);
-	ParticleSystemActor->ParticleSystem = this;
+	ParticleSystemActor->ParticleSystemSceneObject = this;
+	ParticleSystemActor->SetParticleSystem(ParticleSystem);
 }
 
 void UFICParticleSystem::ShutdownEditor(UFICEditorContext* Context) {
@@ -74,7 +99,7 @@ void UFICParticleSystem::EditorUpdate(UFICEditorContext* Context, TSharedRef<FFI
 	FRotator Rot = FFICAttributeRotation::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Rotation"));
 	bool bActive = Attribute->Get<FFICEditorAttributeBool>("Active").GetActiveValue(); 
 	ParticleSystemActor->SetActorLocationAndRotation(Pos, Rot);
-	ParticleSystemActor->ParticleSystemComponent->SetActive(bActive);
+	if (ParticleSystemActor->ParticleSystemComponent) ParticleSystemActor->ParticleSystemComponent->SetActive(bActive);
 }
 
 void UFICParticleSystem::Select(UFICEditorContext* Context) {
@@ -90,7 +115,7 @@ void UFICParticleSystem::InitAnimation() {
 	FRotator Rot = Rotation.Get(0);
 	bool bActive = Active.GetValue(0); 
 	ParticleSystemActor = GetWorld()->SpawnActor<AFICParticleSystemActor>(Pos, Rot);
-	ParticleSystemActor->ParticleSystemComponent->SetTemplate(ParticleSystem);
+	ParticleSystemActor->SetParticleSystem(ParticleSystem);
 }
 
 void UFICParticleSystem::TickAnimation(FICFrameFloat Frame) {
@@ -128,10 +153,9 @@ AActor* UFICParticleSystem::GetActor() {
 	return ParticleSystemActor;
 }
 
-void UFICParticleSystem::SetParticleSystem(UParticleSystem* InParticleSystem) {
+void UFICParticleSystem::SetParticleSystem(UObject* InParticleSystem) {
 	ParticleSystem = InParticleSystem;
 	if (ParticleSystemActor) {
-		ParticleSystemActor->ParticleSystemComponent->SetTemplate(ParticleSystem);
-		ParticleSystemActor->ParticleSystemComponent->Activate(true);
+		ParticleSystemActor->SetParticleSystem(ParticleSystem);
 	}
 }

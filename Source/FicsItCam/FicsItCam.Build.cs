@@ -31,7 +31,8 @@ public class FicsItCam : ModuleRules
             "RHI",
             "Renderer",
             "RenderCore",
-            "ImageWrapper"
+            "ImageWrapper",
+            "Niagara"
 		});
 			
 		if (Target.Type == TargetRules.TargetType.Editor) {

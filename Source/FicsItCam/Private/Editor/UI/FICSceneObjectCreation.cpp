@@ -47,6 +47,7 @@ FReply SFICSceneObjectCreationRow::OnMouseButtonUp(const FGeometry& MyGeometry, 
 			UObject* CDO = SceneObjectClass->GetDefaultObject();
 			UObject* SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(AFICSubsystem::GetFICSubsystem(Context), Context->GetScene());
 			Context->AddSceneObject(SceneObject);
+			Context->SetSelectedSceneObject(SceneObject);
 			return FReply::Handled().ReleaseMouseCapture();
 		}
 	}
