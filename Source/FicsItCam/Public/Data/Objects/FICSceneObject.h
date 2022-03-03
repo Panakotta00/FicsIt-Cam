@@ -26,6 +26,7 @@ public:
 	
 	virtual FFICAttribute& GetRootAttribute() { return RootAttribute; }
 	virtual UObject* CreateNewObject(UObject* InOuter, AFICScene* InScene) = 0;
+	virtual TSharedRef<SWidget> CreateDetailsWidget(UFICEditorContext* InContext) = 0;
 
 	virtual void InitEditor(UFICEditorContext* Context) {}
 	virtual void ShutdownEditor(UFICEditorContext* Context) {}

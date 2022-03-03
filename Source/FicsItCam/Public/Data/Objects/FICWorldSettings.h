@@ -30,6 +30,7 @@ public:
 
 	// Begin IFICSceneObject
 	virtual UObject* CreateNewObject(UObject* InOuter, AFICScene* InScene) override;
+	virtual TSharedRef<SWidget> CreateDetailsWidget(UFICEditorContext* InContext) override;
 	virtual FString GetSceneObjectName() override { return SceneObjectName; }
 	virtual void SetSceneObjectName(FString Name) override { SceneObjectName = Name; }
 	virtual void TickEditor(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) override;

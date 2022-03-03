@@ -8,6 +8,7 @@ void FFICActiveSceneObjectManager::UpdateActiveObjects(FICFrameFloat Frame) {
 	TMap<FString, UObject*> Active;
 	if (Scene) for (UObject* SceneObject : Scene->GetSceneObjects()) {
 		IFICSceneObjectActive* SceneObjectActive = Cast<IFICSceneObjectActive>(SceneObject);
+		if (!SceneObjectActive) continue;
 		FString Type = SceneObjectActive->GetActiveType();
 		if (!Active.Contains(Type) && IsSceneObjectActive.Execute(SceneObject, Frame)) {
 			Active.Add(Type, SceneObject);

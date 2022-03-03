@@ -14,6 +14,10 @@ UObject* UFICWorldSettings::CreateNewObject(UObject* InOuter, AFICScene* InScene
 	return NewObject<UFICWorldSettings>(InOuter);
 }
 
+TSharedRef<SWidget> UFICWorldSettings::CreateDetailsWidget(UFICEditorContext* InContext) {
+	return InContext->GetEditorAttributes()[this]->CreateDetailsWidget(InContext);
+}
+
 void UFICWorldSettings::TickEditor(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) {
 	UFGCheatManager* CheatManager = Cast<UFGCheatManager>(Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController())->CheatManager);
 	if (bActive) {

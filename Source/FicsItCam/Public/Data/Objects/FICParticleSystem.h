@@ -1,27 +1,27 @@
 #pragma once
 
+#pragma once
+
 #include "CoreMinimal.h"
-#include "FGSaveInterface.h"
 #include "FICSceneObject3D.h"
-#include "FICSceneObjectActive.h"
 #include "Data/Attributes/FICAttributeBool.h"
 #include "Data/Attributes/FICAttributePosition.h"
 #include "Data/Attributes/FICAttributeRotation.h"
 #include "Data/Objects/FICSceneObject.h"
-#include "FICCamera.generated.h"
+#include "Editor/ITF/FICSelectionInteraction.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "FICParticleSystem.generated.h"
 
-class AFICScene;
-class AFICEditorCameraActor;
+class AFICParticleSystemActor;
+class USphereComponent;
 
 UCLASS()
-class FICSITCAM_API UFICCamera : public UObject, public FTickableGameObject, public IFICSceneObject, public IFICSceneObject3D, public IFICSceneObjectActive, public IFGSaveInterface {
+class FICSITCAM_API UFICParticleSystem : public UObject, public FTickableGameObject, public IFICSceneObject, public IFICSceneObject3D {
 	GENERATED_BODY()
-private:
-	TSharedPtr<SWidget> CameraPreviewWidget;
-	
 public:
 	UPROPERTY(SaveGame)
-	FString SceneObjectName = TEXT("Camera");
+	FString SceneObjectName = TEXT("ParticleSystem");
 	
 	UPROPERTY(SaveGame)
 	FFICAttributeBool Active;
@@ -30,34 +30,21 @@ public:
 	FFICAttributePosition Position;
 	UPROPERTY(SaveGame)
 	FFICAttributeRotation Rotation;
-	
-	UPROPERTY(SaveGame)
-	FFICFloatAttribute FOV;
-	UPROPERTY(SaveGame)
-	FFICFloatAttribute Aperture;
-	UPROPERTY(SaveGame)
-	FFICFloatAttribute FocusDistance;
 
-	FFICGroupAttribute LensSettings;
+	UPROPERTY(SaveGame)
+	UParticleSystem* ParticleSystem = nullptr;
 	
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
 	UPROPERTY()
-	AFICEditorCameraActor* EditorCameraActor = nullptr;
-	
-	UFICCamera() {
-		Active.SetDefaultValue(true);
-		Aperture.SetDefaultValue(10);
-		FocusDistance.SetDefaultValue(10000);
-		
-		LensSettings.AddChildAttribute(TEXT("FOV"), &FOV);
-		LensSettings.AddChildAttribute(TEXT("Aperture"), &Aperture);
-		LensSettings.AddChildAttribute(TEXT("Focus Distance"), &FocusDistance);
+	AFICParticleSystemActor* ParticleSystemActor = nullptr;
 
+	UFICParticleSystem() {
+		Active.SetDefaultValue(true);
+		
 		RootAttribute.AddChildAttribute(TEXT("Active"), &Active);
 		RootAttribute.AddChildAttribute(TEXT("Position"), &Position);
 		RootAttribute.AddChildAttribute(TEXT("Rotation"), &Rotation);
-		RootAttribute.AddChildAttribute(TEXT("Lens Settings"), &LensSettings);
 	}
 
 	// Begin FTickableGameObject
@@ -65,10 +52,6 @@ public:
 	virtual bool IsTickable() const override { return true; }
 	virtual TStatId GetStatId() const override { return UObject::GetStatID(); }
 	// End FTickableGameObject
-
-	// Begin IFGSaveInterface
-	virtual bool ShouldSave_Implementation() const override { return true; }
-	// End IFGSaveInterface
 
 	// Begin IFICSceneObject-Interface
 	virtual FString GetSceneObjectName() override { return SceneObjectName; }
@@ -82,6 +65,10 @@ public:
 	virtual void EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) override;
 	virtual void Select(UFICEditorContext* Context) override;
 	virtual void Unselect(UFICEditorContext* Context) override;
+
+	virtual void InitAnimation() override;
+	virtual void TickAnimation(FICFrameFloat Frame) override;
+	virtual void ShutdownAnimation() override;
 	// End IFICSceneObject-Interface
 
 	// Begin IFICSceneObject3D
@@ -91,8 +78,25 @@ public:
 	virtual void SetSceneObjectTransform(FTransform InTransform) override;
 	// End IFICSceneObject3D
 
-	// Begin IFICSceneObjectActive
-	virtual FString GetActiveType() { return TEXT("Camera"); }
-	virtual FFICAttributeBool& GetActiveAttribute() { return Active; }
-	// End IFICSceneObjectActive
+	void SetParticleSystem(UParticleSystem* InParticleSystem);
+};
+
+UCLASS()
+class FICSITCAM_API AFICParticleSystemActor : public AActor, public IFICSelectionInteractionTarget {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	UParticleSystemComponent* ParticleSystemComponent;
+	UPROPERTY()
+	USphereComponent* Collision;
+
+	UPROPERTY()
+	class UFICParticleSystem* ParticleSystem = nullptr;
+
+	AFICParticleSystemActor();
+
+	// Begin IFICSelectionInteractionTarget
+	virtual UObject* Select() { return ParticleSystem; }
+	// End IFICSelectionInteractionTarget
 };

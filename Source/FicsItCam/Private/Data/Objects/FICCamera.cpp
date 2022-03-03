@@ -55,6 +55,10 @@ UObject* UFICCamera::CreateNewObject(UObject* InOuter, AFICScene* InScene) {
 	return Camera;
 }
 
+TSharedRef<SWidget> UFICCamera::CreateDetailsWidget(UFICEditorContext* InContext) {
+	return InContext->GetEditorAttributes()[this]->CreateDetailsWidget(InContext);
+}
+
 void UFICCamera::InitEditor(UFICEditorContext* Context) {
 	EditorContext = Context;
 

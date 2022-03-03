@@ -23,5 +23,5 @@ void SFICSceneObjectDetails::UpdatePanel(UObject* SceneObject) {
 		ChildSlot.DetachWidget();
 		return;
 	}
-	ChildSlot.AttachWidget(Context->GetEditorAttributes()[SceneObject]->CreateDetailsWidget(Context));
+	ChildSlot.AttachWidget(Cast<IFICSceneObject>(SceneObject)->CreateDetailsWidget(Context));
 }
