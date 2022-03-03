@@ -26,6 +26,12 @@ public:
 
 	UFUNCTION()
 	static bool IsValidFICObjectName(const FString& InName);
+
+	template<typename T>
+	static T Modulo(T a, T b) {
+      T r = a % b;
+      return r >= 0 ? r : r + FMath::Abs(b);
+    }
 };
 
 

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "FGSaveInterface.h"
 #include "FICTypes.h"
+#include "FICUtils.h"
 #include "Objects/FICCamera.h"
 #include "FICScene.generated.h"
 
@@ -61,6 +62,12 @@ public:
 
 	void RemoveSceneObject(UObject* Object) {
 		SceneObjects.Remove(Object);
+	}
+
+	void MoveSceneObject(UObject* Object, int Delta) {
+		int Index = SceneObjects.Find(Object);
+		SceneObjects.RemoveAt(Index);
+		SceneObjects.Insert(Object, UFICUtils::Modulo(Index + Delta, SceneObjects.Num()+1));
 	}
 
 	UFICCamera* GetActiveCamera(FICFrameFloat Time);

@@ -164,6 +164,12 @@ void UFICEditorContext::RemoveSceneObject(UObject* SceneObject) {
 	OnSceneObjectsChanged.Broadcast();
 }
 
+void UFICEditorContext::MoveSceneObject(UObject* SceneObject, int Delta) {
+	Scene->MoveSceneObject(SceneObject, Delta);
+	OnSceneObjectsChanged.Broadcast();
+	SetSelectedSceneObject(SceneObject);
+}
+
 AFICScene* UFICEditorContext::GetScene() const {
 	return Scene;
 }

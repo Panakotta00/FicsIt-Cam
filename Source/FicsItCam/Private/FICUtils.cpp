@@ -3,6 +3,7 @@
 
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
+#include "Runtime/FICCameraReference.h"
 
 FRotator UFICUtils::NormalizeRotator(FRotator Rot) {
 	while (Rot.Pitch > 180.0) Rot.Pitch -= 360.0f;

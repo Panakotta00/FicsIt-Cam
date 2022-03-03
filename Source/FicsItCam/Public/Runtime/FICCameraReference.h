@@ -1,8 +1,9 @@
 #pragma once
+#include "Data/FICTypes.h"
 
-#include "Process/FICRuntimeProcessPlayScene.h"
 #include "FICCameraReference.generated.h"
 
+class UFICRuntimeProcessPlayScene;
 class UFICCamera;
 class AFICScene;
 

@@ -45,8 +45,8 @@ void SFICSceneObjectOutliner::Construct(const FArguments& InArgs, UFICEditorCont
 				return FReply::Unhandled();
 			})
 			.OnGenerateRow_Lambda([this](TSharedPtr<FFICSceneObjectReference> SceneObject, const TSharedRef<STableViewBase>& Base) {
-				return SNew(STableRow<TSharedPtr<FFICSceneObjectReference>>, Base)
-				.Content()[
+				TSharedRef<STableRow<TSharedPtr<FFICSceneObjectReference>>> Row = SNew(STableRow<TSharedPtr<FFICSceneObjectReference>>, Base);
+				Row->SetRowContent(
 					SNew(SHorizontalBox)
 					+SHorizontalBox::Slot().AutoWidth()[
 						SNew(SBox)
@@ -69,12 +69,35 @@ void SFICSceneObjectOutliner::Construct(const FArguments& InArgs, UFICEditorCont
 					]
 					+SHorizontalBox::Slot().FillWidth(1)
 					+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
+						SNew(SButton)
+						.Visibility_Lambda([Row]() {
+							return Row->IsHovered() ? EVisibility::Visible : EVisibility::Hidden;
+						})
+						.Text(FText::FromString("/\\"))
+						.OnClicked_Lambda([this, SceneObject]() {
+							Context->MoveSceneObject(SceneObject->SceneObject, -1);
+							return FReply::Handled();
+						})
+					]
+					+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
+						SNew(SButton)
+						.Visibility_Lambda([Row]() {
+							return Row->IsHovered() ? EVisibility::Visible : EVisibility::Hidden;
+						})
+						.Text(FText::FromString("\\/"))
+						.OnClicked_Lambda([this, SceneObject]() {
+							Context->MoveSceneObject(SceneObject->SceneObject, 1);
+							return FReply::Handled();
+						})
+					]
+					+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
 						SNew(SFICKeyframeControl, Context, Context->GetEditorAttributes()[SceneObject->SceneObject])
 						.Frame_Lambda([this]() {
 							return Context->GetCurrentFrame();
 						})
 					]
-				];
+				);
+				return Row;
 			})
 		]
 	];

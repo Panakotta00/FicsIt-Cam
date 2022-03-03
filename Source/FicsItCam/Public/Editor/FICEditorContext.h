@@ -93,6 +93,7 @@ public:
 	void UnloadSceneObject(UObject* SceneObject);
 	void AddSceneObject(UObject* SceneObject);
 	void RemoveSceneObject(UObject* SceneObject);
+	void MoveSceneObject(UObject* SceneObject, int Delta);
 	
 	AFICScene* GetScene() const;
 	UFICCamera* GetCamera();
