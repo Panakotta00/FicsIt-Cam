@@ -25,10 +25,13 @@ UObject* UFICParticleSystem::CreateNewObject(UObject* InOuter, AFICScene* InScen
 	UFICParticleSystem* Object = NewObject<UFICParticleSystem>(InOuter);
 	APlayerController* Player = InScene->GetWorld()->GetFirstPlayerController(); 
 	FVector Pos = Player->PlayerCameraManager->GetCameraLocation();
-	FRotator Rot = Player->PlayerCameraManager->GetCameraRotation();
 	Object->Position.SetDefaultValue(Pos);
-	Object->Rotation.SetDefaultValue(Rot);
 	Object->Active.SetDefaultValue(true);
+	for (TObjectIterator<UParticleSystem> System; System; ++System) {
+		if (System->GetName() == TEXT("P_WeldSparks_01")) {
+			Object->SetParticleSystem(*System);
+		}
+	}
 	return Object;
 }
 
@@ -119,6 +122,10 @@ void UFICParticleSystem::SetSceneObjectTransform(FTransform InTransform) {
 	FFICAttributePosition::ToEditorAttribute(InTransform.GetLocation(), EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Position"));
 	FFICAttributeRotation::ToEditorAttribute(NewRotation, EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Rotation"));
 	EditorContext->CommitAutoKeyframe(nullptr);
+}
+
+AActor* UFICParticleSystem::GetActor() {
+	return ParticleSystemActor;
 }
 
 void UFICParticleSystem::SetParticleSystem(UParticleSystem* InParticleSystem) {

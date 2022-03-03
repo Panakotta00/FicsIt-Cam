@@ -9,6 +9,7 @@
 #include "Widgets/Docking/SDockTab.h"
 #include "Editor/UI/FICTimeline.h"
 #include "Editor/UI/FICEditorSettings.h"
+#include "Editor/UI/FICSceneObjectCreation.h"
 #include "Editor/UI/FICSceneObjectDetails.h"
 #include "Editor/UI/FICSceneObjectOutliner.h"
 #include "Editor/UI/FICSceneSettings.h"
@@ -41,6 +42,7 @@ void SFICEditor::Construct(const FArguments& InArgs, UFICEditorContext* InContex
 			->Split(FTabManager::NewSplitter()
 				->SetSizeCoefficient(0.2)
 				->SetOrientation(Orient_Vertical)
+				->Split(FTabManager::NewStack()->AddTab("New Scene Object", ETabState::OpenedTab))
 				->Split(FTabManager::NewStack()->AddTab("Scene Object Outliner", ETabState::OpenedTab))
 				->Split(FTabManager::NewStack()->AddTab("Scene Object Details", ETabState::OpenedTab))
 				->Split(FTabManager::NewStack()->AddTab("Scene Settings", ETabState::OpenedTab))
@@ -120,6 +122,15 @@ void SFICEditor::RegisterTabs() {
 		return SNew(SDockTab)
 		.Content()[
 			SNew(SFICTimelinePanel, Context)
+		];
+	}), FCanSpawnTab::CreateLambda([](const FSpawnTabArgs& Args) {
+		return true;
+	}));
+
+	TabManager->RegisterTabSpawner("New Scene Object", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& Args) {
+		return SNew(SDockTab)
+		.Content()[
+			SNew(SFICSceneObjectCreation, Context)
 		];
 	}), FCanSpawnTab::CreateLambda([](const FSpawnTabArgs& Args) {
 		return true;

@@ -89,6 +89,7 @@ public:
 	virtual ETransformGizmoSubElements GetGizmoSubElements() { return ETransformGizmoSubElements::StandardTranslateRotate; }
 	virtual FTransform GetSceneObjectTransform() override;
 	virtual void SetSceneObjectTransform(FTransform InTransform) override;
+	virtual AActor* GetActor() override;
 	// End IFICSceneObject3D
 
 	// Begin IFICSceneObjectActive

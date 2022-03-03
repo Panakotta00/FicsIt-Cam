@@ -45,7 +45,7 @@ void UFICCamera::Tick(float DeltaTime) {
 
 UObject* UFICCamera::CreateNewObject(UObject* InOuter, AFICScene* InScene) {
 	UFICCamera* Camera = NewObject<UFICCamera>(InOuter);
-	APlayerController* Player = GetWorld()->GetFirstPlayerController(); 
+	APlayerController* Player = InOuter->GetWorld()->GetFirstPlayerController(); 
 	FVector Pos = Player->PlayerCameraManager->GetCameraLocation();
 	FRotator Rot = Player->PlayerCameraManager->GetCameraRotation();
 	float FOVVal = Player->PlayerCameraManager->GetFOVAngle();
@@ -122,3 +122,5 @@ void UFICCamera::SetSceneObjectTransform(FTransform InTransform) {
 		EditorContext->CommitAutoKeyframe(nullptr);
 	}
 }
+
+AActor* UFICCamera::GetActor() { return EditorCameraActor; }

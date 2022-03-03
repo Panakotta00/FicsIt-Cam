@@ -19,5 +19,12 @@ private:
 	TSharedPtr<SOverlay> Overlay;
 
 public:
+	// Begin SWidget
+	virtual bool IsInteractable() const override { return true; }
+	virtual void OnDragEnter(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
+	virtual FReply OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
+	virtual void OnDragLeave(const FDragDropEvent& DragDropEvent) override;
+	// End SWidget
+	
 	void UpdateViewportOverlays();
 };

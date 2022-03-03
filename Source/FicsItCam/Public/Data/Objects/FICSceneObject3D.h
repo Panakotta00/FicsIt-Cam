@@ -15,4 +15,5 @@ public:
 	virtual ETransformGizmoSubElements GetGizmoSubElements() { return ETransformGizmoSubElements::FullTranslateRotateScale; }
 	virtual void SetSceneObjectTransform(FTransform InTransform) {}
 	virtual FTransform GetSceneObjectTransform() { return FTransform(); }
+	virtual AActor* GetActor() { return nullptr; }
 };

@@ -1,8 +1,92 @@
 #include "Editor/UI/FICSceneObjectOutliner.h"
 
-#include "FICSubsystem.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICKeyframeControl.h"
+#include "Editor/UI/FICSceneObjectCreation.h"
+
+void SFICSceneObjectOutlinerRow::Construct(const FArguments& InArgs, UFICEditorContext* InContext, UObject* InSceneObject) {
+	Context = InContext;
+	SceneObject = InSceneObject;
+	
+	ChildSlot[
+		SNew(SHorizontalBox)
+		+SHorizontalBox::Slot().AutoWidth()[
+			SNew(SBox)
+			.VAlign(VAlign_Center)
+			.MinDesiredWidth(20)[
+				SNew(SEditableText)
+				.IsEnabled_Lambda([this]() {
+					return Context->GetSelectedSceneObject() == SceneObject;
+				})
+				.IsReadOnly_Lambda([this]() {
+					return Context->GetSelectedSceneObject() != SceneObject;
+				})
+				.OnTextCommitted_Lambda([this](const FText& Text, ETextCommit::Type Type) {
+					Cast<IFICSceneObject>(SceneObject)->SetSceneObjectName(Text.ToString());
+				})
+				.Text_Lambda([this]() {
+					return FText::FromString(Cast<IFICSceneObject>(SceneObject)->GetSceneObjectName());
+				})
+			]
+		]
+		+SHorizontalBox::Slot().FillWidth(1)
+		+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
+			SNew(SButton)
+			.Visibility_Lambda([this]() {
+				return IsHovered() ? EVisibility::Visible : EVisibility::Hidden;
+			})
+			.Text(FText::FromString("/\\"))
+			.OnClicked_Lambda([this]() {
+				Context->MoveSceneObject(SceneObject, -1);
+				return FReply::Handled();
+			})
+		]
+		+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
+			SNew(SButton)
+			.Visibility_Lambda([this]() {
+				return IsHovered() ? EVisibility::Visible : EVisibility::Hidden;
+			})
+			.Text(FText::FromString("\\/"))
+			.OnClicked_Lambda([this]() {
+				Context->MoveSceneObject(SceneObject, 1);
+				return FReply::Handled();
+			})
+		]
+		+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
+			SNew(SFICKeyframeControl, Context, Context->GetEditorAttributes()[SceneObject])
+			.Frame_Lambda([this]() {
+				return Context->GetCurrentFrame();
+			})
+		]
+	];
+}
+
+bool SFICSceneObjectOutlinerRow::IsInteractable() const {
+	return SCompoundWidget::IsInteractable();
+}
+
+FReply SFICSceneObjectOutlinerRow::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
+		bClick = true;
+		return FReply::Handled().CaptureMouse(AsShared()).DetectDrag(AsShared(), EKeys::LeftMouseButton);
+	}
+	return FReply::Unhandled();
+}
+
+FReply SFICSceneObjectOutlinerRow::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
+		if (bClick) {
+			bClick = false;
+			Context->SetSelectedSceneObject(SceneObject);
+			return FReply::Handled().ReleaseMouseCapture();
+		}
+	}
+	return FReply::Unhandled().ReleaseMouseCapture();
+}
+
+FReply SFICSceneObjectOutlinerRow::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	return FReply::Handled().ReleaseMouseCapture().BeginDragDrop(MakeShared<FFICSceneObjectDragDrop>(SceneObject, false));
+}
 
 SFICSceneObjectOutliner::~SFICSceneObjectOutliner() {
 	if (Context) Context->OnSceneObjectSelectionChanged.Remove(OnSelectionChangedDelegateHandle);
@@ -16,14 +100,6 @@ void SFICSceneObjectOutliner::Construct(const FArguments& InArgs, UFICEditorCont
 
 	ChildSlot[
 		SNew(SVerticalBox)
-		+SVerticalBox::Slot().AutoHeight()[
-			SAssignNew(WidgetAddButton, SButton)
-			.Text(FText::FromString("Add"))
-			.OnClicked_Lambda([this]() {
-				OpenAddSceneObjectMenu();
-				return FReply::Handled();
-			})
-		]
 		+SVerticalBox::Slot().FillHeight(1)[
 			SAssignNew(SceneObjectListWidget, SListView<TSharedPtr<FFICSceneObjectReference>>)
 			.ListItemsSource(&SceneObjectList)
@@ -47,55 +123,7 @@ void SFICSceneObjectOutliner::Construct(const FArguments& InArgs, UFICEditorCont
 			.OnGenerateRow_Lambda([this](TSharedPtr<FFICSceneObjectReference> SceneObject, const TSharedRef<STableViewBase>& Base) {
 				TSharedRef<STableRow<TSharedPtr<FFICSceneObjectReference>>> Row = SNew(STableRow<TSharedPtr<FFICSceneObjectReference>>, Base);
 				Row->SetRowContent(
-					SNew(SHorizontalBox)
-					+SHorizontalBox::Slot().AutoWidth()[
-						SNew(SBox)
-						.VAlign(VAlign_Center)
-						.MinDesiredWidth(20)[
-							SNew(SEditableText)
-							.IsEnabled_Lambda([this, SceneObject]() {
-								return SceneObjectListWidget->IsItemSelected(SceneObject);
-							})
-							.IsReadOnly_Lambda([this, SceneObject]() {
-								return !SceneObjectListWidget->IsItemSelected(SceneObject);
-							})
-							.OnTextCommitted_Lambda([SceneObject](const FText& Text, ETextCommit::Type Type) {
-								Cast<IFICSceneObject>(SceneObject->SceneObject)->SetSceneObjectName(Text.ToString());
-							})
-							.Text_Lambda([SceneObject]() {
-								return FText::FromString(Cast<IFICSceneObject>(SceneObject->SceneObject)->GetSceneObjectName());
-							})
-						]
-					]
-					+SHorizontalBox::Slot().FillWidth(1)
-					+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
-						SNew(SButton)
-						.Visibility_Lambda([Row]() {
-							return Row->IsHovered() ? EVisibility::Visible : EVisibility::Hidden;
-						})
-						.Text(FText::FromString("/\\"))
-						.OnClicked_Lambda([this, SceneObject]() {
-							Context->MoveSceneObject(SceneObject->SceneObject, -1);
-							return FReply::Handled();
-						})
-					]
-					+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
-						SNew(SButton)
-						.Visibility_Lambda([Row]() {
-							return Row->IsHovered() ? EVisibility::Visible : EVisibility::Hidden;
-						})
-						.Text(FText::FromString("\\/"))
-						.OnClicked_Lambda([this, SceneObject]() {
-							Context->MoveSceneObject(SceneObject->SceneObject, 1);
-							return FReply::Handled();
-						})
-					]
-					+SHorizontalBox::Slot().AutoWidth().Padding(5).VAlign(VAlign_Center).HAlign(HAlign_Center)[
-						SNew(SFICKeyframeControl, Context, Context->GetEditorAttributes()[SceneObject->SceneObject])
-						.Frame_Lambda([this]() {
-							return Context->GetCurrentFrame();
-						})
-					]
+					SNew(SFICSceneObjectOutlinerRow, Context, SceneObject->SceneObject)
 				);
 				return Row;
 			})
@@ -123,25 +151,4 @@ void SFICSceneObjectOutliner::UpdateSelection() {
 	if (Context->GetSelectedSceneObject()) {
 		SceneObjectListWidget->SetSelection(SceneObjectMap[Context->GetSelectedSceneObject()]);
 	}
-}
-
-void SFICSceneObjectOutliner::OpenAddSceneObjectMenu() {
-	FMenuBuilder MenuBuilder(true, NULL);
-	for (TObjectIterator<UClass> Class; Class; ++Class) {
-		if (!Class->ImplementsInterface(UFICSceneObject::StaticClass())) continue;
-		UObject* Obj = Class->GetDefaultObject();
-		IFICSceneObject* SceneObj = Cast<IFICSceneObject>(Obj);
-		MenuBuilder.AddMenuEntry(
-	        FText::FromString(SceneObj->GetSceneObjectName()),
-	        FText(),
-	        FSlateIcon(),
-			FExecuteAction::CreateLambda([Class, this]() {
-				UObject* CDO = Class->GetDefaultObject();
-				UObject* SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(AFICSubsystem::GetFICSubsystem(Context), Context->GetScene());
-	            Context->AddSceneObject(SceneObject);
-	        }));
-	}
-	FWidgetPath WidgetPath;
-	FSlateApplication::Get().GeneratePathToWidgetChecked(SharedThis(this), WidgetPath);
-	FSlateApplication::Get().PushMenu(SharedThis(this), WidgetPath, MenuBuilder.MakeWidget(), WidgetAddButton->GetCachedGeometry().GetAbsolutePositionAtCoordinates(FVector2D(0, 1)), FPopupTransitionEffect::ContextMenu);
 }

@@ -2,6 +2,28 @@
 
 class UFICEditorContext;
 
+class SFICSceneObjectOutlinerRow : public SCompoundWidget {
+	SLATE_BEGIN_ARGS(SFICSceneObjectOutlinerRow) {}
+	SLATE_END_ARGS()
+
+public:
+	void Construct(const FArguments& InArgs, UFICEditorContext* InContext, UObject* InSceneObject);
+
+private:
+	UFICEditorContext* Context = nullptr;
+	UObject* SceneObject = nullptr;
+
+	bool bClick = false;
+
+public:
+	// Begin SWidget
+	virtual bool IsInteractable() const override;
+	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	virtual FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	// End SWidget
+};
+
 struct FFICSceneObjectReference {
 	UObject* SceneObject;
 
@@ -29,6 +51,4 @@ private:
 
 	void UpdateSceneObjects();
 	void UpdateSelection();
-
-	void OpenAddSceneObjectMenu();
 };

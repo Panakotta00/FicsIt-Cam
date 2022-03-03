@@ -153,18 +153,21 @@ void UFICEditorContext::UnloadSceneObject(UObject* SceneObject) {
 }
 
 void UFICEditorContext::AddSceneObject(UObject* SceneObject) {
+	if (!SceneObject) return;
 	Scene->AddSceneObject(SceneObject);
 	LoadSceneObject(SceneObject);
 	OnSceneObjectsChanged.Broadcast();
 }
 
 void UFICEditorContext::RemoveSceneObject(UObject* SceneObject) {
+	if (!SceneObject) return;
 	UnloadSceneObject(SceneObject);
 	Scene->RemoveSceneObject(SceneObject);
 	OnSceneObjectsChanged.Broadcast();
 }
 
 void UFICEditorContext::MoveSceneObject(UObject* SceneObject, int Delta) {
+	if (!SceneObject) return;
 	Scene->MoveSceneObject(SceneObject, Delta);
 	OnSceneObjectsChanged.Broadcast();
 	SetSelectedSceneObject(SceneObject);
