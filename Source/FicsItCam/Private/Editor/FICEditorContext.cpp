@@ -39,9 +39,18 @@ void UFICEditorContext::Load(AFICEditorCameraCharacter* InEditorPlayerCharacter,
 		if (!Attrib) return false;
 		return StaticCastSharedRef<FFICEditorAttributeBool>(*Attrib)->GetActiveValue();
 	});
+
+	if (Scene->bViewportEverSaved) {
+		SetSelectedSceneObject(Scene->LastSelectedSceneObject);
+		InEditorPlayerCharacter->SetActorLocation(Scene->LastCameraTransform.GetLocation());
+		InEditorPlayerCharacter->SetActorRotation(Scene->LastCameraTransform.GetRotation().Rotator());
+	}
 }
 
 void UFICEditorContext::Unload() {
+	Scene->LastSelectedSceneObject = GetSelectedSceneObject();
+	Scene->LastCameraTransform = FTransform(GetPlayerCharacter()->GetControlRotation(), GetPlayerCharacter()->GetActorLocation());
+	Scene->bViewportEverSaved = true;
 	ActiveSceneObjectManager.Shutdown();
 	for (UObject* SceneObject : Scene->GetSceneObjects()) {
 		UnloadSceneObject(SceneObject);

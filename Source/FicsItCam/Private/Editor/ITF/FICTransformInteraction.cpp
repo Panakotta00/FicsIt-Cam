@@ -34,8 +34,8 @@ void UFICTransformInteraction::Tick(float DeltaTime) {
 
 void UFICTransformInteraction::Initialize(UFICEditorContext* InContext) {
 	Context = InContext;
-	
-	SelectionChangedEventHandle = Context->OnSceneObjectSelectionChanged.AddLambda([this]() {
+
+	TFunction<void()> SelectionChanged = [this]() {
 		UInteractiveGizmoManager* GizmoManager = AFICEditorSubsystem::GetFICEditorSubsystem(Context)->ToolsContext->GizmoManager;
 
 		if (TransformGizmo != nullptr) {
@@ -75,7 +75,9 @@ void UFICTransformInteraction::Initialize(UFICEditorContext* InContext) {
 				}
 			}
 		});
-	});
+	};
+	SelectionChangedEventHandle = Context->OnSceneObjectSelectionChanged.AddLambda(SelectionChanged);
+	SelectionChanged();
 }
 
 void UFICTransformInteraction::Shutdown() {

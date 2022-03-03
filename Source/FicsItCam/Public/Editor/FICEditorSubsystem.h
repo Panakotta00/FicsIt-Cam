@@ -21,6 +21,17 @@ UCLASS()
 class FICSITCAM_API AFICEditorSubsystem : public AModSubsystem, public IFGSaveInterface {
 	GENERATED_BODY()
 private:
+	UPROPERTY(SaveGame)
+	bool bAutoKeyframe = false;
+	UPROPERTY(SaveGame)
+	bool bLockCameraToView = true;
+	UPROPERTY(SaveGame)
+	bool bCameraPreview = true;
+	UPROPERTY(SaveGame)
+	bool bForceResolution = false;
+	UPROPERTY(SaveGame)
+	bool bShowCameraPath = true;
+	
 	UPROPERTY()
 	UFICEditorContext* ActiveEditorContext = nullptr;
 	UPROPERTY()

@@ -225,6 +225,11 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	// Create & load new Editor Context
 	Context = NewObject<UFICEditorContext>(GetWorld());
 	Context->Load(Character, InScene);
+	Context->SetAutoKeyframe(bAutoKeyframe);
+	Context->SetLockCameraToView(bLockCameraToView);
+	Context->SetCameraPreview(bCameraPreview);
+	Context->bShowPath = bShowCameraPath;
+	Context->bForceResolution = bForceResolution;
 	
 	// Initialize Editor Player Character
 	// TODO: Persist "Viewport Camera Transform" sepperately in persistent editor storage for given scene
@@ -265,6 +270,13 @@ void AFICEditorSubsystem::CloseEditor() {
 	
 	// Don't do anything if no scene is opened in editor
 	if (!Context) return;
+
+	// Copy Editor Settings
+	bAutoKeyframe = Context->GetAutoKeyframe();
+	bLockCameraToView = Context->GetLockCameraToView();
+	bCameraPreview = Context->GetCameraPreview();
+	bShowCameraPath = Context->bShowPath;
+	bForceResolution = Context->bForceResolution;
 	
 	AFICScene* Scene = Context->GetScene();
 

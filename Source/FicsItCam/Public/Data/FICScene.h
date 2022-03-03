@@ -37,6 +37,13 @@ public:
 	UPROPERTY(SaveGame)
 	bool bBulletTime = false;
 
+	UPROPERTY(SaveGame)
+	FTransform LastCameraTransform;
+	UPROPERTY(SaveGame)
+	UObject* LastSelectedSceneObject = nullptr;
+	UPROPERTY(SaveGame)
+	bool bViewportEverSaved = false;
+
 	// Begin IFGSaveInterface
 	//virtual void GatherDependencies_Implementation(TArray<UObject*>& out_dependentObjects) override { out_dependentObjects.Append(SceneObjects); }
 	virtual bool ShouldSave_Implementation() const override { return true; }
