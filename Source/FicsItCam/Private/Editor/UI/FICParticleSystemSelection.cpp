@@ -16,10 +16,15 @@ void SFICParticleSystemSelection::Construct(const FArguments& InArgs, UFICEditor
 		]
 		.OptionsSource(&ParticleSystems)
 		.OnGenerateWidget_Lambda([this](UParticleSystem* System) {
+			if (!System->IsValidLowLevelFast()) {
+				LoadParticleSystems();
+				return SNew(STextBlock);
+			}
 			return SNew(STextBlock)
 			.Text(FText::FromString(System->GetName()));
 		})
 		.OnSelectionChanged_Lambda([this](UParticleSystem* System, ESelectInfo::Type) {
+			if (!System->IsValidLowLevelFast()) return;
 			OnSelectionChanged.ExecuteIfBound(System);
 			UpdateContent();
 		})
@@ -34,6 +39,7 @@ void SFICParticleSystemSelection::LoadParticleSystems() {
 	for (TObjectIterator<UParticleSystem> System; System; ++System) {
 		ParticleSystems.Add(*System);
 	}
+	if (ComboBox) ComboBox->RefreshOptions();
 }
 
 void SFICParticleSystemSelection::UpdateContent() {

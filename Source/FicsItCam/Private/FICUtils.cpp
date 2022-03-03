@@ -67,3 +67,21 @@ bool UFICUtils::IsValidFICObjectName(const FString& InName) {
 	}
 	return false;
 }
+
+FRotator UFICUtils::AdditiveRotation(FRotator OldRotation, FRotator NewRotation) {
+	FRotator RotOldN = OldRotation;
+	while (RotOldN.Pitch < -180.0) RotOldN.Pitch += 360.0;
+	while (RotOldN.Pitch > 180.0) RotOldN.Pitch -= 360.0;
+	while (RotOldN.Yaw < -180.0) RotOldN.Yaw += 360.0;
+	while (RotOldN.Yaw > 180.0) RotOldN.Yaw -= 360.0;
+	while (RotOldN.Roll < -180.0) RotOldN.Roll += 360.0;
+	while (RotOldN.Roll > 180.0) RotOldN.Roll -= 360.0;
+	FRotator RotDiff = NewRotation - RotOldN;
+	while (RotDiff.Pitch < -180.0) RotDiff.Pitch += 360.0;
+	while (RotDiff.Pitch > 180.0) RotDiff.Pitch -= 360.0;
+	while (RotDiff.Yaw < -180.0) RotDiff.Yaw += 360.0;
+	while (RotDiff.Yaw > 180.0) RotDiff.Yaw -= 360.0;
+	while (RotDiff.Roll < -180.0) RotDiff.Roll += 360.0;
+	while (RotDiff.Roll > 180.0) RotDiff.Roll -= 360.0;
+	return OldRotation + RotDiff;
+}

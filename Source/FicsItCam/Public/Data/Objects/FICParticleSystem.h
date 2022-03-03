@@ -17,7 +17,7 @@ class AFICParticleSystemActor;
 class USphereComponent;
 
 UCLASS()
-class FICSITCAM_API UFICParticleSystem : public UObject, public FTickableGameObject, public IFICSceneObject, public IFICSceneObject3D {
+class FICSITCAM_API UFICParticleSystem : public UObject, public FTickableGameObject, public IFGSaveInterface, public IFICSceneObject, public IFICSceneObject3D {
 	GENERATED_BODY()
 public:
 	UPROPERTY(SaveGame)
@@ -52,6 +52,10 @@ public:
 	virtual bool IsTickable() const override { return true; }
 	virtual TStatId GetStatId() const override { return UObject::GetStatID(); }
 	// End FTickableGameObject
+
+	// Begin IFGSaveInterface
+	virtual bool ShouldSave_Implementation() const override { return true; }
+	// End IFGSaveInterface
 
 	// Begin IFICSceneObject-Interface
 	virtual FString GetSceneObjectName() override { return SceneObjectName; }

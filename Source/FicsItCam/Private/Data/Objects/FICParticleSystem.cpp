@@ -114,8 +114,10 @@ void UFICParticleSystem::SetSceneObjectTransform(FTransform InTransform) {
 		ParticleSystemActor->SetActorTransform(InTransform);
 	}
 	EditorContext->CommitAutoKeyframe(this);
+	FRotator LastRotation = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Rotation"));
+	FRotator NewRotation = UFICUtils::AdditiveRotation(LastRotation, InTransform.Rotator());
 	FFICAttributePosition::ToEditorAttribute(InTransform.GetLocation(), EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Position"));
-	FFICAttributeRotation::ToEditorAttribute(InTransform.GetRotation().Rotator(), EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Rotation"));
+	FFICAttributeRotation::ToEditorAttribute(NewRotation, EditorContext->GetEditorAttributes()[this]->Get<FFICEditorAttributeGroup>("Rotation"));
 	EditorContext->CommitAutoKeyframe(nullptr);
 }
 

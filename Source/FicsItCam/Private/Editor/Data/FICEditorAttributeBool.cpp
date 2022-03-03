@@ -54,12 +54,13 @@ TSharedRef<SWidget> FFICEditorAttributeBool::CreateDetailsWidget(UFICEditorConte
 			return GetActiveValue() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 		})
 	]
-	+SHorizontalBox::Slot()[
+	+SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).HAlign(HAlign_Center)[
 		SNew(SFICKeyframeControl, Context, SharedThis(this))
 		.Frame_Lambda([Context]() {
 			return Context->GetCurrentFrame();
 		})
-	];
+	]
+	+SHorizontalBox::Slot().FillWidth(1);
 }
 
 void FFICEditorAttributeBool::SetActiveValue(bool InValue) {

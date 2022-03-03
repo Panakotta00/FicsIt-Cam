@@ -32,6 +32,9 @@ public:
       T r = a % b;
       return r >= 0 ? r : r + FMath::Abs(b);
     }
+
+	UFUNCTION()
+	static FRotator AdditiveRotation(FRotator OldRotation, FRotator NewRotation);
 };
 
 
