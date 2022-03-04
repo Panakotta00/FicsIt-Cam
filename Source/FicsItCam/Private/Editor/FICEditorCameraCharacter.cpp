@@ -70,7 +70,7 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 		}
 	
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-		GetCharacterMovement()->MaxFlySpeed = bIsSprinting ? MaxFlySpeed * 10 : MaxFlySpeed;
+		GetCharacterMovement()->MaxFlySpeed = Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed() ? MaxFlySpeed * 10 : MaxFlySpeed;
 		GetCharacterMovement()->MaxAcceleration = 1000000;
 
 		FRotator RotatorFix;
@@ -150,32 +150,19 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 	PlayerInputComponent->BindAxis("Turn", this, &AFICEditorCameraCharacter::RotateYaw);
 	PlayerInputComponent->BindAxis("LookUp", this, &AFICEditorCameraCharacter::RotatePitch);
 
-	PlayerInputComponent->BindAction("FicsItCam.ChangeFOV", IE_Pressed, this, &AFICEditorCameraCharacter::EnterChangeFOV);
-	PlayerInputComponent->BindAction("FicsItCam.ChangeFOV", IE_Released, this, &AFICEditorCameraCharacter::LeaveChangeFOV);
-	PlayerInputComponent->BindAction("FicsItCam.Sprint", EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::EnterSprint);
-	PlayerInputComponent->BindAction("FicsItCam.Sprint", EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::LeaveSprint);
-	PlayerInputComponent->BindAction("FicsItCam.ChangeSpeed", EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::EnterChangeSpeed);
-	PlayerInputComponent->BindAction("FicsItCam.ChangeSpeed", EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::LeaveChangeSpeed);
-
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.NextKeyframe"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::NextKeyframe);
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.PrevKeyframe"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::PrevKeyframe);
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.PrevFrame"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::PrevFrame);
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.PrevFrame"), EInputEvent::IE_Repeat, this, &AFICEditorCameraCharacter::PrevFrame);
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.NextFrame"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::NextFrame);
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.NextFrame"), EInputEvent::IE_Repeat, this, &AFICEditorCameraCharacter::NextFrame);
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleAllKeyframes"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ChangedKeyframe);
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleAutoKeyframe"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleAutoKeyframe);
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleShowPath"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleShowPath);
-	PlayerInputComponent->BindAction(TEXT("FicsItCam.ToggleLockCamera"), EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::ToggleLockCamera);
-
-	PlayerInputComponent->BindKey(EKeys::Z, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::Undo);
-	PlayerInputComponent->BindKey(EKeys::Y, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::Redo);
-
 	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::RightMousePress);
 	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::RightMouseRelease);
 	
 	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &AFICEditorCameraCharacter::OnLeftMouseDown);
 	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &AFICEditorCameraCharacter::OnLeftMouseUp);
+
+	TArray<FInputActionKeyMapping>& Mappings = Cast<APlayerController>(GetController())->PlayerInput->ActionMappings;
+	TMap<FName, FInputActionKeyMapping>& KeyMappings = AFICEditorSubsystem::GetFICEditorSubsystem(this)->KeyMappings;
+	KeyMappings.Empty();
+	for (const FInputActionKeyMapping& KeyMapping : Mappings) {
+		KeyMappings.Add(KeyMapping.ActionName, KeyMapping);
+	}
+	Mappings.Empty();
 }
 
 void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
@@ -209,7 +196,7 @@ void AFICEditorCameraCharacter::UnPossessed() {
 void AFICEditorCameraCharacter::MoveForward(float Value) {
 	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
 	float Multi = FlyMultiplier;
-	if (bIsSprinting) Multi *= 3;
+	if (Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed()) Multi *= 3;
 	AddMovementInput(Direction, Value * Multi);
 }
 
@@ -217,7 +204,7 @@ void AFICEditorCameraCharacter::MoveRight(float Value) {
 	if (!IsControlView()) return;
 	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
 	float Multi = FlyMultiplier;
-	if (bIsSprinting) Multi *= 3;
+	if (Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed()) Multi *= 3;
 	AddMovementInput(Direction, Value * Multi);
 }
 void AFICEditorCameraCharacter::RotatePitch(float Value) {
@@ -240,47 +227,11 @@ void AFICEditorCameraCharacter::FlyUp(float Value) {
 	if (!IsControlView()) return;
 	FVector Direction = GetActorUpVector();
 	float Multi = FlyMultiplier;
-	if (bIsSprinting) Multi *= 3;
+	if (Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed()) Multi *= 3;
 	AddMovementInput(Direction, Value * Multi);
 	AddActorLocalRotation(FRotator(0, 0, Value));
 }
 
-void AFICEditorCameraCharacter::NextKeyframe() {
-	int64 Time;
-	TSharedPtr<FFICKeyframe> KF = EditorContext->GetAllAttributes()->GetAttribute().GetNextKeyframe(EditorContext->GetCurrentFrame(), Time);
-	if (KF) EditorContext->SetCurrentFrame(Time);
-}
-
-void AFICEditorCameraCharacter::PrevKeyframe() {
-	int64 Time;
-	TSharedPtr<FFICKeyframe> KF = EditorContext->GetAllAttributes()->GetAttribute().GetPrevKeyframe(EditorContext->GetCurrentFrame(), Time);
-	EditorContext->SetCurrentFrame(Time);
-}
-
-void AFICEditorCameraCharacter::NextFrame() {
-	int64 Rate = 1;
-	if (bIsSprinting) Rate = 10;
-	EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame()+Rate);
-}
-
-void AFICEditorCameraCharacter::PrevFrame() {
-	int64 Rate = 1;
-	if (bIsSprinting) Rate = 10;
-	EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame()-Rate);
-}
-
-void AFICEditorCameraCharacter::ToggleAutoKeyframe() {
-	EditorContext->SetAutoKeyframe(!EditorContext->GetAutoKeyframe());
-}
-
-void AFICEditorCameraCharacter::ToggleShowPath() {
-	EditorContext->bShowPath = !EditorContext->bShowPath;
-}
-
-void AFICEditorCameraCharacter::ToggleLockCamera() {
-	EditorContext->SetLockCameraToView(!EditorContext->GetLockCameraToView());
-}
-#pragma optimize("", off)
 void AFICEditorCameraCharacter::RightMousePress() {
 	SetControlView(true, true);
 }
@@ -290,37 +241,18 @@ void AFICEditorCameraCharacter::RightMouseRelease() {
 		SetControlView(false);
 	}
 }
-#pragma optimize("", on)
-
-void AFICEditorCameraCharacter::Undo() {
-	TSharedPtr<FFICChange> Change = EditorContext->ChangeList.PopChange();
-	if (Change) Change->UndoChange();
-}
-
-void AFICEditorCameraCharacter::Redo() {
-	TSharedPtr<FFICChange> Change = EditorContext->ChangeList.PushChange();
-	if (Change) Change->RedoChange();
-}
-
-void AFICEditorCameraCharacter::ChangedKeyframe() {
-	auto Change = MakeShared<FFICChange_Group>();
-	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(EditorContext, TNumericLimits<int64>::Min(), EditorContext->GetCurrentFrame()));
-	BEGIN_ATTRIB_CHANGE(EditorContext->GetAllAttributes()->GetAttribute())
-	EditorContext->ToggleCurrentKeyframes();
-	END_ATTRIB_CHANGE(Change)
-	EditorContext->ChangeList.PushChange(Change);
-}
 
 void AFICEditorCameraCharacter::Zoom(float Value) {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (bChangeFOV) {
+	bool bIsSprinting = PlayerController->PlayerInput->IsShiftPressed();
+	if (bIsSprinting && PlayerController->PlayerInput->IsCtrlPressed()) {
 		float Delta = Value;
 		if (bIsSprinting) Delta *= 2;
 		TFICEditorAttribute<FFICFloatAttribute> FOV = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV");
 		EditorContext->CommitAutoKeyframe(this);
 		FOV.SetValue(FOV.GetValue() + Delta);
 		EditorContext->CommitAutoKeyframe(nullptr);
-	} else if (bChangeSpeed) {
+	} else if (PlayerController->PlayerInput->IsCtrlPressed()) {
 		float Delta = Value * 100;
 		if (bIsSprinting) Delta *= 2;
 		//if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);

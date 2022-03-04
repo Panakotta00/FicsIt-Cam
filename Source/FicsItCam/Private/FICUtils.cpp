@@ -1,6 +1,7 @@
 ﻿#include "FICUtils.h"
 #include "FicsItCam/Public/FICUtils.h"
 
+#include "Editor/FICEditorSubsystem.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
 #include "Runtime/FICCameraReference.h"
@@ -66,6 +67,15 @@ bool UFICUtils::IsValidFICObjectName(const FString& InName) {
 		return true;
 	}
 	return false;
+}
+
+bool UFICUtils::IsAction(UObject* WorldContext, const FKeyEvent& InKeyEvent, const FName& InActionName) {
+	const FInputActionKeyMapping& Mapping = AFICEditorSubsystem::GetFICEditorSubsystem(WorldContext)->KeyMappings[InActionName];
+	return Mapping.Key == InKeyEvent.GetKey() &&
+		Mapping.bAlt == InKeyEvent.GetModifierKeys().IsAltDown() &&
+		Mapping.bCmd == InKeyEvent.GetModifierKeys().IsCommandDown() &&
+		Mapping.bCtrl == InKeyEvent.GetModifierKeys().IsControlDown() &&
+		Mapping.bShift == InKeyEvent.GetModifierKeys().IsShiftDown();
 }
 
 FRotator UFICUtils::AdditiveRotation(FRotator OldRotation, FRotator NewRotation) {

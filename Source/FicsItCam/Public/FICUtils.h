@@ -27,6 +27,9 @@ public:
 	UFUNCTION()
 	static bool IsValidFICObjectName(const FString& InName);
 
+	UFUNCTION()
+	static bool IsAction(UObject* WorldContext, const FKeyEvent& InKeyEvent, const FName& ActionName);
+
 	template<typename T>
 	static T Modulo(T a, T b) {
       T r = a % b;

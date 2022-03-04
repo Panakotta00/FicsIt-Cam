@@ -3,6 +3,7 @@
 #include "Editor/ITF/FICToolsContextRenderComponent.h"
 #include "PrimitiveSceneProxy.h"
 #include "SceneManagement.h"
+#include "Components/LineBatchComponent.h"
 
 // SceneProxy for UFICToolsContextRenderComponent. Just uses the PDI's available in GetDynamicMeshElements
 // to draw the lines/points accumulated by the Component.
@@ -82,11 +83,14 @@ public:
 class FToolsContextRenderComponentPDI : public FPrimitiveDrawInterface
 {
 public:
-	UFICToolsContextRenderComponent* RenderComponent;
+	UFICToolsContextRenderComponent* RenderComponent = nullptr;
+	ULineBatchComponent* LineBatchComponent = nullptr;
 
-	FToolsContextRenderComponentPDI(const FSceneView* InView, UFICToolsContextRenderComponent* RenderComponentIn) : FPrimitiveDrawInterface(InView)
-	{
+	FToolsContextRenderComponentPDI(const FSceneView* InView, UFICToolsContextRenderComponent* RenderComponentIn) : FPrimitiveDrawInterface(InView) {
 		RenderComponent = RenderComponentIn;
+	}
+	FToolsContextRenderComponentPDI(const FSceneView* InView, ULineBatchComponent* LineBatchComponentIn) : FPrimitiveDrawInterface(InView) {
+		LineBatchComponent = LineBatchComponentIn;
 	}
 
 	virtual bool IsHitTesting() { return false; }
@@ -102,12 +106,14 @@ public:
 	virtual void DrawLine( const FVector& Start, const FVector& End, const FLinearColor& Color,
 		uint8 DepthPriorityGroup, float Thickness = 0.0f, float DepthBias = 0.0f, bool bScreenSpace = false	)
 	{
-		RenderComponent->DrawLine(Start, End, Color, DepthPriorityGroup, Thickness, DepthBias, bScreenSpace);
+		if (RenderComponent) RenderComponent->DrawLine(Start, End, Color, DepthPriorityGroup, Thickness, DepthBias, bScreenSpace);
+		if (LineBatchComponent) LineBatchComponent->DrawLine(Start, End, Color, DepthPriorityGroup, Thickness);
 	}
 
 	virtual void DrawPoint( const FVector& Position, const FLinearColor& Color, float PointSize, uint8 DepthPriorityGroup )
 	{
-		RenderComponent->DrawPoint(Position, Color, PointSize, DepthPriorityGroup);
+		if (RenderComponent) RenderComponent->DrawPoint(Position, Color, PointSize, DepthPriorityGroup);
+		if (LineBatchComponent) LineBatchComponent->DrawPoint(Position, Color, PointSize, DepthPriorityGroup);
 	}
 
 };
@@ -118,7 +124,9 @@ TSharedPtr<FPrimitiveDrawInterface> UFICToolsContextRenderComponent::GetPDIForVi
 	return MakeShared<FToolsContextRenderComponentPDI>(InView, this);
 }
 
-
+TSharedPtr<FPrimitiveDrawInterface> UFICToolsContextRenderComponent::GetPDIForView(const FSceneView* InView, ULineBatchComponent* LineBatchComponent) {
+	return MakeShared<FToolsContextRenderComponentPDI>(InView, LineBatchComponent);
+}
 
 void UFICToolsContextRenderComponent::DrawLine(
 	const FVector& Start,

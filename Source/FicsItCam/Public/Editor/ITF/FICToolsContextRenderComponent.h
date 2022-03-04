@@ -51,6 +51,7 @@ public:
 
 	/** @return a new FPrimitiveDrawInterface implementation allocated for the given FSceneView. See .cpp for details. */
 	TSharedPtr<FPrimitiveDrawInterface> GetPDIForView(const FSceneView* InView);
+	static TSharedPtr<FPrimitiveDrawInterface> GetPDIForView(const FSceneView* InView, ULineBatchComponent* LineBatchComponent);
 
 	// mirrors FPrimitiveDrawInterface::DrawLine()
 	virtual void DrawLine(

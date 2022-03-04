@@ -29,11 +29,6 @@ UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 		FText::FromString(TEXT("Mousewheel -> Change Speed"))
 	});
 	ModKeyBindings.Add({
-		TEXT("FicsItCam.Sprint"),
-		FInputActionKeyMapping(TEXT("FicsItCam.Sprint"), EKeys::LeftShift),
-		FText::FromString(TEXT("Fast Movement & Scrubbing"))
-	});
-	ModKeyBindings.Add({
 		TEXT("FicsItCam.ToggleAllKeyframes"),
 		FInputActionKeyMapping(TEXT("FicsItCam.ToggleAllKeyframes"), EKeys::I),
 		FText::FromString(TEXT("Toggle all keyframes"))
@@ -82,5 +77,20 @@ UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 		TEXT("FicsItCam.ToggleLockCamera"),
 		FInputActionKeyMapping(TEXT("FicsItCam.ToggleLockCamera"), EKeys::J),
 		FText::FromString(TEXT("Enables/Disables view lock to path camera"))
+	});
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.Undo"),
+		FInputActionKeyMapping(TEXT("FicsItCam.Undo"), EKeys::Z, false, true),
+		FText::FromString(TEXT("Undos a previous change you applied."))
+	});
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.Redo"),
+		FInputActionKeyMapping(TEXT("FicsItCam.Redo"), EKeys::Y, false, true),
+		FText::FromString(TEXT("Redos a change you have previously un-done."))
+	});
+	ModKeyBindings.Add({
+		TEXT("FicsItCam.Grab"),
+		FInputActionKeyMapping(TEXT("FicsItCam.Grab"), EKeys::G, false, true),
+		FText::FromString(TEXT("Activates the grab tool."))
 	});
 }

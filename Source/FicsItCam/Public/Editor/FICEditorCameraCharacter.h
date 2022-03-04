@@ -22,9 +22,6 @@ private:
 	UPROPERTY()
 	UFICCamera* LastCameraSceneObject = nullptr;
 
-	bool bIsSprinting = false;
-	bool bChangeFOV = false;
-	bool bChangeSpeed = false;
 	float FlyMultiplier = 10000;
 
 	float RollRotationFixValue = 0.0f;
@@ -72,58 +69,10 @@ public:
 	void FlyUp(float Value);
 
 	UFUNCTION()
-	void EnterChangeFOV() {
-		bChangeFOV = true;
-		bChangeSpeed = false;
-	}
-	UFUNCTION()
-	void LeaveChangeFOV() { bChangeSpeed = bChangeFOV = false; }
-
-	UFUNCTION()
-	void EnterSprint() { bIsSprinting = true; }
-	UFUNCTION()
-	void LeaveSprint() { bIsSprinting = false; }
-
-	UFUNCTION()
-	void EnterChangeSpeed() {
-		bChangeSpeed = true;
-		bChangeFOV = false;
-	}
-	UFUNCTION()
-	void LeaveChangeSpeed() {
-		bChangeFOV = bChangeSpeed = false;
-	}
-
-	UFUNCTION()
-	void NextKeyframe();
-	UFUNCTION()
-	void PrevKeyframe();
-
-	UFUNCTION()
-	void NextFrame();
-	UFUNCTION()
-	void PrevFrame();
-
-	UFUNCTION()
-	void ToggleAutoKeyframe();
-	UFUNCTION()
-	void ToggleShowPath();
-	UFUNCTION()
-	void ToggleLockCamera();
-
-	UFUNCTION()
 	void RightMousePress();
 	UFUNCTION()
 	void RightMouseRelease();
 
-	UFUNCTION()
-	void Undo();
-	UFUNCTION()
-	void Redo();
-
-	UFUNCTION()
-	void ChangedKeyframe();
-	
 	UFUNCTION()
 	void Zoom(float Value);
 
@@ -131,7 +80,6 @@ public:
 	void OnLeftMouseDown();
 	UFUNCTION()
 	void OnLeftMouseUp();
-	
 
 	UFUNCTION()
 	void SetEditorContext(UFICEditorContext* InEditorContext);

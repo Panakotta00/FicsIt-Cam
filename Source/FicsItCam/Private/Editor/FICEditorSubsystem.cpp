@@ -7,6 +7,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/ProxyInstancedStaticMeshComponent.h"
 #include "Editor/FICEditorContext.h"
+#include "Editor/ITF/FICGrabTool.h"
 #include "Editor/ITF/FICSelectionInteraction.h"
 #include "Editor/ITF/FICToolsContextQueries.h"
 #include "Editor/ITF/FICToolsContextRender.h"
@@ -22,6 +23,8 @@ void AFICEditorSubsystem::InitInteractiveTools() {
 	PDIRenderComponent = NewObject<UFICToolsContextRenderComponent>(PDIRenderActor);
 	PDIRenderActor->SetRootComponent(PDIRenderComponent);
 	PDIRenderComponent->RegisterComponent();
+	LineBatchComponent = NewObject<ULineBatchComponent>(PDIRenderActor);
+	LineBatchComponent->AttachToComponent(PDIRenderActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
 	ToolsQueries = MakeShared<FFICToolsContextQueries>(ToolsContext, GetWorld());
 	ToolsTransactions = MakeShared<FFICToolsContextTransactions>();
@@ -36,6 +39,9 @@ void AFICEditorSubsystem::InitInteractiveTools() {
 	// create transform interaction
 	TransformInteraction = NewObject<UFICTransformInteraction>(this);
 	TransformInteraction->Initialize(GetActiveEditorContext());
+
+	// register tools
+	ToolsContext->ToolManager->RegisterToolType("Grab", NewObject<UFICGrabToolBuilder>(ToolsContext->ToolManager));
 }
 
 void AFICEditorSubsystem::ShutdownInteractiveTools() {
@@ -200,7 +206,7 @@ void AFICEditorSubsystem::Tick(float DeltaTime) {
 			ToolsContext->GizmoManager->Tick(DeltaTime);
 
 			// render things
-			FRuntimeToolsFrameworkRenderImpl RenderAPI(PDIRenderComponent, SceneView, CurrentViewCameraState);
+			FRuntimeToolsFrameworkRenderImpl RenderAPI(LineBatchComponent, SceneView, CurrentViewCameraState);
 			ToolsContext->ToolManager->Render(&RenderAPI);
 			ToolsContext->GizmoManager->Render(&RenderAPI);
 
@@ -236,6 +242,7 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	Controller->Possess(Character);
 	UFGInputLibrary::UpdateInputMappings(Controller);
 	Character->SetEditorContext(Context);
+	Controller->PlayerInput->ActionMappings.Empty();
 
 	// Get widgets to inject editor UI into and store necessery recovery data
 	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
@@ -258,7 +265,7 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	// Finish Editor Opening
 	ActiveEditorContext = Context;
 	EditorPlayerCharacter = Character;
-
+		
 	InitInteractiveTools();
 }
 

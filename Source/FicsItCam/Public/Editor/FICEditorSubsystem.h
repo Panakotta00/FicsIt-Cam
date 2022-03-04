@@ -50,6 +50,8 @@ private:
 	UPROPERTY()
 	UFICToolsContextRenderComponent* PDIRenderComponent;
 	UPROPERTY()
+	ULineBatchComponent* LineBatchComponent;
+	UPROPERTY()
 	UFICSelectionInteraction* SelectionInteraction;
 	UPROPERTY()
 	UFICTransformInteraction* TransformInteraction;
@@ -83,6 +85,9 @@ public:
 	TMap<FString, FString> EditorLayouts;
 	UPROPERTY(SaveGame)
 	FString LastEditorLayout;
+
+	UPROPERTY()
+	TMap<FName, FInputActionKeyMapping> KeyMappings;
 	
 	AFICEditorSubsystem();
 
