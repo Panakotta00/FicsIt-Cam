@@ -74,7 +74,7 @@ TSharedRef<FFICEditorAttributeBase> FFICGroupAttribute::CreateEditorAttribute() 
 void FFICGroupAttribute::AddChildAttribute(FString Name, FFICAttribute* Attribute) {
 	Children.Add(Name, Attribute);
 	UpdateDelegateHandles.Add(Name, Attribute->OnUpdate.AddLambda([this]() {
-		OnUpdate.Broadcast();
+		OnUpdateBroadcast();
 	}));
 }
 

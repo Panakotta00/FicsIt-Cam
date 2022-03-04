@@ -51,7 +51,8 @@ EExecutionStatus AFICChatCommand::ExecuteCommand_Implementation(UCommandSender* 
 			UFICCommand* Command = InCMD->GetDefaultObject<UFICCommand>();
 			if (Command->bFinal) Sender->SendChatMessage(Command->CommandSyntax, FColor::Red);
 		}
-		for (const TPair<FString, UFICCommand*>& SubCommand : SubSys->GetCommands()[InCMD]) {
+		const TMap<FString, UFICCommand*>* SubCMDs = SubSys->GetCommands().Find(InCMD);
+		if (SubCMDs) for (const TPair<FString, UFICCommand*>& SubCommand : *SubCMDs) {
 			PrintCommands(SubCommand.Value->GetClass());
 		}
 	};

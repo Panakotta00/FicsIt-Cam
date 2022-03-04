@@ -132,10 +132,12 @@ public:
 	
 	// Begin FFICEditorAttributeBase
 	virtual void SetKeyframe(FICFrame Time) override {
+		Attribute.LockUpdateEvent();
 		Attribute.AddKeyframe(Time);
 		typename AttribType::KeyframeType& KF = *Attribute.GetKeyframe(Time);
 		KF.Value = CurrentValue;
 		Attribute.RecalculateAllKeyframes();
+		Attribute.UnlockUpdateEvent();
 	}
 	
 	virtual bool HasChanged(FICFrame Time) const override {

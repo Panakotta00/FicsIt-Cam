@@ -8,8 +8,26 @@ USTRUCT(BlueprintType)
 struct FFICAttribute {
 	GENERATED_BODY()
 
+private:
+	int UpdateLocks = 0;
+
+protected:
+	void OnUpdateBroadcast() {
+		if (UpdateLocks == 0) OnUpdate.Broadcast(); 
+	}
+	
+public:
 	DECLARE_MULTICAST_DELEGATE(FOnUpdate)
 	FOnUpdate OnUpdate;
+
+	void LockUpdateEvent() { ++UpdateLocks; }
+	void UnlockUpdateEvent(bool bBroadcastIfFullUnlock = true) {
+		--UpdateLocks;
+		if (UpdateLocks < 1) {
+			UpdateLocks = 0;
+			if (bBroadcastIfFullUnlock) OnUpdate.Broadcast();
+		}
+	}
 
 	virtual ~FFICAttribute() = default;
 	

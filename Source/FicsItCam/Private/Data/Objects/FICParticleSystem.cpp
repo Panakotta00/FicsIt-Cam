@@ -87,6 +87,7 @@ void UFICParticleSystem::InitEditor(UFICEditorContext* Context) {
 	EditorContext = Context;
 	ParticleSystemActor->ParticleSystemSceneObject = this;
 	ParticleSystemActor->SetParticleSystem(ParticleSystem);
+	ParticleSystemActor->ParticleSystemComponent->SetActive(Active.GetValue(Context->GetCurrentFrame()));
 }
 
 void UFICParticleSystem::ShutdownEditor(UFICEditorContext* Context) {

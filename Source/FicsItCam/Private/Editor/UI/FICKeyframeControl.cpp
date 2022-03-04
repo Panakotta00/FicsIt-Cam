@@ -204,8 +204,9 @@ FReply SFICKeyframeControl::OnMouseButtonDoubleClick(const FGeometry& MyGeometry
 	TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attribute->GetAttribute().GetKeyframes();
 	if (Keyframes.Num() > 0) {
 		BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
+		Attribute->GetAttribute().LockUpdateEvent();
 		for (const TPair<FICFrame, TSharedRef<FFICKeyframe>>& KF : Keyframes) Attribute->RemoveKeyframe(KF.Key);
-		Attribute->GetAttribute().OnUpdate.Broadcast();
+		Attribute->GetAttribute().UnlockUpdateEvent();
 		END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
 	}
 	return FReply::Handled();

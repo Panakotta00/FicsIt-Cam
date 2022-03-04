@@ -76,8 +76,7 @@ void FFICGraphKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	TSet<TPair<FFICAttribute*, FICFrame>> Selection;
 	double start2 = FPlatformTime::Seconds();
 	for (TPair<FFICAttribute*, TArray<FICFrame>>& Movement : Movements) {
-		FFICAttribute::FOnUpdate Update = Movement.Key->OnUpdate;
-		Movement.Key->OnUpdate = FFICAttribute::FOnUpdate();
+		Movement.Key->LockUpdateEvent();
 		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Movement.Key->GetKeyframes();
 		Movement.Value.Sort();
 		int32 Step = (CumulativeTimelineDiff>0) ? -1 : 1;
@@ -90,8 +89,7 @@ void FFICGraphKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 			Selection.Add(TPair<FFICAttribute*, FICFrame>(Movement.Key, Movement.Value[Index] + CumulativeTimelineDiff));
 		}
 		Movement.Key->RecalculateAllKeyframes();
-		Movement.Key->OnUpdate = Update;
-		Movement.Key->OnUpdate.Broadcast();
+		Movement.Key->UnlockUpdateEvent();
 	}
 	GraphView->SetSelection(Selection);
 }

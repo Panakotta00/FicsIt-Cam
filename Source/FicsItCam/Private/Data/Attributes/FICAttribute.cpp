@@ -7,7 +7,7 @@ void FFICAttribute::RecalculateAllKeyframes() {
 		RecalculateKeyframe(Time);
 	}
 
-	OnUpdate.Broadcast();
+	OnUpdateBroadcast();
 }
 
 TSharedPtr<FFICKeyframe> FFICAttribute::GetPrevKeyframe(FICFrame Time, FICFrame& OutTime) {
