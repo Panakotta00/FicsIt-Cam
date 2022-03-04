@@ -85,7 +85,7 @@ FReply SFICSceneObjectOutlinerRow::OnMouseButtonUp(const FGeometry& MyGeometry, 
 }
 
 FReply SFICSceneObjectOutlinerRow::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	return FReply::Handled().ReleaseMouseCapture().BeginDragDrop(MakeShared<FFICSceneObjectDragDrop>(SceneObject, false));
+	return FReply::Handled().ReleaseMouseCapture().BeginDragDrop(MakeShared<FFICSceneObjectDragDrop>(Context, SceneObject, false));
 }
 
 SFICSceneObjectOutliner::~SFICSceneObjectOutliner() {

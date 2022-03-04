@@ -314,7 +314,10 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			if (Change) Change->RedoChange();
 			return FReply::Handled();
 		} else if (InKeyEvent.GetKey() == EKeys::Delete) {
-			Context->RemoveSceneObject(Context->GetSelectedSceneObject());
+			if (Context->GetSelectedSceneObject()) {
+				Context->ChangeList.PushChange(MakeShared<FFICChange_RemoveSceneObject>(Context, Context->GetSelectedSceneObject()));
+				Context->RemoveSceneObject(Context->GetSelectedSceneObject());
+			}
 			return FReply::Handled();
 		}
 	}

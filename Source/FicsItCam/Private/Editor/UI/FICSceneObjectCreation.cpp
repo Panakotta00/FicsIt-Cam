@@ -5,8 +5,14 @@
 #include "Editor/FICEditorContext.h"
 #include "Widgets/Layout/SScrollBox.h"
 
-FFICSceneObjectDragDrop::FFICSceneObjectDragDrop(UClass* InSceneObjectClass, bool bSceneObjectTemp): SceneObjectClass(InSceneObjectClass), bSceneObjectTemp(bSceneObjectTemp) {}
-FFICSceneObjectDragDrop::FFICSceneObjectDragDrop(UObject* InSceneObject, bool bSceneObjectTemp) : SceneObject(InSceneObject), bSceneObjectTemp(bSceneObjectTemp) {}
+FFICSceneObjectDragDrop::FFICSceneObjectDragDrop(UClass* InSceneObjectClass, bool bSceneObjectTemp) : SceneObjectClass(InSceneObjectClass), bSceneObjectTemp(bSceneObjectTemp) {}
+FFICSceneObjectDragDrop::FFICSceneObjectDragDrop(UFICEditorContext* InContext, UObject* InSceneObject, bool bSceneObjectTemp) : Context(InContext), SceneObject(InSceneObject), bSceneObjectTemp(bSceneObjectTemp) {}
+
+void FFICSceneObjectDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
+	if (SceneObject && Context && bSceneObjectTemp) {
+		Context->ChangeList.PushChange(MakeShared<FFICChange_AddSceneObject>(Context, SceneObject));
+	}
+}
 
 FSlateColorBrush SFICSceneObjectCreationRow::DefaultHoverBackground = FSlateColorBrush(FColor::FromHex("333333"));
 
@@ -48,6 +54,7 @@ FReply SFICSceneObjectCreationRow::OnMouseButtonUp(const FGeometry& MyGeometry, 
 			UObject* SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(AFICSubsystem::GetFICSubsystem(Context), Context->GetScene());
 			Context->AddSceneObject(SceneObject);
 			Context->SetSelectedSceneObject(SceneObject);
+			Context->ChangeList.PushChange(MakeShared<FFICChange_AddSceneObject>(Context, SceneObject));
 			return FReply::Handled().ReleaseMouseCapture();
 		}
 	}

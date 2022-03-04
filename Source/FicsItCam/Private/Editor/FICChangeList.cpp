@@ -1,5 +1,6 @@
 #include "Editor/FICChangeList.h"
 
+#include "FICSubsystem.h"
 #include "Editor/FICEditorContext.h"
 
 TArray<FChangeStackEntry> FFICChange::ChangeStack = TArray<FChangeStackEntry>();
@@ -35,6 +36,45 @@ void FFICChange_ActiveFrame::RedoChange() {
 
 void FFICChange_ActiveFrame::UndoChange() {
 	EditorContext->SetCurrentFrame(FromFrame);
+}
+
+void FFICChange_AddSceneObject::RedoChange() {
+	if (SceneObject) return;
+	UObject* CDO = SceneObjectClass->GetDefaultObject();
+	SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(AFICSubsystem::GetFICSubsystem(Context), Context->GetScene());
+	Context->AddSceneObject(SceneObject);
+	Context->SetSelectedSceneObject(SceneObject);
+	Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().Set(Snapshot.ToSharedRef());
+	Snapshot.Reset();
+}
+
+void FFICChange_AddSceneObject::UndoChange() {
+	if (!SceneObject) return;
+	Snapshot = Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().Get();
+	Context->RemoveSceneObject(SceneObject);
+	SceneObject = nullptr;
+}
+
+FFICChange_RemoveSceneObject::FFICChange_RemoveSceneObject(UFICEditorContext* InContext, UObject* InSceneObject) :
+	Context(InContext),
+	SceneObjectClass(InSceneObject->GetClass()),
+	Snapshot(Cast<IFICSceneObject>(InSceneObject)->GetRootAttribute().Get()) {}
+
+void FFICChange_RemoveSceneObject::RedoChange() {
+	if (!SceneObject) return;
+	Snapshot = Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().Get();
+	Context->RemoveSceneObject(SceneObject);
+	SceneObject = nullptr;
+}
+
+void FFICChange_RemoveSceneObject::UndoChange() {
+	if (SceneObject) return;
+	UObject* CDO = SceneObjectClass->GetDefaultObject();
+	SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(AFICSubsystem::GetFICSubsystem(Context), Context->GetScene());
+	Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().Set(Snapshot.ToSharedRef());
+	Snapshot.Reset();
+	Context->AddSceneObject(SceneObject);
+	Context->SetSelectedSceneObject(SceneObject);
 }
 
 void FFICChangeList::PushChange(TSharedRef<FFICChange> InChange) {

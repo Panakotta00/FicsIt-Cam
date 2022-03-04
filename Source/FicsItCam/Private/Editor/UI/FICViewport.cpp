@@ -30,6 +30,7 @@ void SFICViewport::OnDragEnter(const FGeometry& MyGeometry, const FDragDropEvent
 			UObject* SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(AFICSubsystem::GetFICSubsystem(Context), Context->GetScene());
 			Context->AddSceneObject(SceneObject);
 			SceneObjectDrag->SceneObject = SceneObject;
+			SceneObjectDrag->Context = Context;
 		}
 	}
 }
@@ -66,6 +67,7 @@ void SFICViewport::OnDragLeave(const FDragDropEvent& DragDropEvent) {
 		if (SceneObjectDrag->SceneObject && SceneObjectDrag->bSceneObjectTemp) {
 			Context->RemoveSceneObject(SceneObjectDrag->SceneObject);
 			SceneObjectDrag->SceneObject = nullptr;
+			SceneObjectDrag->Context = nullptr;
 		}
 	}
 }

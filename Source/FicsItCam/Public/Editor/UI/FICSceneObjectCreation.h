@@ -7,12 +7,17 @@ class FFICSceneObjectDragDrop : public FDragDropOperation {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICGraphDragDrop, FDragDropOperation)
 
+	UFICEditorContext* Context = nullptr;
 	UClass* SceneObjectClass = nullptr;
 	UObject* SceneObject = nullptr;
 	bool bSceneObjectTemp = true;
 
 	FFICSceneObjectDragDrop(UClass* InSceneObjectClass, bool bSceneObjectTemp);
-	FFICSceneObjectDragDrop(UObject* InSceneObject, bool bSceneObjectTemp);
+	FFICSceneObjectDragDrop(UFICEditorContext* InContext, UObject* InSceneObject, bool bSceneObjectTemp);
+
+	// Begin FDragDropOperation
+	virtual void OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) override;
+	// End FDragDropOperation
 };
 
 class SFICSceneObjectCreationRow : public SCompoundWidget {

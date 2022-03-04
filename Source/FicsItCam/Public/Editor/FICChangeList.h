@@ -92,6 +92,39 @@ struct FFICChange_Attribute : public FFICChange {
 	}
 };
 
+struct FFICChange_AddSceneObject : public FFICChange {
+	UFICEditorContext* Context;
+	UClass* SceneObjectClass;
+	UObject* SceneObject;
+	TSharedPtr<FFICAttribute> Snapshot;
+
+	FFICChange_AddSceneObject(UFICEditorContext* InContext, UObject* InSceneObject) : Context(InContext), SceneObjectClass(InSceneObject->GetClass()), SceneObject(InSceneObject) {}
+
+	virtual void RedoChange() override;
+	virtual void UndoChange() override;
+
+	virtual FName ChangeType() override {
+		return FName(TEXT("AddSceneObject"));
+	}
+};
+
+struct FFICChange_RemoveSceneObject : public FFICChange {
+	UFICEditorContext* Context;
+	UObject* SceneObject = nullptr;
+	UClass* SceneObjectClass;
+	TSharedPtr<FFICAttribute> Snapshot;
+
+	FFICChange_RemoveSceneObject(UFICEditorContext* InContext, UClass* InSceneObjectClass, TSharedRef<FFICAttribute> InSnapshot) : Context(InContext), SceneObjectClass(InSceneObjectClass), Snapshot(InSnapshot) {}
+	FFICChange_RemoveSceneObject(UFICEditorContext* InContext, UObject* InSceneObject);
+
+	virtual void RedoChange() override;
+	virtual void UndoChange() override;
+
+	virtual FName ChangeType() override {
+		return FName(TEXT("RemoveSceneObject"));
+	}
+};
+
 struct FFICChange_Group : public FFICChange {
 	TSet<TSharedRef<FFICChange>> Changes;
 		
