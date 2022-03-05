@@ -8,6 +8,7 @@
 #include "Editor/FICEditorSubsystem.h"
 
 void UFICGrabToolAxiLockTarget::OnUpdateModifierState(int ModifierID, bool bIsOn) {
+	if (!bIsOn) return;
 	switch (ModifierID) {
 	case 0:
 		GrabTool->AxisLock = FIC_GrabTool_Lock_X;

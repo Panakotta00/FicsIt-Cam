@@ -1,16 +1,59 @@
 #pragma once
 
-#include "FICKeyframeControl.h"
-#include "Brushes/SlateColorBrush.h"
+#include "FICEditorStyle.h"
 #include "Data/FICTypes.h"
 #include "FICEvents.h"
 #include "Data/Attributes/FICKeyframe.h"
+#include "Editor/Data/FICEditorAttributeBase.h"
+#include "FICGraphView.generated.h"
 
+class UFICEditorContext;
 struct FFICAttribute;
+class SFICGraphView;
+
+USTRUCT()
+struct FFICGraphViewStyle : public FSlateWidgetStyle {
+	GENERATED_BODY()
+	
+	static const FFICGraphViewStyle& GetDefault();
+	
+	static const FName TypeName;
+	virtual const FName GetTypeName() const override { return TypeName; };
+
+	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
+		NumericKeyframeIcons.GetResources(OutBrushes);
+		OutBrushes.Add(&SelectionBoxBrush);
+		OutBrushes.Add(&HighlightRangeBrush);
+	}
+
+	UPROPERTY(EditAnywhere)
+	FFICNumericKeyframeIcons NumericKeyframeIcons;
+	UPROPERTY(EditAnywhere)
+	FSlateColor KeyframeSelectedColor;
+	UPROPERTY(EditAnywhere)
+	FSlateColor KeyframeUnselectedColor;
+	UPROPERTY(EditAnywhere)
+	FSlateBrush SelectionBoxBrush;
+	UPROPERTY(EditAnywhere)
+	FSlateBrush HighlightRangeBrush;
+};
+
+UCLASS(hidecategories = Object, MinimalAPI)
+class UFICGraphViewStyleContainer : public USlateWidgetStyleContainerBase {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
+	FFICGraphViewStyle Style;
+
+	virtual const FSlateWidgetStyle* const GetStyle() const override {
+		return &Style;
+	}
+};
 
 class SFICGraphViewKeyframeHandle : public SCompoundWidget {
-	SLATE_BEGIN_ARGS(SFICGraphViewKeyframeHandle) : _Style(&FFICKeyframeControlStyle::GetDefault()), _IsOutHandle(false) {}
-	SLATE_STYLE_ARGUMENT(FFICKeyframeControlStyle, Style)
+	SLATE_BEGIN_ARGS(SFICGraphViewKeyframeHandle) : _Style(&FFICGraphViewStyle::GetDefault()), _IsOutHandle(false) {}
+	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)
 	SLATE_ARGUMENT(bool, IsOutHandle)
 	SLATE_END_ARGS()
 
@@ -20,7 +63,7 @@ public:
 private:
 	class SFICGraphViewKeyframe* GraphKeyframe = nullptr;
 	bool bIsOutHandle = false;
-	const FFICKeyframeControlStyle* Style = nullptr;
+	const FFICGraphViewStyle* Style = nullptr;
 
 public:
 	// Begin SWidget
@@ -34,8 +77,8 @@ public:
 };
 
 class SFICGraphViewKeyframe : public SPanel {
-	SLATE_BEGIN_ARGS(SFICGraphViewKeyframe) : _Style(&FFICKeyframeControlStyle::GetDefault()) {}
-	SLATE_STYLE_ARGUMENT(FFICKeyframeControlStyle, Style)
+	SLATE_BEGIN_ARGS(SFICGraphViewKeyframe) : _Style(&FFICGraphViewStyle::GetDefault()) {}
+	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)
 	SLATE_END_ARGS()
 
 public:
@@ -47,7 +90,7 @@ private:
 	SFICGraphView* GraphView = nullptr;
 	FFICAttribute* Attribute = nullptr;
 	FICFrame Frame = 0;
-	const FFICKeyframeControlStyle* Style = nullptr;
+	const FFICGraphViewStyle* Style = nullptr;
 
 	TSlotlessChildren<SWidget> Children;
 	TSharedPtr<SBox> MainHandle;
@@ -73,39 +116,33 @@ public:
 };
 
 class SFICGraphView : public SPanel {
-	SLATE_BEGIN_ARGS(SFICGraphView) :
-	_AnimationBrush(&DefaultAnimationBrush),
-	_AutoFit(true) {}
-		SLATE_ATTRIBUTE(FICFrame, Frame)
-		SLATE_ATTRIBUTE(FFICFrameRange, FrameRange)
-		SLATE_ATTRIBUTE(FFICFrameRange, FrameHighlightRange)
-		SLATE_ATTRIBUTE(FFICValueRange, ValueRange)
+	SLATE_BEGIN_ARGS(SFICGraphView) : _Style(&FFICGraphViewStyle::GetDefault()) {}
+	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)
+	SLATE_ATTRIBUTE(FICFrame, Frame)
+	SLATE_ATTRIBUTE(FFICFrameRange, FrameRange)
+	SLATE_ATTRIBUTE(FFICFrameRange, FrameHighlightRange)
+	SLATE_ATTRIBUTE(FFICValueRange, ValueRange)
 
-		SLATE_ARGUMENT_DEFAULT(bool, AutoFit) = false;
-		SLATE_ARGUMENT(TArray<TSharedRef<FFICEditorAttributeBase>>, Attributes)
+	SLATE_ARGUMENT_DEFAULT(bool, AutoFit) = true;
+	SLATE_ARGUMENT(TArray<TSharedRef<FFICEditorAttributeBase>>, Attributes)
 
-		SLATE_EVENT(FFICFrameRangeChanged, OnFrameRangeChanged)
-		SLATE_EVENT(FFICValueRangeChanged, OnValueRangeChanged)
-	
-		SLATE_ATTRIBUTE(const FSlateBrush*, AnimationBrush)
+	SLATE_EVENT(FFICFrameRangeChanged, OnFrameRangeChanged)
+	SLATE_EVENT(FFICValueRangeChanged, OnValueRangeChanged)
 	SLATE_END_ARGS()
 
 public:
 	void Construct(const FArguments& InArgs, UFICEditorContext* Context);
 
 private:
-	static FSlateColorBrush DefaultAnimationBrush;
-	static FSlateColorBrush DefaultSelectionBrush;
-	
 	TSlotlessChildren<SFICGraphViewKeyframe> Children;
+
+	const FFICGraphViewStyle* Style = nullptr;
 
 	TAttribute<FICFrame> ActiveFrame;
 	TAttribute<FFICFrameRange> FrameRange;
 	TAttribute<FFICFrameRange> FrameHighlightRange;
 	TAttribute<FFICValueRange> ValueRange;
 	
-	TAttribute<const FSlateBrush*> AnimationBrush;
-
 	FFICFrameRangeChanged OnFrameRangeChanged;
 	FFICValueRangeChanged OnValueRangeChanged;
 

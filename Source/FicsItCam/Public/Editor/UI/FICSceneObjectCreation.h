@@ -5,7 +5,7 @@ class UFICEditorContext;
 
 class FFICSceneObjectDragDrop : public FDragDropOperation {
 public:
-	DRAG_DROP_OPERATOR_TYPE(FFICGraphDragDrop, FDragDropOperation)
+	DRAG_DROP_OPERATOR_TYPE(FFICSceneObjectDragDrop, FDragDropOperation)
 
 	UFICEditorContext* Context = nullptr;
 	UClass* SceneObjectClass = nullptr;

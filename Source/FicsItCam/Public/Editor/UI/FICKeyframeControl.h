@@ -1,45 +1,49 @@
 ﻿#pragma once
 
+#include "FICEditorStyle.h"
 #include "Data/FICTypes.h"
+#include "FICKeyframeControl.generated.h"
 
 class FFICEditorAttributeBase;
 class UFICEditorContext;
 class SFICGraphView;
 
+USTRUCT()
 struct FFICKeyframeControlStyle : public FSlateWidgetStyle {
-public:
+	GENERATED_BODY()
+	
 	static const FFICKeyframeControlStyle& GetDefault();
 	
 	static const FName TypeName;
 	virtual const FName GetTypeName() const override { return TypeName; };
 
 	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
-		OutBrushes.Add(&AutoBrush);
-		OutBrushes.Add(&MirrorBrush);
-		OutBrushes.Add(&CustomBrush);
-		OutBrushes.Add(&LinearBrush);
-		OutBrushes.Add(&StepBrush);
-		OutBrushes.Add(&EaseInOutBrush);
-		OutBrushes.Add(&DefaultBrush);
-		OutBrushes.Add(&HandleBrush);
+		NumericKeyframeIcons.GetResources(OutBrushes);
 	}
-	
-	FSlateBrush AutoBrush;
-	FSlateBrush MirrorBrush;
-	FSlateBrush CustomBrush;
-	FSlateBrush LinearBrush;
-	FSlateBrush StepBrush;
-	FSlateBrush EaseInOutBrush;
-	FSlateBrush DefaultBrush;
-	
-	FSlateBrush HandleBrush;
-	
-	FSlateColor UnsetColor;
-	FSlateColor SetColor;
-	FSlateColor ChangedColor;
-	FSlateColor AnimatedColor;
 
-	FFICKeyframeControlStyle();
+	UPROPERTY(EditAnywhere)
+	FFICNumericKeyframeIcons NumericKeyframeIcons;
+	UPROPERTY(EditAnywhere)
+	FSlateColor UnsetColor;
+	UPROPERTY(EditAnywhere)
+	FSlateColor SetColor;
+	UPROPERTY(EditAnywhere)
+	FSlateColor ChangedColor;
+	UPROPERTY(EditAnywhere)
+	FSlateColor AnimatedColor;
+};
+
+UCLASS(hidecategories = Object, MinimalAPI)
+class UFICKeyframeControlStyleContainer : public USlateWidgetStyleContainerBase {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
+	FFICKeyframeControlStyle Style;
+
+	virtual const FSlateWidgetStyle* const GetStyle() const override {
+		return &Style;
+	}
 };
 
 class SFICKeyframeControl : public SCompoundWidget {

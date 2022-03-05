@@ -9,61 +9,13 @@
 const FName FFICKeyframeControlStyle::TypeName = TEXT("KeyframeControlStyle");
 
 const FFICKeyframeControlStyle& FFICKeyframeControlStyle::GetDefault() {
-	static FFICKeyframeControlStyle* Style = nullptr;
-	if (!Style) Style = new FFICKeyframeControlStyle();
-	return *Style;
-}
-
-FFICKeyframeControlStyle::FFICKeyframeControlStyle() {
-	UnsetColor = FSlateColor(FColor::FromHex("5A5A5A"));
-	SetColor = FSlateColor(FColor::FromHex("FFAA00"));
-	ChangedColor = FSlateColor(FColor::FromHex("AAAAFF"));
-	AnimatedColor = FSlateColor(FColor::FromHex("AA8800"));
-
-	UTexture2D* Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Ease.Ease"));
-	if (Texture) {
-		Texture->AddToRoot();
-		DefaultBrush.DrawAs = ESlateBrushDrawType::Image;
-		DefaultBrush.ImageType = ESlateBrushImageType::FullColor;
-		DefaultBrush.SetResourceObject(Texture);
-		DefaultBrush.ImageSize.X = Texture->GetSizeX();
-		DefaultBrush.ImageSize.Y = Texture->GetSizeY();
-	} else {
-		DefaultBrush = static_cast<FSlateBrush>(FSlateColorBrush(FColor::White));
+	static FFICKeyframeControlStyle* Default = nullptr;
+	if (!Default) {
+		Default = new FFICKeyframeControlStyle();
+		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICKeyframeControlStyle>("KeyframeControl");
+		Default->NumericKeyframeIcons = FFICNumericKeyframeIcons::GetDefault();
 	}
-	StepBrush = LinearBrush = EaseInOutBrush = MirrorBrush = CustomBrush = AutoBrush = DefaultBrush;
-
-	Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Ease_InOut.Ease_InOut"));
-	if (Texture) {
-		Texture->AddToRoot();
-		EaseInOutBrush.SetResourceObject(Texture);
-		EaseInOutBrush.ImageSize.X = Texture->GetSizeX();
-		EaseInOutBrush.ImageSize.Y = Texture->GetSizeY();
-	}
-
-	Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Linear.Linear"));
-	if (Texture) {
-		Texture->AddToRoot();
-		LinearBrush.SetResourceObject(Texture);
-		LinearBrush.ImageSize.X = Texture->GetSizeX();
-		LinearBrush.ImageSize.Y = Texture->GetSizeY();
-	}
-
-	Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Step.Step"));
-	if (Texture) {
-		Texture->AddToRoot();
-		StepBrush.SetResourceObject(Texture);
-		StepBrush.ImageSize.X = Texture->GetSizeX();
-		StepBrush.ImageSize.Y = Texture->GetSizeY();
-	}
-
-	Texture = LoadObject<UTexture2D>(NULL, TEXT("/Game/FicsItCam/Handle.Handle"));
-	if (Texture) {
-		Texture->AddToRoot();
-		HandleBrush.SetResourceObject(Texture);
-		HandleBrush.ImageSize.X = Texture->GetSizeX();
-		HandleBrush.ImageSize.Y = Texture->GetSizeY();
-	}
+	return *Default;
 }
 
 void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InContext, TSharedRef<FFICEditorAttributeBase> InAttribute) {
@@ -110,23 +62,23 @@ void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InCont
 				.Image_Lambda([this]() {
 					TSharedPtr<FFICKeyframe> KF = Attribute->GetKeyframe(GetFrame());
 					if (!KF) {
-						return &Style->DefaultBrush;
+						return &Style->NumericKeyframeIcons.DefaultBrush;
 					}
 					switch (KF->KeyframeType) {
 					case FIC_KF_EASE:
-						return &Style->AutoBrush;
+						return &Style->NumericKeyframeIcons.AutoBrush;
 					case FIC_KF_EASEINOUT:
-						return &Style->EaseInOutBrush;
+						return &Style->NumericKeyframeIcons.EaseInOutBrush;
 					case FIC_KF_MIRROR:
-						return &Style->MirrorBrush;
+						return &Style->NumericKeyframeIcons.MirrorBrush;
 					case FIC_KF_CUSTOM:
-						return &Style->CustomBrush;
+						return &Style->NumericKeyframeIcons.CustomBrush;
 					case FIC_KF_LINEAR:
-						return &Style->LinearBrush;
+						return &Style->NumericKeyframeIcons.LinearBrush;
 					case FIC_KF_STEP:
-						return &Style->StepBrush;
+						return &Style->NumericKeyframeIcons.StepBrush;
 					default:
-						return &Style->DefaultBrush;
+						return &Style->NumericKeyframeIcons.DefaultBrush;
 					}
 				})
 			]

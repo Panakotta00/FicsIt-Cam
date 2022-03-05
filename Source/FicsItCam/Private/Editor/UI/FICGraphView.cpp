@@ -4,8 +4,17 @@
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICDragDrop.h"
 
-FSlateColorBrush SFICGraphView::DefaultAnimationBrush = FSlateColorBrush(FColor::FromHex("050505"));
-FSlateColorBrush SFICGraphView::DefaultSelectionBrush = FSlateColorBrush(FColor::FromHex("444444"));
+const FName FFICGraphViewStyle::TypeName = TEXT("FFICGraphViewStyle");
+
+const FFICGraphViewStyle& FFICGraphViewStyle::GetDefault() {
+	static FFICGraphViewStyle* Default = nullptr;
+	if (!Default) {
+		Default = new FFICGraphViewStyle();
+		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICGraphViewStyle>("GraphView");
+		Default->NumericKeyframeIcons = FFICNumericKeyframeIcons::GetDefault();
+	}
+	return *Default;
+}
 
 void SFICGraphViewKeyframeHandle::Construct(const FArguments& InArgs, SFICGraphViewKeyframe* InKeyframe) {
 	GraphKeyframe = InKeyframe;
@@ -20,10 +29,10 @@ void SFICGraphViewKeyframeHandle::Construct(const FArguments& InArgs, SFICGraphV
 		.Padding(5)[
 			SNew(SImage)
 			.Image_Lambda([this]() {
-				return &Style->HandleBrush;
+				return &Style->NumericKeyframeIcons.HandleBrush;
 			})
 			.ColorAndOpacity_Lambda([this]() {
-				return Style->SetColor.GetSpecifiedColor();
+				return Style->KeyframeSelectedColor.GetSpecifiedColor();
 			})
 		]
 	];
@@ -80,29 +89,28 @@ void SFICGraphViewKeyframe::Construct(const FArguments& InArgs, SFICGraphView* I
 				SNew(SImage)
 				.ColorAndOpacity_Lambda([this]() {
 					TSharedPtr<FFICKeyframe> KF = GetKeyframe();
-					if (!KF) return Style->UnsetColor;
-					if (GraphView->IsKeyframeSelected(*Attribute, Frame))return Style->SetColor;
-					return Style->AnimatedColor;
+					if (GraphView->IsKeyframeSelected(*Attribute, Frame))return Style->KeyframeSelectedColor;
+					return Style->KeyframeUnselectedColor;
 				})
 				.Image_Lambda([this]() {
 					if (!GetKeyframe()) {
-						return &Style->DefaultBrush;
+						return &Style->NumericKeyframeIcons.DefaultBrush;
 					}
 					switch (GetKeyframe()->KeyframeType) {
 					case FIC_KF_EASE:
-						return &Style->AutoBrush;
+						return &Style->NumericKeyframeIcons.AutoBrush;
 					case FIC_KF_EASEINOUT:
-						return &Style->EaseInOutBrush;
+						return &Style->NumericKeyframeIcons.EaseInOutBrush;
 					case FIC_KF_MIRROR:
-						return &Style->MirrorBrush;
+						return &Style->NumericKeyframeIcons.MirrorBrush;
 					case FIC_KF_CUSTOM:
-						return &Style->CustomBrush;
+						return &Style->NumericKeyframeIcons.CustomBrush;
 					case FIC_KF_LINEAR:
-						return &Style->LinearBrush;
+						return &Style->NumericKeyframeIcons.LinearBrush;
 					case FIC_KF_STEP:
-						return &Style->StepBrush;
+						return &Style->NumericKeyframeIcons.StepBrush;
 					default:
-						return &Style->DefaultBrush;
+						return &Style->NumericKeyframeIcons.DefaultBrush;
 					}
 				})
 			]
@@ -137,7 +145,7 @@ int SFICGraphViewKeyframe::OnPaint(const FPaintArgs& Args, const FGeometry& Allo
 		if (InHandle) PlotPoints.Add(FVector2D((1.0 / GraphView->GetFramePerLocal()) * -InControl.Frame, (1.0 / GraphView->GetValuePerLocal()) * InControl.Value));
 		PlotPoints.Add(FVector2D(0, 0));
 		if (OutHandle) PlotPoints.Add(FVector2D((1.0 / GraphView->GetFramePerLocal()) * OutControl.Frame, (1.0 / GraphView->GetValuePerLocal()) * -OutControl.Value));
-		FSlateDrawElement::MakeLines(OutDrawElements, LayerId+5, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, Style->SetColor.GetSpecifiedColor(), true, 2);
+		FSlateDrawElement::MakeLines(OutDrawElements, LayerId+5, AllottedGeometry.ToPaintGeometry(), PlotPoints, ESlateDrawEffect::None, Style->KeyframeSelectedColor.GetSpecifiedColor(), true, 2);
 	}
 	
 	int NewLayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId+10, InWidgetStyle, bParentEnabled);
@@ -259,7 +267,7 @@ TSharedPtr<FFICKeyframe> SFICGraphViewKeyframe::GetKeyframe() const {
 }
 
 void SFICGraphView::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
-	AnimationBrush = InArgs._AnimationBrush;
+	Style = InArgs._Style;
 	ActiveFrame = InArgs._Frame;
 	FrameRange = InArgs._FrameRange;
 	ValueRange = InArgs._ValueRange;
@@ -301,7 +309,7 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	// Draw Highlighted Frame Range Background
 	FVector2D AnimationLocalStart = FVector2D(FrameToLocal(Highlight.Begin), 0);
 	FVector2D AnimationLocalEnd = FVector2D(FrameToLocal(Highlight.End), AllottedGeometry.GetLocalSize().Y);
-	FSlateDrawElement::MakeBox(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(AnimationLocalEnd - AnimationLocalStart, FSlateLayoutTransform(AnimationLocalStart)), AnimationBrush.Get(), ESlateDrawEffect::None, AnimationBrush.Get()->TintColor.GetSpecifiedColor());
+	FSlateDrawElement::MakeBox(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(AnimationLocalEnd - AnimationLocalStart, FSlateLayoutTransform(AnimationLocalStart)), &Style->HighlightRangeBrush, ESlateDrawEffect::None, Style->HighlightRangeBrush.TintColor.GetSpecifiedColor());
 	
 	// Draw Grid
 	FVector2D Distance = FVector2D(10,10);
@@ -339,7 +347,7 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 		float EndTime = FrameToLocal(BoxSelection.Max.X);
 		float BeginValue = ValueToLocal(BoxSelection.Min.Y);
 		float EndValue = ValueToLocal(BoxSelection.Max.Y);
-		FSlateDrawElement::MakeBox(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(FVector2D(EndTime - BeginTime, EndValue - BeginValue), FSlateLayoutTransform(FVector2D(BeginTime, BeginValue))), &DefaultSelectionBrush, ESlateDrawEffect::None, DefaultSelectionBrush.TintColor.GetSpecifiedColor());
+		FSlateDrawElement::MakeBox(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(FVector2D(EndTime - BeginTime, EndValue - BeginValue), FSlateLayoutTransform(FVector2D(BeginTime, BeginValue))), &Style->SelectionBoxBrush, ESlateDrawEffect::None, Style->SelectionBoxBrush.TintColor.GetSpecifiedColor());
 	}
 
 	LayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId+10, InWidgetStyle, bParentEnabled);
