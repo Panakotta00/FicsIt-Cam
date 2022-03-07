@@ -30,6 +30,17 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 			})
 			.ToolTipText(FText::FromString(TEXT("If enabled, game simulation will pause allowing you to have a bullet time effect.")))
 		]
+		+SVerticalBox::Slot().Padding(5).AutoHeight()[
+			SNew(SCheckBox)
+			.Content()[SNew(STextBlock).Text(FText::FromString("Looping"))]
+			.IsChecked_Lambda([this]() {
+				return Context->GetScene()->bLooping ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			})
+			.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
+				Context->GetScene()->bLooping = State == ECheckBoxState::Checked;
+			})
+			.ToolTipText(FText::FromString(TEXT("If enabled, animation will restart automatically at the end of the animation sequence.")))
+		]
 		+SVerticalBox::Slot().Padding(5).AutoHeight().HAlign(HAlign_Fill)[
 			SNew(SHorizontalBox)
 			+SHorizontalBox::Slot().AutoWidth()[

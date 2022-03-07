@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "FGSaveInterface.h"
 #include "FICTypes.h"
-#include "FICUtils.h"
 #include "Objects/FICCamera.h"
 #include "FICScene.generated.h"
 
@@ -39,6 +38,9 @@ public:
 	bool bBulletTime = false;
 
 	UPROPERTY(SaveGame)
+	bool bLooping = false;
+
+	UPROPERTY(SaveGame)
 	FTransform LastCameraTransform;
 	UPROPERTY(SaveGame)
 	UObject* LastSelectedSceneObject = nullptr;
@@ -64,11 +66,7 @@ public:
 		SceneObjects.Remove(Object);
 	}
 
-	void MoveSceneObject(UObject* Object, int Delta) {
-		int Index = SceneObjects.Find(Object);
-		SceneObjects.RemoveAt(Index);
-		SceneObjects.Insert(Object, UFICUtils::Modulo(Index + Delta, SceneObjects.Num()+1));
-	}
+	void MoveSceneObject(UObject* Object, int Delta);
 
 	UFICCamera* GetActiveCamera(FICFrameFloat Time);
 };

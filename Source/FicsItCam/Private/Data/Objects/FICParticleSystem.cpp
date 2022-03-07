@@ -47,6 +47,7 @@ void UFICParticleSystem::Tick(float DeltaTime) {
 
 UObject* UFICParticleSystem::CreateNewObject(UObject* InOuter, AFICScene* InScene) {
 	UFICParticleSystem* Object = NewObject<UFICParticleSystem>(InOuter);
+	Object->SceneObjectName = UFICUtils::AdjustSceneObjectName(InScene, Object->SceneObjectName);
 	APlayerController* Player = InScene->GetWorld()->GetFirstPlayerController(); 
 	FVector Pos = Player->PlayerCameraManager->GetCameraLocation();
 	Object->Position.SetDefaultValue(Pos);

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "Editor/FICEditorContext.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/FICCameraReference.h"
 #include "FICUtils.generated.h"
@@ -38,6 +39,9 @@ public:
 
 	UFUNCTION()
 	static FRotator AdditiveRotation(FRotator OldRotation, FRotator NewRotation);
+
+	UFUNCTION()
+	static FString AdjustSceneObjectName(AFICScene* Scene, FString Name);
 };
 
 

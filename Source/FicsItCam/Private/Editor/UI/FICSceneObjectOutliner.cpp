@@ -1,5 +1,6 @@
 #include "Editor/UI/FICSceneObjectOutliner.h"
 
+#include "FICUtils.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICKeyframeControl.h"
 #include "Editor/UI/FICSceneObjectCreation.h"
@@ -22,7 +23,10 @@ void SFICSceneObjectOutlinerRow::Construct(const FArguments& InArgs, UFICEditorC
 					return Context->GetSelectedSceneObject() != SceneObject;
 				})
 				.OnTextCommitted_Lambda([this](const FText& Text, ETextCommit::Type Type) {
-					Cast<IFICSceneObject>(SceneObject)->SetSceneObjectName(Text.ToString());
+					FString Name = Text.ToString();
+					if (UFICUtils::IsValidFICObjectName(Name)) {
+						Cast<IFICSceneObject>(SceneObject)->SetSceneObjectName(UFICUtils::AdjustSceneObjectName(Context->GetScene(), Name));
+					}
 				})
 				.Text_Lambda([this]() {
 					return FText::FromString(Cast<IFICSceneObject>(SceneObject)->GetSceneObjectName());

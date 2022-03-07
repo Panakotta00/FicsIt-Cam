@@ -10,6 +10,7 @@
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 #include "Runtime/FICTimelapseCamera.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
+#include "Runtime/Process/FICRuntimeProcessTimelapseCamera.h"
 
 FFICAsyncImageCompressAndSave::FFICAsyncImageCompressAndSave(TSharedPtr<IImageWrapper> Image, FString Path) : Image(Image), Path(Path) {}
 
@@ -49,10 +50,6 @@ void AFICSubsystem::BeginPlay() {
 	for (TActorIterator<AFICAnimation> Animation(GetWorld()); Animation; ++Animation) {
 		Animation->CreateScene();
 		Animation->Destroy();
-	}
-
-	for (TTuple<FString, AFICTimelapseCamera*> Cam : TimelapseCameras) {
-		Cam.Value->Name = Cam.Key;
 	}
 
 	// Discover Commands

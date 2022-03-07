@@ -27,8 +27,8 @@
 		BoolVarName = InArgs[ArgNum] == TEXT("true"); \
 	}
 
-#define GetSceneKey(SceneKeyVar, ScenePtr) \
-	FString SceneKeyVar = FString::Printf(TEXT("Scene_%s"), *ScenePtr->SceneName);
+#define GetSceneKey(SceneKeyVar, SceneName) \
+	FString SceneKeyVar = FString::Printf(TEXT("Scene_%s"), SceneName);
 
 #define CheckSceneUsage(SubSys, EditSubSys, ProcessKey, SceneNameToCheck) \
 	if (SubSys->GetActiveRuntimeProcessesMap().Contains(ProcessKey) || (EditSubSys->GetActiveEditorContext() && EditSubSys->GetActiveEditorContext()->GetScene()->SceneName == SceneNameToCheck)) { \

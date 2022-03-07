@@ -65,9 +65,6 @@ private:
 	TMap<TSubclassOf<UFICCommand>, TMap<FString, UFICCommand*>> Commands;
 	
 public:
-	UPROPERTY(BlueprintReadWrite, SaveGame, Category="FicsIt-Cam")
-	TMap<FString, AFICTimelapseCamera*> TimelapseCameras;
-	
 	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam", meta=(WorldContext = "WorldContextObject"))
 	static AFICSubsystem* GetFICSubsystem(UObject* WorldContext);
 	

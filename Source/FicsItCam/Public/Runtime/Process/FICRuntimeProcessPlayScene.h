@@ -21,7 +21,7 @@ public:
 	bool bBackground = false;
 	
 	// Begin UFICRuntimeProcess
-	virtual bool NeedsRuntimeProcessCharacter() { return true; }
+	virtual bool NeedsRuntimeProcessCharacter() { return !bBackground; }
 	virtual void Initialize() override;
 	virtual void Start(AFICRuntimeProcessorCharacter* InCharacter) override;
 	virtual void Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) override;

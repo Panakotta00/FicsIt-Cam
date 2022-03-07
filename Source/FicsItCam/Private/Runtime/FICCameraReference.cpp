@@ -2,6 +2,7 @@
 
 #include "FICSubsystem.h"
 #include "Data/FICScene.h"
+#include "Runtime/Process/FICRuntimeProcessPlayScene.h"
 
 UFICRuntimeProcessPlayScene* FFICCameraReference::GetCurrentScenePlay(UObject* WorldContext) const {
 	if (!bUsePlay) return nullptr;

@@ -45,13 +45,11 @@ void UFICCamera::Tick(float DeltaTime) {
 
 UObject* UFICCamera::CreateNewObject(UObject* InOuter, AFICScene* InScene) {
 	UFICCamera* Camera = NewObject<UFICCamera>(InOuter);
-	APlayerController* Player = InOuter->GetWorld()->GetFirstPlayerController(); 
-	FVector Pos = Player->PlayerCameraManager->GetCameraLocation();
-	FRotator Rot = Player->PlayerCameraManager->GetCameraRotation();
-	float FOVVal = Player->PlayerCameraManager->GetFOVAngle();
-	Position.SetDefaultValue(Pos);
-	Rotation.SetDefaultValue(Rot);
-	FOV.SetDefaultValue(FOVVal);
+	Camera->SceneObjectName = UFICUtils::AdjustSceneObjectName(InScene, Camera->SceneObjectName);
+	FFICCameraSettingsSnapshot Snapshot = UFICUtils::CreateCameraSettingsSnapshotFromView(InOuter);
+	Position.SetDefaultValue(Snapshot.Location);
+	Rotation.SetDefaultValue(Snapshot.Rotation);
+	FOV.SetDefaultValue(Snapshot.FOV);
 	return Camera;
 }
 

@@ -95,3 +95,26 @@ FRotator UFICUtils::AdditiveRotation(FRotator OldRotation, FRotator NewRotation)
 	while (RotDiff.Roll > 180.0) RotDiff.Roll -= 360.0;
 	return OldRotation + RotDiff;
 }
+
+FString UFICUtils::AdjustSceneObjectName(AFICScene* Scene, FString Name) {
+	static FRegexPattern Pattern(TEXT("^(\\w+)(_[0-9]+)$"));
+	FRegexMatcher Match(Pattern, Name);
+	if (Match.FindNext()) Name = Match.GetCaptureGroup(1);
+	int Num = 1;
+	FString NewName = Name;
+	while (true) {
+		bool bFound = false;
+		for (UObject* Object : Scene->GetSceneObjects()) {
+			if (Cast<IFICSceneObject>(Object)->GetSceneObjectName() == NewName) {
+				bFound = true;
+				break;
+			}
+		}
+		if (bFound) {
+			NewName = FString::Printf(TEXT("%s_%i"), *Name, Num++);
+		} else {
+			break;
+		}
+	}
+	return NewName;
+}

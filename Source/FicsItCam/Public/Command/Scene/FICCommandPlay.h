@@ -20,13 +20,18 @@ public:
 		TryGetBoolFromArgOpt(bBackground, false, 1)
 		AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(InSender);
 		AFICEditorSubsystem* EditSubSys = AFICEditorSubsystem::GetFICEditorSubsystem(InSender);
-		GetSceneKey(Key, Scene)
+		GetSceneKey(Key, *Scene->SceneName)
 		CheckSceneUsage(SubSys, EditSubSys, Key, Scene->SceneName)
 		UFICRuntimeProcessPlayScene* Process = NewObject<UFICRuntimeProcessPlayScene>(SubSys);
 		Process->Scene = Scene;
 		Process->bBackground = bBackground;
-		SubSys->CreateRuntimeProcess(Key, Process, !bBackground);
-		if (bBackground) InSender->SendChatMessage(FString::Printf(TEXT("Begin to play '%s' in background!"), *InArgs[0]), FColor::Green);
+		if (bBackground) {
+			if (SubSys->CreateRuntimeProcess(Key, Process, false)) {
+				InSender->SendChatMessage(FString::Printf(TEXT("Scene '%s' is now ready to play in background!"), *InArgs[0]), FColor::Green);
+			} else {
+				InSender->SendChatMessage(FString::Printf(TEXT("Failed make Scene '%s' ready for playing in background!"), *InArgs[0]), FColor::Red);
+			}
+		} else SubSys->CreateRuntimeProcess(Key, Process, true);
 		return EExecutionStatus::COMPLETED;
 	}
 };

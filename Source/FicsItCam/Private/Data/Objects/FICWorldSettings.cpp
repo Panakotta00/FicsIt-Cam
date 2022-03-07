@@ -3,6 +3,7 @@
 #include "FGCheatManager.h"
 #include "FGGameState.h"
 #include "FGPlayerController.h"
+#include "FICUtils.h"
 #include "Editor/FICEditorContext.h"
 
 UFICWorldSettings::UFICWorldSettings() {
@@ -11,7 +12,9 @@ UFICWorldSettings::UFICWorldSettings() {
 }
 
 UObject* UFICWorldSettings::CreateNewObject(UObject* InOuter, AFICScene* InScene) {
-	return NewObject<UFICWorldSettings>(InOuter);
+	UFICWorldSettings* Object = NewObject<UFICWorldSettings>(InOuter);
+	Object->SceneObjectName = UFICUtils::AdjustSceneObjectName(InScene, Object->SceneObjectName);
+	return Object;
 }
 
 TSharedRef<SWidget> UFICWorldSettings::CreateDetailsWidget(UFICEditorContext* InContext) {
