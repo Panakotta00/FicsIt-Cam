@@ -64,7 +64,7 @@ void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InCont
 					if (!KF) {
 						return &Style->NumericKeyframeIcons.DefaultBrush;
 					}
-					switch (KF->KeyframeType) {
+					switch (KF->GetType()) {
 					case FIC_KF_EASE:
 						return &Style->NumericKeyframeIcons.AutoBrush;
 					case FIC_KF_EASEINOUT:
@@ -93,11 +93,13 @@ FReply SFICKeyframeControl::OnMouseButtonDown(const FGeometry& MyGeometry, const
 FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton) {
 		FFICAttribute& Attrib = Attribute->GetAttribute();
-        BEGIN_QUICK_ATTRIB_CHANGE(Context, Attrib, GetFrame(), GetFrame())
+		Attrib.LockUpdateEvent();
+		BEGIN_QUICK_ATTRIB_CHANGE(Context, Attrib, GetFrame(), GetFrame())
 		if (Attribute->GetKeyframe(GetFrame()) && (!Attribute->HasChanged(GetFrame()))) Attribute->RemoveKeyframe(GetFrame());
 		else Attribute->SetKeyframe(GetFrame());
 		Attrib.RecalculateAllKeyframes();
 		END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
+		Attrib.UnlockUpdateEvent();
 		return FReply::Handled();
 	} else 	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
         TSharedPtr<FFICKeyframe> KF = Attribute->GetKeyframe(GetFrame());
@@ -110,7 +112,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                 	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASE, false);
+                    KF->SetType(FIC_KF_EASE);
                 	Attribute->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
@@ -120,7 +122,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                 	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASEINOUT, false);
+                    KF->SetType(FIC_KF_EASEINOUT);
                 	Attribute->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
@@ -130,7 +132,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                 	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_LINEAR, false);
+                    KF->SetType(FIC_KF_LINEAR);
                 	Attribute->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
@@ -140,7 +142,7 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
                 FSlateIcon(),
                 FUIAction(FExecuteAction::CreateLambda([KF, this]() {
                 	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_STEP, false);
+                    KF->SetType(FIC_KF_STEP);
                 	Attribute->GetAttribute().RecalculateAllKeyframes();
                 	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
                 }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));

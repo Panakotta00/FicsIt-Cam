@@ -162,6 +162,7 @@ void AFICEditorCameraActor::UpdateValues(TSharedRef<FFICEditorAttributeBase> Att
 	FRotator Rot = FFICAttributeRotation::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Rotation"));
 	SetActorLocation(Pos);
 	SetActorRotation(Rot);
+	CaptureComponent->FOVAngle = Attribute->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue();
 }
 
 TSharedRef<SWidget> AFICEditorCameraActor::GetCameraPreview() {

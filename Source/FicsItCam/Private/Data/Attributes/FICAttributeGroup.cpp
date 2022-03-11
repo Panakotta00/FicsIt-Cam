@@ -6,12 +6,19 @@ TMap<FICFrame, TSharedRef<FFICKeyframe>> FFICGroupAttribute::GetKeyframes() {
 	TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes;
 	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
 		for (const TPair<int64, TSharedRef<FFICKeyframe>>& Keyframe : Attr.Value->GetKeyframes()) {
-			FFICKeyframe KF;
-			KF.KeyframeType = FIC_KF_CUSTOM;
-			Keyframes.Add(Keyframe.Key, MakeShared<FFICKeyframe>(KF));
+			Keyframes.Add(Keyframe.Key, MakeShared<FFICKeyframeGroup>(this, Keyframe.Key));
 		}
 	}
 	return Keyframes;
+}
+
+void FFICKeyframeGroup::SetType(EFICKeyframeType Type) {
+	for (TPair<FString, FFICAttribute*> Child : Attribute->Children) {
+		TSharedRef<FFICKeyframe>* KF = Child.Value->GetKeyframes().Find(Frame);
+		if (KF) {
+			(*KF)->SetType(Type);
+		}
+	}
 }
 
 FFICGroupAttribute::~FFICGroupAttribute() {
@@ -28,9 +35,7 @@ TSharedRef<FFICKeyframe> FFICGroupAttribute::AddKeyframe(FICFrame Time) {
 	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
 		Attr.Value->AddKeyframe(Time);
 	}
-	FFICKeyframe KF;
-	KF.KeyframeType = FIC_KF_CUSTOM;
-	return MakeShared<FFICKeyframe>(KF);
+	return MakeShared<FFICKeyframeGroup>(this, Time);
 }
 
 void FFICGroupAttribute::RemoveKeyframe(FICFrame Time) {

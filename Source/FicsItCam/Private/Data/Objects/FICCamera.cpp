@@ -1,5 +1,6 @@
 #include "Data/Objects/FICCamera.h"
 
+#include "FICUtils.h"
 #include "Components/LineBatchComponent.h"
 #include "Editor/Data/FICEditorCameraActor.h"
 #include "Editor/FICEditorContext.h"
@@ -47,9 +48,9 @@ UObject* UFICCamera::CreateNewObject(UObject* InOuter, AFICScene* InScene) {
 	UFICCamera* Camera = NewObject<UFICCamera>(InOuter);
 	Camera->SceneObjectName = UFICUtils::AdjustSceneObjectName(InScene, Camera->SceneObjectName);
 	FFICCameraSettingsSnapshot Snapshot = UFICUtils::CreateCameraSettingsSnapshotFromView(InOuter);
-	Position.SetDefaultValue(Snapshot.Location);
-	Rotation.SetDefaultValue(Snapshot.Rotation);
-	FOV.SetDefaultValue(Snapshot.FOV);
+	Camera->Position.SetDefaultValue(Snapshot.Location);
+	Camera->Rotation.SetDefaultValue(Snapshot.Rotation);
+	Camera->FOV.SetDefaultValue(Snapshot.FOV);
 	return Camera;
 }
 

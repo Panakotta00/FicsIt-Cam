@@ -62,7 +62,7 @@ void UFICRuntimeProcessPlayScene::Tick(AFICRuntimeProcessorCharacter* InCharacte
 	}
 	
 	if (Time > Scene->AnimationRange.End) {
-		Progress = 0;
+		Progress = (Scene->AnimationRange.Begin + (Time - Scene->AnimationRange.End)) / (FICFrameFloat)Scene->FPS;
 		if (!Scene->bLooping) {
 			if (bBackground) {
 				AFICSubsystem::GetFICSubsystem(this)->StopRuntimeProcess(this);

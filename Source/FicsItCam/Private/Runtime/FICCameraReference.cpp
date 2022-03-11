@@ -93,17 +93,19 @@ UFICCamera* FFICCameraReference::GetCamera(UObject* WorldContext, UFICRuntimePro
 	if (OptOutRuntimePlay) *OptOutRuntimePlay = PlayScene;
 	if (OptOutTime) *OptOutTime = Time;
 	if (PlayScene) return PlayScene->Scene->GetActiveCamera(Time);
-	if (Camera.Len() < 1) return GetScene(WorldContext)->GetActiveCamera(Frame);
-	else for (UObject* SceneObject : GetScene(WorldContext)->GetSceneObjects()) {
-		UFICCamera* CameraPtr = Cast<UFICCamera>(SceneObject);
-		if (CameraPtr && CameraPtr->GetSceneObjectName() == Camera) {
-			return CameraPtr;
+	AFICScene* UsedScene = GetScene(WorldContext);
+	if (UsedScene) {
+		if (Camera.Len() < 1) return UsedScene->GetActiveCamera(Frame);
+		else for (UObject* SceneObject : UsedScene->GetSceneObjects()) {
+			UFICCamera* CameraPtr = Cast<UFICCamera>(SceneObject);
+			if (CameraPtr && CameraPtr->GetSceneObjectName() == Camera) {
+				return CameraPtr;
+			}
 		}
 	}
 	return nullptr;
 }
 
-#pragma optimize("", off)
 FFICCameraSettingsSnapshot FFICCameraReference::GetSnapshot(UObject* WorldContext) const {
 	FICFrameFloat Time;
 	UFICCamera* CameraPtr = GetCamera(WorldContext, nullptr, &Time);
@@ -117,4 +119,3 @@ FFICCameraSettingsSnapshot FFICCameraReference::GetSnapshot(UObject* WorldContex
 	Snapshot.FocusDistance = CameraPtr->FocusDistance.GetValue(Time);
 	return Snapshot;
 }
-#pragma optimize("", on)

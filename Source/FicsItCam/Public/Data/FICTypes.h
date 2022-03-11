@@ -33,9 +33,12 @@ struct FFICFrameRangeIterator {
 USTRUCT()
 struct FFICFrameRange {
 	GENERATED_BODY()
-	
-	FICFrame Begin;
-	FICFrame End;
+
+	UPROPERTY(SaveGame)
+	int64 Begin;
+
+	UPROPERTY(SaveGame)
+	int64 End;
 
 	FFICFrameRange() : Begin(0), End(1) {}
 	

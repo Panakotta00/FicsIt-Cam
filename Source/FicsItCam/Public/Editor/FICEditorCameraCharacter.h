@@ -27,6 +27,8 @@ private:
 	float RollRotationFixValue = 0.0f;
 	bool bReposses = false;
 
+	float FOV = 0;
+
 	bool bControlView = true;
 	bool bControlViewTemp = false;
 	FVector2D LastCursorPos;

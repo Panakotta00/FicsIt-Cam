@@ -96,7 +96,7 @@ void SFICGraphViewKeyframe::Construct(const FArguments& InArgs, SFICGraphView* I
 					if (!GetKeyframe()) {
 						return &Style->NumericKeyframeIcons.DefaultBrush;
 					}
-					switch (GetKeyframe()->KeyframeType) {
+					switch (GetKeyframe()->GetType()) {
 					case FIC_KF_EASE:
 						return &Style->NumericKeyframeIcons.AutoBrush;
 					case FIC_KF_EASEINOUT:
@@ -200,58 +200,62 @@ FReply SFICGraphViewKeyframe::OnDragDetected(const FGeometry& MyGeometry, const 
 FReply SFICGraphViewKeyframe::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton) {
 		GraphView->ToggleKeyframeSelection(*Attribute, GetFrame(), &Event.GetModifierKeys());
-	}
-	//return FReply::Handled();
-	/*} else 	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
-        TSharedPtr<FFICKeyframe> KF = GetKeyframe();
-		if (KF) {
-			TSharedPtr<IMenu> MenuHandle;
-			FMenuBuilder MenuBuilder(true, NULL);
-			MenuBuilder.AddMenuEntry(
-                FText::FromString("Ease"),
-                FText(),
-                FSlateIcon(),
-                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASE, false);
-                	Attribute->GetAttribute().RecalculateAllKeyframes();
-                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
-                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-			MenuBuilder.AddMenuEntry(
-                FText::FromString("Ease-In/Out"),
-                FText(),
-                FSlateIcon(),
-                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_EASEINOUT, false);
-                	Attribute->GetAttribute().RecalculateAllKeyframes();
-                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
-                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-			MenuBuilder.AddMenuEntry(
-                FText::FromString("Linear"),
-                FText(),
-                FSlateIcon(),
-                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_LINEAR, false);
-                	Attribute->GetAttribute().RecalculateAllKeyframes();
-                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
-                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-			MenuBuilder.AddMenuEntry(
-                FText::FromString("Step"),
-                FText(),
-                FSlateIcon(),
-                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    Attribute->SetKeyframe(FFICValueTime(GetFrame(), Attribute->GetKeyframe(GetFrame())->GetValue()), FIC_KF_STEP, false);
-                	Attribute->GetAttribute().RecalculateAllKeyframes();
-                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
-                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+	} else	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
+		TSet<TPair<FFICAttribute*, FICFrame>> Keyframes = GraphView->GetSelection();
+		TFunction<void(EFICKeyframeType)> SetKeyframeType;
+		SetKeyframeType = [Keyframes, this](EFICKeyframeType Type) {
+			TSharedRef<FFICChange_Group> Group = MakeShared<FFICChange_Group>();
+			TMap<FFICAttribute*, TSharedRef<FFICAttribute>> Snapshots;
+			for (const TPair<FFICAttribute*, FICFrame>& KF : Keyframes) {
+				TSharedRef<FFICAttribute>* Snapshot = Snapshots.Find(KF.Key);
+				if (!Snapshot) Snapshots.Add(KF.Key, KF.Key->Get());
+				TSharedRef<FFICKeyframe>* NKF = KF.Key->GetKeyframes().Find(KF.Value);
+				if (NKF) (*NKF)->SetType(Type);
+				KF.Key->LockUpdateEvent();
+				KF.Key->RecalculateAllKeyframes();
+				KF.Key->UnlockUpdateEvent(false);
+			}
+			for (const TPair<FFICAttribute*, TSharedRef<FFICAttribute>>& Snapshot : Snapshots) {
+				Group->PushChange(MakeShared<FFICChange_Attribute>(Snapshot.Key, Snapshot.Value));
+			}
+			GraphView->Context->ChangeList.PushChange(Group);
+			for (const TPair<FFICAttribute*, FICFrame>& KF : Keyframes) KF.Key->OnUpdate.Broadcast();
+		};
 		
-			FSlateApplication::Get().PushMenu(SharedThis(this), *Event.GetEventPath(), MenuBuilder.MakeWidget(), Event.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
-		}
-		return FReply::Handled();*/
-	//}
+		TSharedPtr<IMenu> MenuHandle;
+		FMenuBuilder MenuBuilder(true, NULL);
+		MenuBuilder.AddMenuEntry(
+            FText::FromString("Ease"),
+            FText(),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
+            	SetKeyframeType(FIC_KF_EASE);
+            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+		MenuBuilder.AddMenuEntry(
+            FText::FromString("Ease-In/Out"),
+            FText(),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
+                SetKeyframeType(FIC_KF_EASEINOUT);
+            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+		MenuBuilder.AddMenuEntry(
+            FText::FromString("Linear"),
+            FText(),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
+                SetKeyframeType(FIC_KF_LINEAR);
+            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+		MenuBuilder.AddMenuEntry(
+            FText::FromString("Step"),
+            FText(),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
+                SetKeyframeType(FIC_KF_STEP);
+            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
+	
+		FSlateApplication::Get().PushMenu(SharedThis(this), *Event.GetEventPath(), MenuBuilder.MakeWidget(), Event.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
+		return FReply::Handled();
+	}
 	return FReply::Handled();
 }
 

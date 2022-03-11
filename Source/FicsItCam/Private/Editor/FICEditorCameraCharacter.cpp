@@ -4,7 +4,9 @@
 #include "Editor/FICEditorCameraCharacter.h"
 
 #include "CineCameraComponent.h"
+#include "FGGameUserSettings.h"
 #include "FGPlayerController.h"
+#include "FICUtils.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Data/Objects/FICCamera.h"
@@ -34,7 +36,7 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
 
 	if (GetController() == GetWorld()->GetFirstPlayerController()) {
-		bool bUseCinematic = EditorContext->GetScene()->bUseCinematic;
+		bool bUseCinematic = EditorContext->GetScene()->bUseCinematic && EditorContext->GetLockCameraToView();
 		if (!IsValid(Camera) || Camera->IsA<UCineCameraComponent>() != bUseCinematic) {
 			if (Camera) Camera->DestroyComponent();
 			if (bUseCinematic) {
@@ -64,11 +66,12 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
 			CineCamera->Filmback.SensorWidth = EditorContext->GetScene()->SensorDimension.X * EditorContext->SensorWidthAdjust;
 			CineCamera->Filmback.SensorHeight = EditorContext->GetScene()->SensorDimension.Y * EditorContext->SensorWidthAdjust;
-			if (EditorContext->GetCamera()) Camera->SetFieldOfView(EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue());
 		} else {
 			Camera->SetAspectRatio(EditorContext->GetScene()->ResolutionHeight / EditorContext->GetScene()->ResolutionWidth);
 		}
-	
+		if (EditorContext->GetCamera() && EditorContext->GetLockCameraToView()) Camera->SetFieldOfView(EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue());
+		else Camera->SetFieldOfView(FOV);
+		
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		GetCharacterMovement()->MaxFlySpeed = Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed() ? MaxFlySpeed * 10 : MaxFlySpeed;
 		GetCharacterMovement()->MaxAcceleration = 1000000;
@@ -95,9 +98,8 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 
 				// Patch Rotation
 				RotNew = UFICUtils::AdditiveRotation(RotOld, RotNew);
+				RotNew.Roll = RollRotationFixValue;
 
-				FVector PosOldNewDiff = PosOld - PosNew;
-				FRotator RotOldNewDiff = RotOld - RotNew;
 				if (bWasChangedDirectly) EditorContext->bInAutoKeyframeSet = true;
 				EditorContext->CommitAutoKeyframe(this);
 				bChangedByMovement = true;
@@ -108,8 +110,6 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 				if (bWasChangedDirectly) EditorContext->bInAutoKeyframeSet = false;
 				
 				RotOld = RotNew;
-				
-				RotatorFix.Roll = RotOld.Roll;
 			}
 
 			UGameplayStatics::SetGlobalTimeDilation(this, EditorContext->GetScene()->bBulletTime ? 0.00001 : 1);
@@ -248,10 +248,14 @@ void AFICEditorCameraCharacter::Zoom(float Value) {
 	if (bIsSprinting && PlayerController->PlayerInput->IsCtrlPressed()) {
 		float Delta = Value;
 		if (bIsSprinting) Delta *= 2;
-		TFICEditorAttribute<FFICFloatAttribute> FOV = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV");
-		EditorContext->CommitAutoKeyframe(this);
-		FOV.SetValue(FOV.GetValue() + Delta);
-		EditorContext->CommitAutoKeyframe(nullptr);
+		if (EditorContext->GetLockCameraToView()) {
+			TFICEditorAttribute<FFICFloatAttribute>& FOV_Attr = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV");
+			EditorContext->CommitAutoKeyframe(this);
+			FOV_Attr.SetValue(FOV_Attr.GetValue() + Delta);
+			EditorContext->CommitAutoKeyframe(nullptr);
+		} else {
+			FOV += Delta;
+		}
 	} else if (PlayerController->PlayerInput->IsCtrlPressed()) {
 		float Delta = Value * 100;
 		if (bIsSprinting) Delta *= 2;
@@ -287,6 +291,8 @@ void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorCont
 		OnCurrentFrameChangedHandle = EditorContext->OnCurrentFrameChanged.AddLambda([this]() {
 			bWasChangedDirectly = true;
 		});
+
+		FOV = EditorContext->GetScene()->LastCameraFOV;
 	}
 }
 
@@ -299,6 +305,7 @@ void AFICEditorCameraCharacter::UpdateValues() {
 			SetActorRotation(Rot);
 			if (GetController()) {
 				GetController()->SetControlRotation(Rot);
+				RollRotationFixValue = Rot.Roll;
 				Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
 			}
 			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);

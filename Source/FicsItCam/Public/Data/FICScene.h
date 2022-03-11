@@ -42,6 +42,8 @@ public:
 
 	UPROPERTY(SaveGame)
 	FTransform LastCameraTransform;
+	UPROPERTY()
+	float LastCameraFOV = 120;
 	UPROPERTY(SaveGame)
 	UObject* LastSelectedSceneObject = nullptr;
 	UPROPERTY(SaveGame)
