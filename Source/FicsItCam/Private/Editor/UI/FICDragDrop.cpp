@@ -15,8 +15,10 @@ void FFICGraphDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 
 	FVector2D CursorDelta = DragDropEvent.GetCursorDelta();
 
-	if (DragDropEvent.IsControlDown()) CursorDelta.Y = 0;
-	if (DragDropEvent.IsShiftDown()) CursorDelta.X = 0;
+	if (bRestrictDirections) {
+		if (DragDropEvent.IsControlDown()) CursorDelta.Y = 0;
+		if (DragDropEvent.IsShiftDown()) CursorDelta.X = 0;
+	}
 	
 	CumulativeDelta += CursorDelta;
 	
@@ -45,6 +47,7 @@ void FFICGraphPanDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 }
 
 FFICGraphSelectionDragDrop::FFICGraphSelectionDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent): FFICGraphDragDrop(GraphView, InitEvent) {
+	bRestrictDirections = false;
 	GraphView->BeginBoxSelection(InitEvent.GetModifierKeys());
 }
 
