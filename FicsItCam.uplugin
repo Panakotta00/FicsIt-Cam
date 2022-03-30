@@ -1,8 +1,8 @@
 {
 	"FileVersion": 3,
 	"Version": 0,
-	"VersionName": "0.2",
-	"SemVersion": "0.2.3",
+	"VersionName": "0.3",
+	"SemVersion": "0.3.0",
 	"FriendlyName": "FicsIt-Cam",
 	"Description": "This mod allows you to create beautiful camera animations in-game.",
 	"Category": "Modding",
