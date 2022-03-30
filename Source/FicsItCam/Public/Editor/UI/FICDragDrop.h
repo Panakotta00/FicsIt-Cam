@@ -19,6 +19,8 @@ public:
 	int64 CumulativeTimelineDiff = 0;
 	float CumulativeValueDiff = 0.0f;
 
+	bool bRestrictDirections = true;
+
 	FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent);
 	
 	// Begin FDragDropOperation

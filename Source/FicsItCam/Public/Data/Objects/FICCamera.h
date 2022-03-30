@@ -67,7 +67,7 @@ public:
 	// End FTickableGameObject
 
 	// Begin IFGSaveInterface
-	virtual bool ShouldSave_Implementation() const override { return true; }
+	virtual bool ShouldSave_Implementation() const override { return GetWorld() != nullptr; }
 	// End IFGSaveInterface
 
 	// Begin IFICSceneObject-Interface

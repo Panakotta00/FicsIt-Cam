@@ -201,6 +201,10 @@ FReply SFICGraphViewKeyframe::OnMouseButtonUp(const FGeometry& MyGeometry, const
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton) {
 		GraphView->ToggleKeyframeSelection(*Attribute, GetFrame(), &Event.GetModifierKeys());
 	} else	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
+		TPair<FFICAttribute*, FICFrame> KF_Selection(&GetAttribute(), GetFrame());
+		if (!GraphView->GetSelection().Contains(KF_Selection)) {
+			GraphView->SetSelection({KF_Selection});
+		}
 		TSet<TPair<FFICAttribute*, FICFrame>> Keyframes = GraphView->GetSelection();
 		TFunction<void(EFICKeyframeType)> SetKeyframeType;
 		SetKeyframeType = [Keyframes, this](EFICKeyframeType Type) {

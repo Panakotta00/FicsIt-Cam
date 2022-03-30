@@ -81,7 +81,9 @@ public:
 	}
 
 	AFICScene* CreateScene() {
-		UFICCamera* Camera = NewObject<UFICCamera>();
+		AFICScene* Scene = GetWorld()->SpawnActor<AFICScene>();
+		
+		UFICCamera* Camera = NewObject<UFICCamera>(Scene);
 		Camera->Position.X = PosX;
 		Camera->Position.Y = PosY;
 		Camera->Position.Z = PosZ;
@@ -94,7 +96,6 @@ public:
 		Camera->Aperture = Aperture;
 		Camera->FocusDistance = FocusDistance;
 		
-		AFICScene* Scene = GetWorld()->SpawnActor<AFICScene>();
 		Scene->AddSceneObject(Camera);
 
 		Scene->SceneName = Name;

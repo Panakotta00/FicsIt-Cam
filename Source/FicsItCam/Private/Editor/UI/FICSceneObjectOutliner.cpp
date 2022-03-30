@@ -108,6 +108,7 @@ void SFICSceneObjectOutliner::Construct(const FArguments& InArgs, UFICEditorCont
 			SAssignNew(SceneObjectListWidget, SListView<TSharedPtr<FFICSceneObjectReference>>)
 			.ListItemsSource(&SceneObjectList)
 			.SelectionMode(ESelectionMode::Single)
+			.ClearSelectionOnClick(false)
 			.OnSelectionChanged_Lambda([this](TSharedPtr<FFICSceneObjectReference> SelectedObject, ESelectInfo::Type Type) {
 				if (Type != ESelectInfo::Type::Direct) {
 					if (SelectedObject) Context->SetSelectedSceneObject(SelectedObject->SceneObject);
