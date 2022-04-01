@@ -1,6 +1,7 @@
 ﻿#include "Editor/UI/FICEditor.h"
 
 #include "FICSubsystem.h"
+#include "FICUtils.h"
 #include "Engine/World.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Editor/FICEditorContext.h"
@@ -94,7 +95,10 @@ void SFICEditor::RegisterTabs() {
 	TabManager->RegisterTabSpawner("Scene Object Details", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& Args) {
 		return SNew(SDockTab)
 		.Content()[
-			SNew(SFICSceneObjectDetails, Context)
+			SNew(SScrollBox)
+			+SScrollBox::Slot().VAlign(VAlign_Fill).HAlign(HAlign_Fill)[
+				SNew(SFICSceneObjectDetails, Context)
+			]
 		];
 	}), FCanSpawnTab::CreateLambda([](const FSpawnTabArgs& Args) {
 		return true;
@@ -249,15 +253,6 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 	AFICEditorSubsystem::GetFICEditorSubsystem(Context)->ToolsContext->InputRouter->PostInputEvent(InputState);
 	
 	if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleCursor"))) {
-		/*if (GameWidget->HasUserFocusedDescendants(InKeyEvent.GetUserIndex())) {
-			FSlateApplication::Get().SetUserFocus(InKeyEvent.GetUserIndex(), SharedThis(this));
-			APlayerController* Controller = Context->GetScene()->GetWorld()->GetFirstPlayerController();
-			UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(Controller);
-		} else {
-			FSlateApplication::Get().SetUserFocusToGameViewport(InKeyEvent.GetUserIndex());
-			APlayerController* Controller = Context->GetScene()->GetWorld()->GetFirstPlayerController();
-			UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
-		}*/
 		Context->GetPlayerCharacter()->ControlViewToggle();
 		return FReply::Handled();
 	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleAllKeyframes"))) {

@@ -7,8 +7,8 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 	Context = InContext;
 
 	ChildSlot[
-		SNew(SVerticalBox)
-		+SVerticalBox::Slot().Padding(5).AutoHeight()[
+		SNew(SScrollBox)
+		+SScrollBox::Slot().Padding(5)[
 			SNew(SCheckBox)
 			.Content()[SNew(STextBlock).Text(FText::FromString("Use Cinematic Camera"))]
 			.IsChecked_Lambda([this]() {
@@ -19,7 +19,7 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 			})
 			.ToolTipText(FText::FromString(TEXT("If enabled, tries to use a more fancy camera which f.e. can do Depth-Of-Field,\ntho it will require more performance hence using it in combination with the play command is not reccomended.")))
 		]
-		+SVerticalBox::Slot().Padding(5).AutoHeight()[
+		+SScrollBox::Slot().Padding(5)[
 			SNew(SCheckBox)
 			.Content()[SNew(STextBlock).Text(FText::FromString("Bullet Time"))]
 			.IsChecked_Lambda([this]() {
@@ -30,7 +30,7 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 			})
 			.ToolTipText(FText::FromString(TEXT("If enabled, game simulation will pause allowing you to have a bullet time effect.")))
 		]
-		+SVerticalBox::Slot().Padding(5).AutoHeight()[
+		+SScrollBox::Slot().Padding(5)[
 			SNew(SCheckBox)
 			.Content()[SNew(STextBlock).Text(FText::FromString("Looping"))]
 			.IsChecked_Lambda([this]() {
@@ -41,7 +41,7 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 			})
 			.ToolTipText(FText::FromString(TEXT("If enabled, animation will restart automatically at the end of the animation sequence.")))
 		]
-		+SVerticalBox::Slot().Padding(5).AutoHeight().HAlign(HAlign_Fill)[
+		+SScrollBox::Slot().Padding(5).HAlign(HAlign_Fill)[
 			SNew(SHorizontalBox)
 			+SHorizontalBox::Slot().AutoWidth()[
 				SNew(STextBlock).Text(FText::FromString("FPS: "))
@@ -63,7 +63,7 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 				.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
 			]
 		]
-		+SVerticalBox::Slot().Padding(5).AutoHeight().HAlign(HAlign_Fill)[
+		+SScrollBox::Slot().Padding(5).HAlign(HAlign_Fill)[
 			SNew(SHorizontalBox)
 			.ToolTipText(FText::FromString(TEXT("The resolution setting will be used to determine the aspect ratio and image size for rendering the animation.")))
 			+SHorizontalBox::Slot().AutoWidth()[
@@ -107,7 +107,7 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 				.ToolTipText(FText::FromString(TEXT("Resolution Height")))
 			]
 		]
-		+SVerticalBox::Slot().Padding(5).AutoHeight().HAlign(HAlign_Fill)[
+		+SScrollBox::Slot().Padding(5).HAlign(HAlign_Fill)[
 			SNew(SHorizontalBox)
 			.ToolTipText(FText::FromString(TEXT("The sensor size used to adjust the DOF and aspect ration. (only functional with cinematic camera)")))
 			+SHorizontalBox::Slot().AutoWidth()[
