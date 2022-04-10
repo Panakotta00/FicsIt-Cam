@@ -14,8 +14,8 @@ public:
 	UPROPERTY()
 	AFICCaptureCamera* CaptureCamera = nullptr;
 
-	UPROPERTY()
-	float SecondsPerFrame;
+	UPROPERTY(SaveGame)
+	float SecondsPerFrame = 10.0f;
 
 	UPROPERTY()
 	float Time = 0.0f;
