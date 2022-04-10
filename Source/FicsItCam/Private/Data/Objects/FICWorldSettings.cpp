@@ -3,6 +3,7 @@
 #include "FGCheatManager.h"
 #include "FGGameState.h"
 #include "FGPlayerController.h"
+#include "FGTimeSubsystem.h"
 #include "FICUtils.h"
 #include "Editor/FICEditorContext.h"
 
@@ -24,35 +25,40 @@ TSharedRef<SWidget> UFICWorldSettings::CreateDetailsWidget(UFICEditorContext* In
 void UFICWorldSettings::TickEditor(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) {
 	UFGCheatManager* CheatManager = Cast<UFGCheatManager>(Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController())->CheatManager);
 	if (bActive) {
-		int32 Time = FMath::RoundToInt(Attribute->Get<TFICEditorAttribute<FFICFloatAttribute>>(TEXT("Time of Day")).GetValue(Context->GetCurrentFrame()));
-		int32 Hour, Minute;
-		ClockFromInt(Time, Hour, Minute);
-		CheatManager->SetTimeOfDay(Hour, Minute);
+		//int32 Time = FMath::RoundToInt(Attribute->Get<TFICEditorAttribute<FFICFloatAttribute>>(TEXT("Time of Day")).GetValue(Context->GetCurrentFrame()));
+		//int32 Hour, Minute;
+		//ClockFromInt(Time, Hour, Minute);
+		//CheatManager->SetTimeOfDay(Hour, Minute);
+		AFGTimeOfDaySubsystem::Get(this)->SetDaySeconds(60.0 * Attribute->Get<TFICEditorAttribute<FFICFloatAttribute>>(TEXT("Time of Day")).GetValue(Context->GetCurrentFrame()));
 	}
 }
 
 void UFICWorldSettings::TickAnimation(FICFrameFloat Frame) {
 	UFGCheatManager* CheatManager = Cast<UFGCheatManager>(Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController())->CheatManager);
 	if (bActive) {
-		int32 Time = FMath::RoundToInt(Daytime.GetValue(Frame));
-		int32 Hour, Minute;
-		ClockFromInt(Time, Hour, Minute);
-		CheatManager->SetTimeOfDay(Hour, Minute);
+		//int32 Time = FMath::RoundToInt(Daytime.GetValue(Frame));
+		//int32 Hour, Minute;
+		//ClockFromInt(Time, Hour, Minute);
+		//CheatManager->SetTimeOfDay(Hour, Minute);
+		AFGTimeOfDaySubsystem::Get(this)->SetDaySeconds(60.0 * Daytime.GetValue(Frame));
 	}
 }
 
 void UFICWorldSettings::Activate() {
 	bActive = true;
-	UFGCheatManager* CheatManager = Cast<UFGCheatManager>(Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController())->CheatManager);
-	OldTimeOfDay = IntFromClock(CheatManager->SetTimeOfDay_hour_Get(), CheatManager->SetTimeOfDay_minute_Get());
+	//UFGCheatManager* CheatManager = Cast<UFGCheatManager>(Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController())->CheatManager);
+	//GetWorld()->GetFirstPlayerController()->EnableCheats();
+	OldDaySeconds = AFGTimeOfDaySubsystem::Get(this)->GetDaySeconds();
+	//OldTimeOfDay = IntFromClock(CheatManager->SetTimeOfDay_hour_Get(), CheatManager->SetTimeOfDay_minute_Get());
 }
 
 void UFICWorldSettings::Deactivate() {
 	bActive = false;
-	UFGCheatManager* CheatManager = Cast<UFGCheatManager>(Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController())->CheatManager);
-	int32 Hour, Minute;
-	ClockFromInt(OldTimeOfDay, Hour, Minute);
-	CheatManager->SetTimeOfDay(Hour, Minute);
+	//UFGCheatManager* CheatManager = Cast<UFGCheatManager>(Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController())->CheatManager);
+	//int32 Hour, Minute;
+	//ClockFromInt(OldTimeOfDay, Hour, Minute);
+	//CheatManager->SetTimeOfDay(Hour, Minute);
+	AFGTimeOfDaySubsystem::Get(this)->SetDaySeconds(OldDaySeconds);
 }
 
 int32 UFICWorldSettings::IntFromClock(int32 Hours, int32 Minute) {

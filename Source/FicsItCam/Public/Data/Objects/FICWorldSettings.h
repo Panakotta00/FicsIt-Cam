@@ -20,6 +20,8 @@ public:
 
 	UPROPERTY()
 	int32 OldTimeOfDay = 0;
+	UPROPERTY()
+	float OldDaySeconds = 0;
 	bool bActive = false;
 
 	UFICWorldSettings();
