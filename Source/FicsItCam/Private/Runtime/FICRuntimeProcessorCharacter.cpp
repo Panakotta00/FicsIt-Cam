@@ -93,8 +93,8 @@ void AFICRuntimeProcessorCharacter::SetCamera(bool bEnabled, bool bCinematic) {
 	}
 
 	if (bEnabled) {
-		if (bCinematic) Camera = NewObject<UCineCameraComponent>();
-		else Camera = NewObject<UCameraComponent>();
+		if (bCinematic) Camera = NewObject<UCineCameraComponent>(this);
+		else Camera = NewObject<UCameraComponent>(this);
 		Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		Camera->SetActive(true);
 	}
