@@ -5,6 +5,7 @@
 #include "FICSubsystem.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Runtime/Process/FICRuntimeProcessTimelapseCamera.h"
 
 AFICTimelapseCamera::AFICTimelapseCamera() {
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>("RenderTarget");
@@ -26,6 +27,19 @@ void AFICTimelapseCamera::OnConstruction(const FTransform& Transform) {
 	RenderTarget->InitCustomFormat(Resolution.X, Resolution.Y, EPixelFormat::PF_R8G8B8A8, false);
 	RenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
 	RenderTarget->bGPUSharedFlag = true;
+}
+
+void AFICTimelapseCamera::BeginPlay() {
+	Super::BeginPlay();
+
+	UFICRuntimeProcessTimelapseCamera* Process = NewObject<UFICRuntimeProcessTimelapseCamera>(GetWorld());
+	Process->CameraArgument.CameraSettingsSnapshot = UFICUtils::CreateCameraSettingsSnapshotFromView(this);
+	Process->CameraArgument.CameraSettingsSnapshot.Location = GetActorLocation();
+	Process->CameraArgument.CameraSettingsSnapshot.Rotation = GetActorRotation();
+	
+	AFICSubsystem::GetFICSubsystem(this)->CreateRuntimeProcess(FString::Printf(TEXT("Timelapse_%s"), *Name), Process, CaptureTimer.IsValid());
+
+	Destroy();
 }
 
 void AFICTimelapseCamera::EndPlay(const EEndPlayReason::Type EndPlayReason) {
