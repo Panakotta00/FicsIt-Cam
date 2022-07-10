@@ -118,7 +118,7 @@ pipeline {
 		always {
 			cleanWs()
 			withCredentials([string(credentialsId: 'FINDiscordToken_FicsItCam', variable: 'WEBHOOKURL')]) {
-				discordSend description: "FIN Build", link: env.BUILD_URL, result: currentBuild.currentResult, title: JOB_NAME, webhookURL: "$WEBHOOKURL"
+				discordSend description: "FIC Build", link: env.BUILD_URL, result: currentBuild.currentResult, title: JOB_NAME, webhookURL: "$WEBHOOKURL"
 			}
 		}
 	}

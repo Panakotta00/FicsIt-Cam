@@ -27,7 +27,7 @@ void SFICViewport::OnDragEnter(const FGeometry& MyGeometry, const FDragDropEvent
 	if (SceneObjectDrag) {
 		if (!SceneObjectDrag->SceneObject && SceneObjectDrag->bSceneObjectTemp) {
 			UObject* CDO = SceneObjectDrag->SceneObjectClass->GetDefaultObject();
-			UObject* SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(AFICSubsystem::GetFICSubsystem(Context), Context->GetScene());
+			UObject* SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(Context->GetScene(), Context->GetScene());
 			Context->AddSceneObject(SceneObject);
 			SceneObjectDrag->SceneObject = SceneObject;
 			SceneObjectDrag->Context = Context;

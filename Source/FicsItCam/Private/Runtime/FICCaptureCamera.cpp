@@ -31,9 +31,9 @@ void AFICCaptureCamera::SetCamera(bool bEnabled, bool bCinematic) {
 	}
 	if (bEnabled) {
 		if (bCinematic) {
-			Camera = NewObject<UCineCameraComponent>();
+			Camera = NewObject<UCineCameraComponent>(this);
 		} else {
-			Camera = NewObject<UCameraComponent>();
+			Camera = NewObject<UCameraComponent>(this);
 		}
 		Camera->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 		Camera->PostProcessSettings.VignetteIntensity = 0;
