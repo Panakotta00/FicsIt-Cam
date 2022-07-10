@@ -32,7 +32,7 @@ void AFICTimelapseCamera::OnConstruction(const FTransform& Transform) {
 void AFICTimelapseCamera::BeginPlay() {
 	Super::BeginPlay();
 
-	UFICRuntimeProcessTimelapseCamera* Process = NewObject<UFICRuntimeProcessTimelapseCamera>(GetWorld());
+	UFICRuntimeProcessTimelapseCamera* Process = NewObject<UFICRuntimeProcessTimelapseCamera>(AFICSubsystem::GetFICSubsystem(this));
 	Process->CameraArgument.CameraSettingsSnapshot = UFICUtils::CreateCameraSettingsSnapshotFromView(this);
 	Process->CameraArgument.CameraSettingsSnapshot.Location = GetActorLocation();
 	Process->CameraArgument.CameraSettingsSnapshot.Rotation = GetActorRotation();

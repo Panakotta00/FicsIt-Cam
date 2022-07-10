@@ -1,5 +1,6 @@
 #include "Data/Objects/FICParticleSystem.h"
 
+#include "FICUtils.h"
 #include "NiagaraComponent.h"
 #include "Data/Objects/FICWorldSettings.h"
 #include "Editor/FICEditorContext.h"

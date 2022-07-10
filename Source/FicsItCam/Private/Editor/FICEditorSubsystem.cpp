@@ -293,6 +293,9 @@ void AFICEditorSubsystem::CloseEditor() {
 	// Focus back to viewport
 	Character->SetControlView(true);
 	
+	// Remove Editor UI
+	GameOverlay->RemoveSlot(EditorWidget.ToSharedRef());
+	
 	// Unload loaded Editor Context
 	Context->Unload();
 	
@@ -300,9 +303,8 @@ void AFICEditorSubsystem::CloseEditor() {
 	GetWorld()->GetFirstPlayerController()->Possess(OriginalPlayerCharacter);
 	UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
 	UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
-	
-	// Remove Editor UI
-	GameOverlay->RemoveSlot(EditorWidget.ToSharedRef());
+
+	// Add Game Viewport Back
 	GameOverlay->AddSlot()[
 		GameViewportContainer.ToSharedRef()
 	];
@@ -332,10 +334,10 @@ void AFICEditorSubsystem::SetMeshInstanced(UMeshComponent* MeshComp, bool Instan
 			ColoredMeshProxy->mBlockInstancing = !Instanced;
 			ColoredMeshProxy->SetInstanced(Instanced);
 		} else {
-			auto ProdIndInst = Cast<UFGProductionIndicatorInstanceComponent>(MeshComp);
+			/*auto ProdIndInst = Cast<UFGProductionIndicatorInstanceComponent>(MeshComp);
 			if (ProdIndInst) {
 				ProdIndInst->SetInstanced(Instanced);
-			}
+			}*/
 		}
 	}
 }
