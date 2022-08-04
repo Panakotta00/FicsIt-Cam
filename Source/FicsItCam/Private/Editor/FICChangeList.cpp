@@ -39,16 +39,19 @@ void FFICChange_ActiveFrame::UndoChange() {
 }
 
 void FFICChange_AddSceneObject::RedoChange() {
+	UObject* SceneObject = Context->FindSceneObject(SceneObjectName);
 	if (SceneObject) return;
 	UObject* CDO = SceneObjectClass->GetDefaultObject();
 	SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(AFICSubsystem::GetFICSubsystem(Context), Context->GetScene());
+	Cast<IFICSceneObject>(SceneObject)->SetSceneObjectName(SceneObjectName);
 	Context->AddSceneObject(SceneObject);
 	Context->SetSelectedSceneObject(SceneObject);
-	Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().Set(Snapshot.ToSharedRef());
+	if (Snapshot) Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().Set(Snapshot.ToSharedRef());
 	Snapshot.Reset();
 }
 
 void FFICChange_AddSceneObject::UndoChange() {
+	UObject* SceneObject = Context->FindSceneObject(SceneObjectName);
 	if (!SceneObject) return;
 	Snapshot = Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().Get();
 	Context->RemoveSceneObject(SceneObject);
@@ -58,19 +61,22 @@ void FFICChange_AddSceneObject::UndoChange() {
 FFICChange_RemoveSceneObject::FFICChange_RemoveSceneObject(UFICEditorContext* InContext, UObject* InSceneObject) :
 	Context(InContext),
 	SceneObjectClass(InSceneObject->GetClass()),
+	SceneObjectName(Cast<IFICSceneObject>(InSceneObject)->GetSceneObjectName()),
 	Snapshot(Cast<IFICSceneObject>(InSceneObject)->GetRootAttribute().Get()) {}
 
 void FFICChange_RemoveSceneObject::RedoChange() {
+	UObject* SceneObject = Context->FindSceneObject(SceneObjectName);
 	if (!SceneObject) return;
 	Snapshot = Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().Get();
 	Context->RemoveSceneObject(SceneObject);
-	SceneObject = nullptr;
 }
 
 void FFICChange_RemoveSceneObject::UndoChange() {
+	UObject* SceneObject = Context->FindSceneObject(SceneObjectName);
 	if (SceneObject) return;
 	UObject* CDO = SceneObjectClass->GetDefaultObject();
 	SceneObject = Cast<IFICSceneObject>(CDO)->CreateNewObject(AFICSubsystem::GetFICSubsystem(Context), Context->GetScene());
+	Cast<IFICSceneObject>(SceneObject)->SetSceneObjectName(SceneObjectName);
 	Cast<IFICSceneObject>(SceneObject)->GetRootAttribute().Set(Snapshot.ToSharedRef());
 	Snapshot.Reset();
 	Context->AddSceneObject(SceneObject);

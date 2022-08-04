@@ -94,6 +94,7 @@ public:
 	void AddSceneObject(UObject* SceneObject);
 	void RemoveSceneObject(UObject* SceneObject);
 	void MoveSceneObject(UObject* SceneObject, int Delta);
+	UObject* FindSceneObject(FString SceneObjectName) const;
 	
 	AFICScene* GetScene() const;
 	UFICCamera* GetCamera();

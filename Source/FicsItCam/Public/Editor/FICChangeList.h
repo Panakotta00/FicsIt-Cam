@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Data/Attributes/FICAttribute.h"
+#include "Data/Objects/FICSceneObject.h"
 
 class FFICChangeList;
 
@@ -95,10 +96,10 @@ struct FFICChange_Attribute : public FFICChange {
 struct FFICChange_AddSceneObject : public FFICChange {
 	UFICEditorContext* Context;
 	UClass* SceneObjectClass;
-	UObject* SceneObject;
+	FString SceneObjectName;
 	TSharedPtr<FFICAttribute> Snapshot;
 
-	FFICChange_AddSceneObject(UFICEditorContext* InContext, UObject* InSceneObject) : Context(InContext), SceneObjectClass(InSceneObject->GetClass()), SceneObject(InSceneObject) {}
+	FFICChange_AddSceneObject(UFICEditorContext* InContext, UObject* InSceneObject) : Context(InContext), SceneObjectClass(InSceneObject->GetClass()), SceneObjectName(Cast<IFICSceneObject>(InSceneObject)->GetSceneObjectName()) {}
 
 	virtual void RedoChange() override;
 	virtual void UndoChange() override;
@@ -110,7 +111,7 @@ struct FFICChange_AddSceneObject : public FFICChange {
 
 struct FFICChange_RemoveSceneObject : public FFICChange {
 	UFICEditorContext* Context;
-	UObject* SceneObject = nullptr;
+	FString SceneObjectName = "";
 	UClass* SceneObjectClass;
 	TSharedPtr<FFICAttribute> Snapshot;
 

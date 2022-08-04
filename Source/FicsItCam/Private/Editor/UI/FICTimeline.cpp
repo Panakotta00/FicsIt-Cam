@@ -65,7 +65,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	                    })
 	                    .MinValue(TNumericLimits<int64>::Min())
 	                    .OnValueCommitted_Lambda([this](int64 Value, ETextCommit::Type) {
-	                        Context->GetScene()->AnimationRange.Begin = Value;
+	                        Context->GetScene()->AnimationRange.SetBegin_Clamped(Value);
 	                    })
 	                ]
 	            ]
@@ -305,7 +305,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	                    })
 	                    .MaxValue(TNumericLimits<int64>::Max())
 	                    .OnValueCommitted_Lambda([this](int64 Value, ETextCommit::Type) {
-	                        Context->GetScene()->AnimationRange.End = FMath::Clamp(Value, Context->GetScene()->AnimationRange.Begin+1, TNumericLimits<int64>::Max());
+	                        Context->GetScene()->AnimationRange.SetEnd_Clamped(Value);
 	                    })
 	                ]
 	            ]
