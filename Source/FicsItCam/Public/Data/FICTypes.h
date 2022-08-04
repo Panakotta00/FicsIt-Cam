@@ -83,6 +83,14 @@ struct FFICFrameRange {
 		return FFICFrameRange(Begin - Frame, End - Frame);
 	}
 
+	void SetBegin_Clamped(FICFrame InBegin, bool bInclusive = false) {
+		Begin = FMath::Min(InBegin, End - (bInclusive ? 0 : 1));
+	}
+
+	void SetEnd_Clamped(FICFrame InEnd, bool bInclusive = false) {
+		End = FMath::Max(InEnd, Begin + (bInclusive ? 0 : 1));
+	}
+
 	FFICFrameRangeIterator begin() const {
 		return FFICFrameRangeIterator(Begin);
 	}

@@ -145,6 +145,7 @@ FMenuBarBuilder SFICEditor::CreateMenuBar() {
 	FMenuBarBuilder MenuBarBuilder(nullptr);
 	MenuBarBuilder.AddMenuEntry(LOCTEXT("Exit", "Exit"), LOCTEXT("ExitTT", "Closes and Exits the Editor"), FSlateIcon(), FExecuteAction::CreateLambda([this]() {
 		TabManager->SavePersistentLayout();
+		FSlateApplication::Get().ClearAllUserFocus();
 		AFICEditorSubsystem::GetFICEditorSubsystem(Context->GetScene()->GetWorld())->CloseEditor();
 	}));
 	MenuBarBuilder.AddPullDownMenu(LOCTEXT("View", "View"), LOCTEXT("ViewTT", "Views, Panels & Windows"), FNewMenuDelegate::CreateLambda([this](FMenuBuilder& MenuBuilder) {
