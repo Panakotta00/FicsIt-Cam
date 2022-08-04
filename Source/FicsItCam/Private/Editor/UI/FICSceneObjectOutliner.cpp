@@ -119,6 +119,7 @@ void SFICSceneObjectOutliner::Construct(const FArguments& InArgs, UFICEditorCont
 				if (Event.GetKey() == EKeys::Delete) {
 					TArray<TSharedPtr<FFICSceneObjectReference>> Selected;
 					if (SceneObjectListWidget->GetSelectedItems(Selected) > 0) {
+						Context->ChangeList.PushChange(MakeShared<FFICChange_RemoveSceneObject>(Context, Selected[0]->SceneObject));
 						Context->RemoveSceneObject(Selected[0]->SceneObject);
 					}
 					return FReply::Handled();

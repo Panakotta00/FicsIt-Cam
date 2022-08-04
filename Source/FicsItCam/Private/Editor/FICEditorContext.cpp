@@ -173,6 +173,15 @@ void UFICEditorContext::MoveSceneObject(UObject* SceneObject, int Delta) {
 	SetSelectedSceneObject(SceneObject);
 }
 
+UObject* UFICEditorContext::FindSceneObject(FString SceneObjectName) const {
+	for (UObject* Object : Scene->GetSceneObjects()) {
+		if (Cast<IFICSceneObject>(Object)->GetSceneObjectName() == SceneObjectName) {
+			return Object;
+		}
+	}
+	return nullptr;
+}
+
 AFICScene* UFICEditorContext::GetScene() const {
 	return Scene;
 }

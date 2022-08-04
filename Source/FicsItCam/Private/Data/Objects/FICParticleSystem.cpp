@@ -83,6 +83,7 @@ TSharedRef<SWidget> UFICParticleSystem::CreateDetailsWidget(UFICEditorContext* I
 }
 
 void UFICParticleSystem::InitEditor(UFICEditorContext* Context) {
+	check(ParticleSystemActor == nullptr);
 	FVector Pos = Position.Get(Context->GetCurrentFrame());
 	FRotator Rot = Rotation.Get(Context->GetCurrentFrame());
 	ParticleSystemActor = GetWorld()->SpawnActor<AFICParticleSystemActor>(Pos, Rot);
@@ -93,11 +94,13 @@ void UFICParticleSystem::InitEditor(UFICEditorContext* Context) {
 }
 
 void UFICParticleSystem::ShutdownEditor(UFICEditorContext* Context) {
+	check(ParticleSystemActor != nullptr);
 	ParticleSystemActor->Destroy();
 	ParticleSystemActor = nullptr;
 }
 
 void UFICParticleSystem::EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) {
+	check(ParticleSystemActor != nullptr);
 	FVector Pos = FFICAttributePosition::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Position"));
 	FRotator Rot = FFICAttributeRotation::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Rotation"));
 	bool bActive = Attribute->Get<FFICEditorAttributeBool>("Active").GetActiveValue(); 
