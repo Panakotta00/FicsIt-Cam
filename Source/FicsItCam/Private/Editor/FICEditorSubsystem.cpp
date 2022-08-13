@@ -86,6 +86,7 @@ void AFICEditorSubsystem::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
 	if (ActiveEditorContext) {
+		//double start = FPlatformTime::Seconds();
 		FInputDeviceState InputState = CurrentMouseState;
 		InputState.InputDevice = EInputDevices::Mouse;
 
@@ -213,6 +214,8 @@ void AFICEditorSubsystem::Tick(float DeltaTime) {
 			// force rendering flush so that PDI lines get drawn
 			FlushRenderingCommands();
 		}
+		//double end = FPlatformTime::Seconds();
+		//UE_LOG(LogTemp, Warning, TEXT("code executed in %f seconds."), end-start);
 	}
 }
 

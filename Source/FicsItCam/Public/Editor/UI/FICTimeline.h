@@ -2,6 +2,8 @@
 
 #include "FICGraphView.h"
 #include "FICRangeSelector.h"
+#include "FICSequencer.h"
+#include "FICSequencerTreeView.h"
 #include "FICTimelineScrubber.h"
 #include "SlateBasics.h"
 
@@ -36,10 +38,15 @@ private:
 	UFICEditorContext* Context = nullptr;
 	TAttribute<const FSlateBrush*> BackgroundBrush;
 
+	int Mode = 0;
+
 	TSharedPtr<SFICRangeSelector> VisibleRange;
 	TSharedPtr<SFICTimelineScrubber> Scrubber;
 	TSharedPtr<STreeView<TSharedPtr<FFICEditorAttributeReference>>> AttributeTree;
 	TSharedPtr<SFICGraphView> Graph;
+	
+	TSharedPtr<SFICSequencer> Sequencer;
+	TSharedPtr<SFICSequencerTreeView> SequencerTreeView;
 	
 	TArray<TSharedPtr<FFICEditorAttributeReference>> Attributes;
 	TArray<TSharedRef<FFICEditorAttributeBase>> SelectedLeafAttributes;

@@ -1,7 +1,9 @@
 ﻿#include "Editor/UI/FICTimeline.h"
 
 #include "Editor/FICEditorContext.h"
+#include "Editor/UI/FICSequencerTreeView.h"
 #include "Widgets/Input/SNumericEntryBox.h"
+#include "Widgets/Layout/SWidgetSwitcher.h"
 
 FSlateColorBrush SFICTimelinePanel::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
 
@@ -47,11 +49,20 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 			.RowSpan(2)
 			.Padding(5)[
 				SNew(SGridPanel)
-				+SGridPanel::Slot(0,0).Padding(5)[
+				+SGridPanel::Slot(0, 0).Padding(5)[
+					SNew(SButton)
+					.Text(FText::FromString("Toggle Mode"))
+					.OnClicked_Lambda([this]() {
+						++Mode;
+						if (Mode > 1) Mode = 0;
+						return FReply::Handled();
+					})
+				]
+				+SGridPanel::Slot(1,0).Padding(5)[
 	                SNew(STextBlock)
 	                .Text(FText::FromString("Animation Start:"))
 	            ]
-	            +SGridPanel::Slot(0, 1).Padding(5)[
+	            +SGridPanel::Slot(1, 1).Padding(5)[
 	                SNew(SBox)
 	                .WidthOverride(50)
 	                .Content()[
@@ -69,11 +80,11 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	                    })
 	                ]
 	            ]
-	            +SGridPanel::Slot(1,0).Padding(5)[
+	            +SGridPanel::Slot(2,0).Padding(5)[
 	                SNew(STextBlock)
 	                .Text(FText::FromString("View Start:"))
 	            ]
-	            +SGridPanel::Slot(1, 1).Padding(5)[
+	            +SGridPanel::Slot(2, 1).Padding(5)[
 	                SNew(SBox)
 	                .WidthOverride(50)
 	                .Content()[
@@ -107,7 +118,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	                    .AllowSpin(true)
 	                ]
 	            ]
-	            +SGridPanel::Slot(2, 1)
+	            +SGridPanel::Slot(3, 1)
 	            .Padding(5)
 	            .HAlign(HAlign_Center)
 	            .VAlign(VAlign_Center)[
@@ -161,11 +172,11 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 						}
 					})
 	            ]
-	            +SGridPanel::Slot(3,0).Padding(5)[
+	            +SGridPanel::Slot(4,0).Padding(5)[
 	                SNew(STextBlock)
 	                .Text(FText::FromString("Current Frame:"))
 	            ]
-	            +SGridPanel::Slot(3, 1).Padding(5)[
+	            +SGridPanel::Slot(4, 1).Padding(5)[
 	                SNew(SBox)
 	                .WidthOverride(50)
 	                .Content()[
@@ -195,7 +206,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	                    .AllowSpin(true)
 	                ]
 	            ]
-	            +SGridPanel::Slot(4, 1)
+	            +SGridPanel::Slot(5, 1)
 	            .Padding(5)
 	            .VAlign(VAlign_Center)
 	            .HAlign(HAlign_Center)[
@@ -249,11 +260,11 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 						}
 					})
 				]
-	            +SGridPanel::Slot(5,0).Padding(5)[
+	            +SGridPanel::Slot(6,0).Padding(5)[
 	                SNew(STextBlock)
 	                .Text(FText::FromString("View End:"))
 	            ]
-	            +SGridPanel::Slot(5, 1).Padding(5)[
+	            +SGridPanel::Slot(6, 1).Padding(5)[
 	                SNew(SBox)
 	                .WidthOverride(50)
 	                .Content()[
@@ -287,11 +298,11 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	                    .AllowSpin(true)
 	                ]
 	            ]
-	            +SGridPanel::Slot(6,0).Padding(5)[
+	            +SGridPanel::Slot(7,0).Padding(5)[
 	                SNew(STextBlock)
 	                .Text(FText::FromString("Animation End:"))
 	            ]
-	            +SGridPanel::Slot(6, 1).Padding(5)[
+	            +SGridPanel::Slot(7, 1).Padding(5)[
 	                SNew(SBox)
 	                .WidthOverride(50)
 	                .Content()[
@@ -311,59 +322,75 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	            ]
 			]
 			+SGridPanel::Slot(0, 2).Padding(5).VAlign(VAlign_Fill).HAlign(HAlign_Fill)[
-				SNew(SVerticalBox)
-				+SVerticalBox::Slot().AutoHeight()[
-					SNew(STextBlock)
-					.Text(FText::FromString(TEXT("Attributes shown in Graph View:")))
-				]
-				+SVerticalBox::Slot().Padding(5).FillHeight(1).VAlign(VAlign_Fill).HAlign(HAlign_Fill)[
-					SAssignNew(AttributeTree, STreeView<TSharedPtr<FFICEditorAttributeReference>>)
-					.TreeItemsSource(&Attributes)
-					.SelectionMode(ESelectionMode::None)
-					.OnGenerateRow_Lambda([this](TSharedPtr<FFICEditorAttributeReference> Attribute, const TSharedRef<STableViewBase>& Base) {
-						return SNew(STableRow<TSharedPtr<FFICEditorAttributeReference>>, Base)
-						.Content()[
-							SNew(SCheckBox)
+				SNew(SWidgetSwitcher)
+				.WidgetIndex_Lambda([this]() {
+					return Mode;
+				})
+				+SWidgetSwitcher::Slot()[
+					SNew(SVerticalBox)
+					+SVerticalBox::Slot().AutoHeight()[
+						SNew(STextBlock)
+						.Text(FText::FromString(TEXT("Attributes shown in Graph View:")))
+					]
+					+SVerticalBox::Slot().Padding(5).FillHeight(1).VAlign(VAlign_Fill).HAlign(HAlign_Fill)[
+						SAssignNew(AttributeTree, STreeView<TSharedPtr<FFICEditorAttributeReference>>)
+						.TreeItemsSource(&Attributes)
+						.SelectionMode(ESelectionMode::None)
+						.OnGenerateRow_Lambda([this](TSharedPtr<FFICEditorAttributeReference> Attribute, const TSharedRef<STableViewBase>& Base) {
+							return SNew(STableRow<TSharedPtr<FFICEditorAttributeReference>>, Base)
 							.Content()[
-								SNew(STextBlock)
-								.Text(FText::FromString(Attribute->Name))
-							].IsChecked_Lambda([Attribute]() {
-								if (Attribute->Attribute->GetChildAttributes().Num() < 1) return Attribute->Attribute->bShowInGraph ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-								TFunction<bool(TSharedRef<FFICEditorAttributeBase>)> HasCheckedChild;
-								ECheckBoxState State = ECheckBoxState::Checked;
-								HasCheckedChild = [&HasCheckedChild, &State](TSharedRef<FFICEditorAttributeBase> Attrib) {
-									bool bAtLeastOne = false;
-									for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attrib->GetChildAttributes()) {
-										if (Child.Value->GetChildAttributes().Num() < 1) {
-											if (Child.Value->bShowInGraph) {
-												bAtLeastOne = true;
+								SNew(SCheckBox)
+								.Content()[
+									SNew(STextBlock)
+									.Text(FText::FromString(Attribute->Name))
+								].IsChecked_Lambda([Attribute]() {
+									if (Attribute->Attribute->GetChildAttributes().Num() < 1) return Attribute->Attribute->bShowInGraph ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+									TFunction<bool(TSharedRef<FFICEditorAttributeBase>)> HasCheckedChild;
+									ECheckBoxState State = ECheckBoxState::Checked;
+									HasCheckedChild = [&HasCheckedChild, &State](TSharedRef<FFICEditorAttributeBase> Attrib) {
+										bool bAtLeastOne = false;
+										for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attrib->GetChildAttributes()) {
+											if (Child.Value->GetChildAttributes().Num() < 1) {
+												if (Child.Value->bShowInGraph) {
+													bAtLeastOne = true;
+												} else {
+													State = ECheckBoxState::Undetermined;
+												}
 											} else {
-												State = ECheckBoxState::Undetermined;
+												bAtLeastOne = HasCheckedChild(Child.Value) || bAtLeastOne;
 											}
-										} else {
-											bAtLeastOne = HasCheckedChild(Child.Value) || bAtLeastOne;
 										}
-									}
-									return bAtLeastOne;
-								};
-								if (HasCheckedChild(Attribute->Attribute)) return State;
-								return ECheckBoxState::Unchecked;
-							})
-							.OnCheckStateChanged_Lambda([this, Attribute](ECheckBoxState State) {
-								TFunction<void(TSharedRef<FFICEditorAttributeBase>)> SetChildren;
-								SetChildren = [&SetChildren, State](TSharedRef<FFICEditorAttributeBase> Attrib) {
-									Attrib->bShowInGraph = State == ECheckBoxState::Checked;
-									for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attrib->GetChildAttributes()) {
-										SetChildren(Child.Value);
-									}
-								};
-								SetChildren(Attribute->Attribute);
-								UpdateLeafAttributes();
-							})
-						];
+										return bAtLeastOne;
+									};
+									if (HasCheckedChild(Attribute->Attribute)) return State;
+									return ECheckBoxState::Unchecked;
+								})
+								.OnCheckStateChanged_Lambda([this, Attribute](ECheckBoxState State) {
+									TFunction<void(TSharedRef<FFICEditorAttributeBase>)> SetChildren;
+									SetChildren = [&SetChildren, State](TSharedRef<FFICEditorAttributeBase> Attrib) {
+										Attrib->bShowInGraph = State == ECheckBoxState::Checked;
+										for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Child : Attrib->GetChildAttributes()) {
+											SetChildren(Child.Value);
+										}
+									};
+									SetChildren(Attribute->Attribute);
+									UpdateLeafAttributes();
+								})
+							];
+						})
+						.OnGetChildren_Lambda([](TSharedPtr<FFICEditorAttributeReference> InEntry, TArray<TSharedPtr<FFICEditorAttributeReference>>& OutArray) {
+							OutArray = InEntry->GetChildren();
+						})
+					]
+				]
+				+SWidgetSwitcher::Slot()[
+					SAssignNew(SequencerTreeView, SFICSequencerTreeView, Context)
+					.OnScrolled_Lambda([this](double) {
+						//if (Sequencer) Sequencer->UpdateRows();
+						Sequencer->Invalidate(EInvalidateWidgetReason::Layout);
 					})
-					.OnGetChildren_Lambda([](TSharedPtr<FFICEditorAttributeReference> InEntry, TArray<TSharedPtr<FFICEditorAttributeReference>>& OutArray) {
-						OutArray = InEntry->GetChildren();
+					.OnUpdate_Lambda([this]() {
+						if (Sequencer) Sequencer->UpdateRows();
 					})
 				]
 			]
@@ -404,28 +431,46 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 			+SGridPanel::Slot(1, 2)
 			.HAlign(HAlign_Fill)
 			.VAlign(VAlign_Fill)[
-				SAssignNew(Graph, SFICGraphView, Context)
-				.Attributes({})
-				.AutoFit(true)
-				.Clipping(EWidgetClipping::ClipToBoundsAlways)
-				.Frame_Lambda([this]() {
-					return Context->GetCurrentFrame();
+				SNew(SWidgetSwitcher)
+				.WidgetIndex_Lambda([this]() {
+					return Mode;
 				})
-				.FrameRange_Lambda([this]() {
-					return Context->GetActiveRange();
-				})
-				.FrameHighlightRange_Lambda([this]() {
-					return Context->GetScene()->AnimationRange;
-				})
-				.ValueRange_Lambda([this]() {
-					return ActiveValueRange;
-				})
-				.OnFrameRangeChanged_Lambda([this](FFICFrameRange Range) {
-					Context->SetActiveRange(Range);
-				})
-				.OnValueRangeChanged_Lambda([this](FFICValueRange Range) {
-					ActiveValueRange = Range;
-				})
+				+SWidgetSwitcher::Slot()[
+					SAssignNew(Graph, SFICGraphView, Context)
+					.Attributes({})
+					.AutoFit(true)
+					.Clipping(EWidgetClipping::ClipToBoundsAlways)
+					.Frame_Lambda([this]() {
+						return Context->GetCurrentFrame();
+					})
+					.FrameRange_Lambda([this]() {
+						return Context->GetActiveRange();
+					})
+					.FrameHighlightRange_Lambda([this]() {
+						return Context->GetScene()->AnimationRange;
+					})
+					.ValueRange_Lambda([this]() {
+						return ActiveValueRange;
+					})
+					.OnFrameRangeChanged_Lambda([this](FFICFrameRange Range) {
+						Context->SetActiveRange(Range);
+					})
+					.OnValueRangeChanged_Lambda([this](FFICValueRange Range) {
+						ActiveValueRange = Range;
+					})
+				]
+				+SWidgetSwitcher::Slot()[
+					SAssignNew(Sequencer, SFICSequencer, Context)
+					.Frame_Lambda([this]() { return Context->GetCurrentFrame(); })
+					.FrameRange_Lambda([this]() { return Context->GetActiveRange(); })
+					.SequenceRowSource_Lambda([this]() {
+						TArray<TSharedPtr<ITableRow>> Rows = SequencerTreeView->GetVisibleTableRows();
+						return Rows;
+					})
+					.OnGenerateRow_Lambda([this](TSharedPtr<ITableRow> TableRow, TSharedPtr<SFICSequencerRow>& Row) {
+						Row = SequencerTreeView->ItemFromWidget(TableRow.Get())->Get()->Provider->CreateRow(Sequencer.Get());
+					})
+				]
 			]
 		]
 	];

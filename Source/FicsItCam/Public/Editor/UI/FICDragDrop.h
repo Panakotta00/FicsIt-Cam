@@ -3,6 +3,9 @@
 #include "FICGraphView.h"
 #include "Data/Attributes/FICAttribute.h"
 
+class SFICSequencerRowAttributeKeyframe;
+class SFICSequencerRowAttribute;
+
 class FFICGraphDragDrop : public FDragDropOperation {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICGraphDragDrop, FDragDropOperation)
@@ -83,6 +86,26 @@ public:
 	TSharedPtr<FFICAttribute> AttribBegin;
 
 	FFICGraphKeyframeHandleDragDrop(TSharedRef<SFICGraphViewKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent);
+
+	// Begin FDragDropOperation
+	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual void OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) override;
+	// End FDragDropOperation
+};
+
+class FFICSequencerKeyframeDragDrop : public FDragDropOperation {
+public:
+	DRAG_DROP_OPERATOR_TYPE(FFICGraphKeyframeDragDrop, FDragDropOperation)
+
+	TSharedPtr<SFICSequencerRowAttribute> RowAttribute;
+	FFICAttribute* Attribute;
+	FICFrame Frame;
+	TSharedPtr<FFICAttribute> OldAttributeState;
+
+	FVector2D CumulativeLocalDiff = FVector2D::ZeroVector;
+	float CumulativeTimeDiff = 0;
+	
+	FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequencerRowAttribute> InRowAttribute, TSharedRef<SFICSequencerRowAttributeKeyframe> RowAttribute, FPointerEvent InitEvent);
 
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;

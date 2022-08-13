@@ -2,6 +2,7 @@
 
 #include "Editor/FICChangeList.h"
 #include "Editor/FICEditorContext.h"
+#include "Editor/UI/FICSequencer.h"
 #include "Widgets/SToolTip.h"
 
 FFICGraphDragDrop::FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent) : GraphView(GraphView) {
@@ -170,4 +171,27 @@ void FFICGraphKeyframeHandleDragDrop::OnDrop(bool bDropWasHandled, const FPointe
 	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(KeyframeHandle->GetGraphKeyframe()->GetContext(), TimelineStart, KeyframeHandle->GetGraphKeyframe()->GetFrame()));
 	Change->PushChange(MakeShared<FFICChange_Attribute>(&KeyframeHandle->GetGraphKeyframe()->GetAttribute(), AttribBegin.ToSharedRef()));
 	KeyframeHandle->GetGraphKeyframe()->GetContext()->ChangeList.PushChange(Change);
+}
+
+FFICSequencerKeyframeDragDrop::FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequencerRowAttribute> InRowAttribute, TSharedRef<SFICSequencerRowAttributeKeyframe> Keyframe, FPointerEvent InitEvent) {
+	RowAttribute = InRowAttribute;
+	Attribute = Keyframe->GetAttribute();
+	Frame = Keyframe->GetFrame();
+	OldAttributeState = Attribute->Get();
+}
+
+void FFICSequencerKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
+	CumulativeLocalDiff += DragDropEvent.GetCursorDelta();
+	CumulativeTimeDiff = RowAttribute->GetFramePerLocal() * CumulativeLocalDiff.X;
+	
+	Attribute->Set(OldAttributeState.ToSharedRef());
+
+	Attribute->LockUpdateEvent();
+	Attribute->MoveKeyframe(Frame, Frame + CumulativeTimeDiff);
+	Attribute->RecalculateAllKeyframes();
+	Attribute->UnlockUpdateEvent();
+}
+
+void FFICSequencerKeyframeDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
+	FDragDropOperation::OnDrop(bDropWasHandled, MouseEvent);
 }
