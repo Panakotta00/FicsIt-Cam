@@ -7,6 +7,7 @@
 #include "Editor/Data/FICEditorAttributeBase.h"
 #include "FICSequencer.generated.h"
 
+class SFICSequencerTreeView;
 class SFICSequencerRowAttribute;
 USTRUCT()
 struct FFICSequencerStyle : public FSlateWidgetStyle {
@@ -53,32 +54,27 @@ class SFICSequencer : public SPanel {
 	SLATE_ATTRIBUTE(FICFrame, Frame)
 	SLATE_ATTRIBUTE(FFICFrameRange, FrameRange)
 	SLATE_ATTRIBUTE(FFICFrameRange, FrameHighlightRange)
-
-	SLATE_ATTRIBUTE(TArray<TSharedPtr<ITableRow>>, SequenceRowSource)
-	SLATE_EVENT(FFICSequencerGenerateRow, OnGenerateRow)
-
 	SLATE_END_ARGS()
 
 public:
-	void Construct(const FArguments& InArgs, UFICEditorContext* InContext);
+	void Construct(const FArguments& InArgs, UFICEditorContext* InContext, SFICSequencerTreeView* InTreeView);
 
 private:
 	TSlotlessChildren<SFICSequencerRow> Children;
+	TArray<TSharedPtr<ITableRow>> LinearRows;
 
 	const FFICSequencerStyle* Style = nullptr;
 
 	TAttribute<FICFrame> ActiveFrame;
 	TAttribute<FFICFrameRange> FrameRange;
 	TAttribute<FFICFrameRange> FrameHighlightRange;
-	
-	TAttribute<TArray<TSharedPtr<ITableRow>>> SequencerRowSource;
-	FFICSequencerGenerateRow GenerateRow;
-	
-	TMap<TSharedPtr<ITableRow>, TSharedPtr<SFICSequencerRow>> TableToSequencerRow;
-	TMap<TSharedPtr<SFICSequencerRow>, TSharedPtr<ITableRow>> WidgetToTableRow;
+
+	TMap<TSharedPtr<FFICSequencerRowMeta>, TSharedPtr<SFICSequencerRow>> MetaToWidget;
+	TMap<TSharedPtr<SFICSequencerRow>, TSharedPtr<FFICSequencerRowMeta>> WidgetToMeta;
 	
 public:
 	UFICEditorContext* Context = nullptr;
+	SFICSequencerTreeView* TreeView = nullptr;
 	
 	SFICSequencer();
 	virtual ~SFICSequencer() override;
@@ -102,7 +98,7 @@ public:
 
 	void UpdateRows();
 
-	int32 GetRowIndexByWidget(TSharedRef<const SFICSequencerRow> InWidget);
+	int32 GetRowIndexByWidget(TSharedRef<SFICSequencerRow> InWidget);
 
 	FICFrame LocalToFrame(float Local) const;
 	float FrameToLocal(FICFrame InFrame) const;

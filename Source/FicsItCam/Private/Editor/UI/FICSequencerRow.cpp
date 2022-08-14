@@ -26,17 +26,9 @@ void SFICSequencerRow::Construct(const FArguments& InArgs, SFICSequencer* InSequ
 }
 
 int32 SFICSequencerRow::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
-	const FSlateBrush* BackgroundBrush = (Sequencer->GetRowIndexByWidget(SharedThis(this)) % 2 == 0) ? &Style->RowBackgroundEven : &Style->RowBackgroundOdd;
-
-	FLinearColor Color = FLinearColor::White;
-	if (BackgroundColor.IsSet() || BackgroundColor.IsBound()) {
-		Color = BackgroundColor.Get();
-		FLinearColor Tint = Style->RowBackgroundOdd.GetTint(InWidgetStyle);
-		Color.A = Tint.A;
-	} else {
-		FLinearColor Tint = BackgroundBrush->GetTint(InWidgetStyle);
-		Color.A = Tint.A;
-	}
+	const FSlateBrush* BackgroundBrush;
+	FLinearColor Color;
+	GetRowBrushAndColor(Sequencer->GetRowIndexByWidget(ConstCastSharedRef<SFICSequencerRow>(SharedThis(this))), BackgroundColor, &Style->RowBackgroundEven, &Style->RowBackgroundOdd, InWidgetStyle, BackgroundBrush, Color);
 	
 	FSlateDrawElement::MakeBox(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), BackgroundBrush, ESlateDrawEffect::None, Color);
 	
@@ -49,6 +41,21 @@ void SFICSequencerRow::UpdateFrameRange(FFICFrameRange InFrameRange) {
 
 void SFICSequencerRow::UpdateActiveFrame(FICFrame InFrame) {
 	ActiveFrame = InFrame;
+}
+
+void SFICSequencerRow::GetRowBrushAndColor(int32 InIndex, const TAttribute<FLinearColor>& InColorAttribute, const FSlateBrush* InBrushEven, const FSlateBrush* InBrushOdd, const FWidgetStyle& InWidgetStyle, const FSlateBrush*& OutBrush, FLinearColor& OutColor) {
+	OutBrush = (InIndex % 2 == 0) ? InBrushEven : InBrushOdd;
+
+	OutColor = FLinearColor::White;
+	FLinearColor Tint;
+	
+	if (InColorAttribute.IsSet() || InColorAttribute.IsBound()) {
+		OutColor = InColorAttribute.Get();
+		if (OutColor == FLinearColor::White) OutBrush = InBrushOdd;
+	}
+
+	Tint = OutBrush->GetTint(InWidgetStyle);
+	OutColor.A = Tint.A;
 }
 
 void SFICSequencerRowAttributeKeyframe::Construct(const FArguments& InArgs, SFICSequencerRowAttribute* InRowAttribute, UFICEditorContext* InContext, FFICAttribute* InAttribute, FICFrame InFrame) {

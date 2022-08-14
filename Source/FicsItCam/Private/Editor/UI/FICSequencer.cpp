@@ -3,6 +3,7 @@
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICDragDrop.h"
 #include "Editor/UI/FICEditorStyle.h"
+#include "Editor/UI/FICSequencerTreeView.h"
 
 const FName FFICSequencerStyle::TypeName = "Sequencer";
 
@@ -16,16 +17,15 @@ const FFICSequencerStyle& FFICSequencerStyle::GetDefault() {
 	return *Default;
 }
 
-void SFICSequencer::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
+void SFICSequencer::Construct(const FArguments& InArgs, UFICEditorContext* InContext, SFICSequencerTreeView* InTreeView) {
 	Context = InContext;
+	TreeView = InTreeView;
 
 	Style = InArgs._Style;
 	ActiveFrame = InArgs._Frame;
 	FrameRange = InArgs._FrameRange;
 	FrameHighlightRange = InArgs._FrameHighlightRange;
-	SequencerRowSource = InArgs._SequenceRowSource;
-	GenerateRow = InArgs._OnGenerateRow;
-	
+		
 	Context->OnCurrentFrameChanged.AddRaw(this, &SFICSequencer::FrameRangeChanged);
 
 	UpdateRows();
@@ -88,7 +88,7 @@ FChildren* SFICSequencer::GetChildren() {
 void SFICSequencer::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const {
 	for (int32 i = 0; i < Children.Num(); ++i) {
 		const TSharedPtr<SFICSequencerRow>& Child = Children[i];
-		const TSharedPtr<ITableRow>& Row = WidgetToTableRow[Child];
+		const TSharedPtr<ITableRow>& Row = LinearRows[i];
 		FGeometry TableRowGeometry = Row->AsWidget()->GetPaintSpaceGeometry();
 		FVector2D Size = FVector2D(AllottedGeometry.GetLocalSize().X, TableRowGeometry.GetLocalSize().Y);
 		FVector2D ParentOffset = FVector2D(0, AllottedGeometry.AbsoluteToLocal(TableRowGeometry.GetAbsolutePosition()).Y);
@@ -97,26 +97,51 @@ void SFICSequencer::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrang
 }
 
 void SFICSequencer::UpdateRows() {
-	Children.Empty();
-	TableToSequencerRow.Empty();
-	WidgetToTableRow.Empty();
-	
-	TArray<TSharedPtr<ITableRow>> Rows = SequencerRowSource.Get();
+	TArray<TSharedPtr<ITableRow>> Rows = TreeView->GetVisibleTableRows();
 
-	for (const TSharedPtr<ITableRow>& TableRow : Rows) {
-		TSharedPtr<SFICSequencerRow> Row;
-		GenerateRow.Execute(TableRow, Row);
-		Children.Add(Row.ToSharedRef());
-		TableToSequencerRow.Add(TableRow, Row);
-		WidgetToTableRow.Add(Row, TableRow);
+	TSet<int32> ToRemove;
+	int32 i = 0;
+	for (; i < Rows.Num(); ++i) {
+		const TSharedPtr<ITableRow>& Row = Rows[i];
+		TSharedPtr<FFICSequencerRowMeta> Meta = *TreeView->ItemFromWidget(Row.Get());
 		
-		Row->UpdateActiveFrame(ActiveFrame.Get());
-		Row->UpdateFrameRange(FrameRange.Get());
+		// Skip if Item already exists
+		if (LinearRows.Num() > i && LinearRows[i] == Row) continue;
+
+		if (LinearRows.Contains(Row)) {
+			// If Current Item already exists, but was not at same index -> Item to delete in LinearRows
+			while (LinearRows[i] != Row) {
+				TSharedPtr<SFICSequencerRow> Widget = Children[i];
+				Children.RemoveAt(i);
+				LinearRows.RemoveAt(i);
+				MetaToWidget.Remove(WidgetToMeta[Widget]);
+				WidgetToMeta.Remove(Widget);
+			}
+		} else {
+			// If Current Item does not exist -> Create and Add Item
+			TSharedPtr<SFICSequencerRow> Widget = Meta->Provider->CreateRow(this);
+			Children.Insert(Widget.ToSharedRef(), i);
+			LinearRows.Insert(Row, i);
+			MetaToWidget.Add(Meta, Widget);
+			WidgetToMeta.Add(Widget, Meta);
+
+			Widget->UpdateActiveFrame(ActiveFrame.Get());
+			Widget->UpdateFrameRange(FrameRange.Get());
+		}
 	}
+	for (; i < LinearRows.Num();) {
+		TSharedPtr<SFICSequencerRow> Widget = Children[i];
+		Children.RemoveAt(i);
+		LinearRows.RemoveAt(i);
+		MetaToWidget.Remove(WidgetToMeta[Widget]);
+		WidgetToMeta.Remove(Widget);
+	}
+
+	Invalidate(EInvalidateWidgetReason::Layout);
 }
 
-int32 SFICSequencer::GetRowIndexByWidget(TSharedRef<const SFICSequencerRow> InWidget) {
-	return Children.Find(ConstCastSharedRef<SFICSequencerRow>(InWidget));
+int32 SFICSequencer::GetRowIndexByWidget(TSharedRef<SFICSequencerRow> InWidget) {
+	return TreeView->GetRowIndex(WidgetToMeta[InWidget]);
 }
 
 void SFICSequencer::FrameRangeChanged() {

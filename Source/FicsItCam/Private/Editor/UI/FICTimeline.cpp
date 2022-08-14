@@ -385,10 +385,6 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 				]
 				+SWidgetSwitcher::Slot()[
 					SAssignNew(SequencerTreeView, SFICSequencerTreeView, Context)
-					.OnScrolled_Lambda([this](double) {
-						//if (Sequencer) Sequencer->UpdateRows();
-						Sequencer->Invalidate(EInvalidateWidgetReason::Layout);
-					})
 					.OnUpdate_Lambda([this]() {
 						if (Sequencer) Sequencer->UpdateRows();
 					})
@@ -460,16 +456,9 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 					})
 				]
 				+SWidgetSwitcher::Slot()[
-					SAssignNew(Sequencer, SFICSequencer, Context)
+					SAssignNew(Sequencer, SFICSequencer, Context, SequencerTreeView.Get())
 					.Frame_Lambda([this]() { return Context->GetCurrentFrame(); })
 					.FrameRange_Lambda([this]() { return Context->GetActiveRange(); })
-					.SequenceRowSource_Lambda([this]() {
-						TArray<TSharedPtr<ITableRow>> Rows = SequencerTreeView->GetVisibleTableRows();
-						return Rows;
-					})
-					.OnGenerateRow_Lambda([this](TSharedPtr<ITableRow> TableRow, TSharedPtr<SFICSequencerRow>& Row) {
-						Row = SequencerTreeView->ItemFromWidget(TableRow.Get())->Get()->Provider->CreateRow(Sequencer.Get());
-					})
 				]
 			]
 		]
