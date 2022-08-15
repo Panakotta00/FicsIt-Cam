@@ -459,6 +459,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 					SAssignNew(Sequencer, SFICSequencer, Context, SequencerTreeView.Get())
 					.Frame_Lambda([this]() { return Context->GetCurrentFrame(); })
 					.FrameRange_Lambda([this]() { return Context->GetActiveRange(); })
+					.FrameHighlightRange_Lambda([this]() { return Context->GetScene()->AnimationRange; })
 				]
 			]
 		]

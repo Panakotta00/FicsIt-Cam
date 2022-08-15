@@ -26,7 +26,7 @@ void SFICSequencer::Construct(const FArguments& InArgs, UFICEditorContext* InCon
 	FrameRange = InArgs._FrameRange;
 	FrameHighlightRange = InArgs._FrameHighlightRange;
 		
-	Context->OnCurrentFrameChanged.AddRaw(this, &SFICSequencer::FrameRangeChanged);
+	ActiveFrameDelegate = Context->OnCurrentFrameChanged.AddRaw(this, &SFICSequencer::ActiveFrameChanged);
 
 	UpdateRows();
 }
@@ -35,14 +35,57 @@ SFICSequencer::SFICSequencer() : Children(this) {
 	Clipping = EWidgetClipping::ClipToBoundsAlways;
 }
 
-SFICSequencer::~SFICSequencer() {}
+SFICSequencer::~SFICSequencer() {
+	Context->OnCurrentFrameChanged.Remove(ActiveFrameDelegate);
+}
+
+void SFICSequencer::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
+	if (OldFrameRange != FrameRange.Get()) {
+		OldFrameRange = FrameRange.Get();
+		FrameRangeChanged();
+	}
+	
+	SPanel::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+}
 
 FVector2D SFICSequencer::ComputeDesiredSize(float) const {
 	return FVector2D(10, 10);
 }
 
 int32 SFICSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
-	return SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	OutDrawElements.PushClip(FSlateClippingZone(AllottedGeometry));
+	
+	FFICFrameRange Range = FrameRange.Get();
+	FFICFrameRange Highlight = FrameHighlightRange.Get();
+		
+	// Draw Highlighted Frame Range Background
+	FVector2D AnimationLocalStart = FVector2D(FrameToLocal(Highlight.Begin), 0);
+	FVector2D AnimationLocalEnd = FVector2D(FrameToLocal(Highlight.End), AllottedGeometry.GetLocalSize().Y);
+	FSlateDrawElement::MakeBox(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(AnimationLocalEnd - AnimationLocalStart, FSlateLayoutTransform(AnimationLocalStart)), &Style->HighlightRangeBrush, ESlateDrawEffect::None, Style->HighlightRangeBrush.TintColor.GetSpecifiedColor());
+	
+	// Draw Grid
+	FVector2D Distance = FVector2D(10,10);
+	FVector2D Start = FVector2D(LocalToFrame(0), 0) / Distance;
+	FVector2D RenderOffset = FVector2D(FMath::Fractional(Start.X) * Distance.X, FMath::Fractional(Start.Y) * Distance.Y);
+	FLinearColor GridColor = FLinearColor(FColor::FromHex("444444"));
+	int64 Steps = 1;
+	int64 SafetyCounter = 0;
+	while (Range.Length() / Steps > 30) Steps *= 10;
+	for (float x = Range.Begin - Range.Begin % Steps; x <= Range.End; x += Steps) {
+		if (SafetyCounter++ > 1000) break;
+		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), {FVector2D(FrameToLocal(x), 0), FVector2D(FrameToLocal(x), AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None, Style->GridColor, true, 1);
+	}
+		
+	// Draw Active Frame
+	FLinearColor FrameColor = FLinearColor(FColor::FromHex("666600"));
+	FSlateDrawElement::MakeLines(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), {FVector2D(FrameToLocal(ActiveFrame.Get()), 0), FVector2D(FrameToLocal(ActiveFrame.Get()), AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None, Style->ActiveFrameColor, true, 2);
+
+	
+	LayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+
+	OutDrawElements.PopClip();
+
+	return LayerId+20;
 }
 
 FReply SFICSequencer::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
@@ -143,6 +186,35 @@ void SFICSequencer::UpdateRows() {
 int32 SFICSequencer::GetRowIndexByWidget(TSharedRef<SFICSequencerRow> InWidget) {
 	return TreeView->GetRowIndex(WidgetToMeta[InWidget]);
 }
+
+FICFrame SFICSequencer::LocalToFrame(float Local) const {
+	return FMath::RoundToInt(LocalToFrameF(Local));
+}
+
+
+double SFICSequencer::LocalToFrameF(float Local) const {
+	FFICFrameRange Frames = FrameRange.Get();
+	return (int64) FMath::Lerp(
+		(double)Frames.Begin,
+		(double)Frames.End,
+		Local / GetCachedGeometry().GetLocalSize().X);
+}
+
+float SFICSequencer::FrameToLocal(FICFrame InFrame) const {
+	FFICFrameRange Frames = FrameRange.Get();
+	return FMath::Lerp(
+		0.0f,
+		GetCachedGeometry().GetLocalSize().X,
+		FMath::GetRangePct(
+			(double)Frames.Begin,
+			(double)Frames.End,
+			(double)InFrame));
+}
+
+float SFICSequencer::GetFramePerLocal() const {
+	return FrameRange.Get().Length() / GetCachedGeometry().Size.X;
+}
+
 
 void SFICSequencer::FrameRangeChanged() {
 	for (int i = 0; i < Children.Num(); ++i) {

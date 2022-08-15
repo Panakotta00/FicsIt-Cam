@@ -68,6 +68,8 @@ protected:
 	FFICFrameRange FrameRange;
 
 public:
+	SFICSequencerRow();
+	
 	// Begin SWidget
 	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 	// End SWidget
@@ -138,11 +140,6 @@ public:
 	virtual FChildren* GetChildren() override;
 	virtual void OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const override;
 	// End SWidget
-
-	// Begin IFICSequenceRow
-	virtual void UpdateFrameRange(FFICFrameRange InFrameRange) override;
-	virtual void UpdateActiveFrame(FICFrame InFrame) override;
-	// End IFICSequenceRFow
 
 	void UpdateKeyframes();
 

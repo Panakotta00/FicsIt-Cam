@@ -79,11 +79,11 @@ void SFICSequencerTreeView::Tick(const FGeometry& AllottedGeometry, const double
 
 void SFICSequencerTreeView::UpdateRoot() {
 	RootRows.Empty();
-	for (TTuple<FString, TSharedRef<FFICEditorAttributeBase>> Attribute : Context->GetAllAttributes()->GetChildAttributes()) {
-		RootRows.Add(MakeShared<FFICSequencerRowMeta>(StaticCastSharedRef<IFICSequencerRowProvider, FFICEditorAttributeBase>(Attribute.Value), FText::FromString(Attribute.Key), FLinearColor::White));
+	for (UObject* SceneObject : Context->GetScene()->GetSceneObjects()) {
+		const TSharedRef<FFICEditorAttributeBase>& Attribute = Context->GetEditorAttributes()[SceneObject];
+		RootRows.Add(MakeShared<FFICSequencerRowMeta>(StaticCastSharedRef<IFICSequencerRowProvider, FFICEditorAttributeBase>(Attribute), FText::FromString(Cast<IFICSceneObject>(SceneObject)->GetSceneObjectName()), FLinearColor::White));
 	}
 	RebuildList();
-	//TriggerUpdate();
 }
 
 TArray<TSharedPtr<ITableRow>> SFICSequencerTreeView::GetVisibleTableRows() {

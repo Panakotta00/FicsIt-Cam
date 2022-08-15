@@ -19,17 +19,26 @@ struct FFICSequencerStyle : public FSlateWidgetStyle {
 	virtual const FName GetTypeName() const override { return TypeName; };
 
 	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
-		KeyframeIcon.GetResources(OutBrushes);
+		OutBrushes.Add(&HighlightRangeBrush);
 		OutBrushes.Add(&RowBackgroundOdd);
 		OutBrushes.Add(&RowBackgroundEven);
+		KeyframeIcon.GetResources(OutBrushes);
 	}
-	
+
 	UPROPERTY(EditAnywhere)
-	FFICKeyframeIconStyle KeyframeIcon;
+	FSlateBrush HighlightRangeBrush;
+	UPROPERTY(EditAnywhere)
+	FLinearColor ActiveFrameColor;
+	UPROPERTY(EditAnywhere)
+	FLinearColor GridColor;
+	
 	UPROPERTY(EditAnywhere)
 	FSlateBrush RowBackgroundOdd;
 	UPROPERTY(EditAnywhere)
 	FSlateBrush RowBackgroundEven;
+
+	UPROPERTY(EditAnywhere)
+	FFICKeyframeIconStyle KeyframeIcon;
 };
 
 UCLASS(hidecategories = Object, MinimalAPI)
@@ -69,8 +78,12 @@ private:
 	TAttribute<FFICFrameRange> FrameRange;
 	TAttribute<FFICFrameRange> FrameHighlightRange;
 
+	FDelegateHandle ActiveFrameDelegate;
+
 	TMap<TSharedPtr<FFICSequencerRowMeta>, TSharedPtr<SFICSequencerRow>> MetaToWidget;
 	TMap<TSharedPtr<SFICSequencerRow>, TSharedPtr<FFICSequencerRowMeta>> WidgetToMeta;
+
+	FFICFrameRange OldFrameRange;
 	
 public:
 	UFICEditorContext* Context = nullptr;
@@ -80,6 +93,7 @@ public:
 	virtual ~SFICSequencer() override;
 	
 	// Begin SWidget
+	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 	virtual FVector2D ComputeDesiredSize(float) const override;
 	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
@@ -101,6 +115,7 @@ public:
 	int32 GetRowIndexByWidget(TSharedRef<SFICSequencerRow> InWidget);
 
 	FICFrame LocalToFrame(float Local) const;
+	double LocalToFrameF(float Local) const;
 	float FrameToLocal(FICFrame InFrame) const;
 	float GetFramePerLocal() const;
 

@@ -25,14 +25,25 @@ void SFICSequencerRow::Construct(const FArguments& InArgs, SFICSequencer* InSequ
 	BackgroundColor = InArgs._BackgroundColor;
 }
 
+SFICSequencerRow::SFICSequencerRow() {
+	Clipping = EWidgetClipping::ClipToBoundsAlways;
+}
+
 int32 SFICSequencerRow::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
+	OutDrawElements.PushClip(FSlateClippingZone(MyCullingRect));
+	
 	const FSlateBrush* BackgroundBrush;
 	FLinearColor Color;
 	GetRowBrushAndColor(Sequencer->GetRowIndexByWidget(ConstCastSharedRef<SFICSequencerRow>(SharedThis(this))), BackgroundColor, &Style->RowBackgroundEven, &Style->RowBackgroundOdd, InWidgetStyle, BackgroundBrush, Color);
 	
 	FSlateDrawElement::MakeBox(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), BackgroundBrush, ESlateDrawEffect::None, Color);
+
 	
-	return SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	LayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	
+	OutDrawElements.PopClip();
+
+	return LayerId + 20;
 }
 
 void SFICSequencerRow::UpdateFrameRange(FFICFrameRange InFrameRange) {
@@ -105,6 +116,8 @@ void SFICSequencerRowAttribute::Construct(const FArguments& InArgs, SFICSequence
 	Attribute = InAttribute;
 	
 	DelegateHandle = Attribute->GetAttribute().OnUpdate.AddSP(SharedThis(this), &SFICSequencerRowAttribute::UpdateKeyframes);
+
+	UpdateKeyframes();
 }
 
 SFICSequencerRowAttribute::SFICSequencerRowAttribute() : Children(this) {
@@ -129,25 +142,13 @@ FChildren* SFICSequencerRowAttribute::GetChildren() {
 
 void SFICSequencerRowAttribute::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const {
 	for (int i = 0; i < Children.Num(); ++i) {
-		TSharedRef<SFICSequencerRowAttributeKeyframe> Child = Children[i];
+		const TSharedRef<SFICSequencerRowAttributeKeyframe>& Child = Children[i];
 		FVector2D Size = Child->GetDesiredSize();
 		FVector2D Offset = -Child->GetDesiredSize() / 2.0f;
 		Offset.Y += AllottedGeometry.Size.Y / 2.0f;
 		Offset.X += FrameToLocal(Child->GetFrame());
 		ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(Child, Offset, Size));
 	}
-}
-
-void SFICSequencerRowAttribute::UpdateFrameRange(FFICFrameRange InFrameRange) {
-	SFICSequencerRow::UpdateFrameRange(InFrameRange);
-
-	UpdateKeyframes();
-}
-
-void SFICSequencerRowAttribute::UpdateActiveFrame(FICFrame InFrame) {
-	SFICSequencerRow::UpdateActiveFrame(InFrame);
-	
-	UpdateKeyframes();
 }
 
 void SFICSequencerRowAttribute::UpdateKeyframes() {
