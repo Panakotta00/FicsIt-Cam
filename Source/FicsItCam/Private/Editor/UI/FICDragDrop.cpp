@@ -183,13 +183,20 @@ FFICSequencerKeyframeDragDrop::FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequ
 void FFICSequencerKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	CumulativeLocalDiff += DragDropEvent.GetCursorDelta();
 	CumulativeTimeDiff = RowAttribute->GetFramePerLocal() * CumulativeLocalDiff.X;
+
+	double start = FPlatformTime::Seconds();
+	Attribute->LockUpdateEvent();
+	double start2 = FPlatformTime::Seconds();
 	
 	Attribute->Set(OldAttributeState.ToSharedRef());
-
-	Attribute->LockUpdateEvent();
+	double start3 = FPlatformTime::Seconds();
 	Attribute->MoveKeyframe(Frame, Frame + CumulativeTimeDiff);
+	double start4 = FPlatformTime::Seconds();
 	Attribute->RecalculateAllKeyframes();
+	double start5 = FPlatformTime::Seconds();
 	Attribute->UnlockUpdateEvent();
+	double start6 = FPlatformTime::Seconds();
+	UE_LOG(LogTemp, Warning, TEXT("Time: %f + %f + %f + %f + %f = %f"), start2-start, start3-start2, start4-start3, start5-start4, start6-start5, start6-start);
 }
 
 void FFICSequencerKeyframeDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {

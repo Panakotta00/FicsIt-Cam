@@ -26,7 +26,7 @@ struct FFICKeyframeIconStyle : public FSlateWidgetStyle {
 };
 
 UCLASS(hidecategories = Object, MinimalAPI)
-class UFICFFICKeyframeIconStyleContainer : public USlateWidgetStyleContainerBase {
+class UFICKeyframeIconStyleContainer : public USlateWidgetStyleContainerBase {
 	GENERATED_BODY()
 
 public:

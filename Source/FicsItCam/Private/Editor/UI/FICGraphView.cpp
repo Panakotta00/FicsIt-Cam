@@ -213,7 +213,8 @@ FReply SFICGraphViewKeyframe::OnMouseButtonUp(const FGeometry& MyGeometry, const
 			for (const TPair<FFICAttribute*, FICFrame>& KF : Keyframes) {
 				TSharedRef<FFICAttribute>* Snapshot = Snapshots.Find(KF.Key);
 				if (!Snapshot) Snapshots.Add(KF.Key, KF.Key->Get());
-				TSharedRef<FFICKeyframe>* NKF = KF.Key->GetKeyframes().Find(KF.Value);
+				TMap<FICFrame, TSharedRef<FFICKeyframe>> KFS = KF.Key->GetKeyframes();
+				TSharedRef<FFICKeyframe>* NKF = KFS.Find(KF.Value);
 				if (NKF) (*NKF)->SetType(Type);
 				KF.Key->LockUpdateEvent();
 				KF.Key->RecalculateAllKeyframes();
