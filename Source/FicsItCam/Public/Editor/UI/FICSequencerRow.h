@@ -77,6 +77,8 @@ public:
 	virtual void UpdateFrameRange(FFICFrameRange InFrameRange);
 	virtual void UpdateActiveFrame(FICFrame InFrame);
 
+	TSharedRef<SFICSequencer> GetSequencer() const;
+
 	static void GetRowBrushAndColor(int32 InIndex, const TAttribute<FLinearColor>& InColorAttribute, const FSlateBrush* InBrushEven, const FSlateBrush* InBrushOdd, const FWidgetStyle& InWidgetStyle, const FSlateBrush*& OutBrush, FLinearColor& OutColor);
 };
 

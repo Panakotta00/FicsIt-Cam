@@ -3,6 +3,7 @@
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICSequencerTreeView.h"
 #include "Widgets/Input/SNumericEntryBox.h"
+#include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
 
 FSlateColorBrush SFICTimelinePanel::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
@@ -10,6 +11,17 @@ FSlateColorBrush SFICTimelinePanel::DefaultBackgroundBrush = FSlateColorBrush(FC
 FCheckBoxStyle SFICTimelinePanel::DefaultToggleButtonStyle = FCoreStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonStyle");
 FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonChecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.25f, 0.25f, 0.25f));
 FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonUnchecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.72f, 0.72f, 0.72f));
+
+const FName FFICTimelineStyle::TypeName = TEXT("FFICTimelineStyle");
+
+const FFICTimelineStyle& FFICTimelineStyle::GetDefault() {
+	static FFICTimelineStyle* Default = nullptr;
+	if (!Default) {
+		Default = new FFICTimelineStyle();
+		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICTimelineStyle>("TimelineStyle");
+	}
+	return *Default;
+}
 
 TArray<TSharedPtr<FFICEditorAttributeReference>> FFICEditorAttributeReference::GetChildren() {
 	if (!bChildrenLoaded) {
@@ -23,6 +35,7 @@ TArray<TSharedPtr<FFICEditorAttributeReference>> FFICEditorAttributeReference::G
 
 void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
 	Context = InContext;
+	Style = InArgs._Style;
 	BackgroundBrush = InArgs._Background;
 	
 	DefaultToggleButtonStyle.CheckedImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
@@ -40,6 +53,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 			.Image(BackgroundBrush)
 		]
 		+SOverlay::Slot()
+		.Padding(0)
 		.HAlign(HAlign_Fill)
 		.VAlign(VAlign_Fill)[
 			SNew(SGridPanel)
@@ -47,11 +61,49 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 			.FillRow(2, 1)
 			+SGridPanel::Slot(0,0)
 			.RowSpan(2)
-			.Padding(5)[
+			.Padding(0)[
 				SNew(SGridPanel)
-				+SGridPanel::Slot(0, 0).Padding(5)[
+				+SGridPanel::Slot(0, 0)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				.Padding(0)[
 					SNew(SButton)
-					.Text(FText::FromString("Toggle Mode"))
+					.HAlign(HAlign_Fill)
+					.VAlign(VAlign_Fill)
+					.Content()[
+						SNew(SScaleBox)
+						.Stretch(EStretch::ScaleToFit)
+						.Content()[
+							SNew(SBox)
+							.Padding(0)
+							.HAlign(HAlign_Fill)
+							.VAlign(VAlign_Fill)
+							.MaxDesiredHeight(10)
+							.MaxDesiredWidth(10)
+							.Content()[
+								SNew(SImage)
+								.Image_Lambda([this]() {
+									switch (Mode) {
+									case 0:
+										return &Style->SequencerIcon;
+									case 1:
+										return &Style->GraphViewIcon;
+									default:
+										return &Style->SequencerIcon;
+									}
+								})
+							]
+						]
+					]
+					.ToolTipText_Lambda([this]() {
+						switch (Mode) {
+						default:
+						case 0:
+							return FText::FromString(TEXT("Switch to Sequencer Mode"));
+						case 1:
+							return FText::FromString(TEXT("Switch to Graph Mode"));
+						}
+					})
 					.OnClicked_Lambda([this]() {
 						++Mode;
 						if (Mode > 1) Mode = 0;

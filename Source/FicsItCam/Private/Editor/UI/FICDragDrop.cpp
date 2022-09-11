@@ -3,6 +3,7 @@
 #include "Editor/FICChangeList.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICSequencer.h"
+#include "Editor/UI/FICSequencerTreeView.h"
 #include "Widgets/SToolTip.h"
 
 FFICGraphDragDrop::FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent) : GraphView(GraphView) {
@@ -173,7 +174,33 @@ void FFICGraphKeyframeHandleDragDrop::OnDrop(bool bDropWasHandled, const FPointe
 	KeyframeHandle->GetGraphKeyframe()->GetContext()->ChangeList.PushChange(Change);
 }
 
-FFICSequencerKeyframeDragDrop::FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequencerRowAttribute> InRowAttribute, TSharedRef<SFICSequencerRowAttributeKeyframe> Keyframe, FPointerEvent InitEvent) {
+FFICSequencerDragDrop::FFICSequencerDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent) : Sequencer(Sequencer) {
+	StartLocal = Sequencer->GetCachedGeometry().AbsoluteToLocal(InitEvent.GetScreenSpacePosition());
+	StartFrameF = Sequencer->LocalToFrameF(StartLocal.X);
+	StartActiveRange = Sequencer->Context->GetActiveRange();
+	StartFramePerLocal = Sequencer->GetFramePerLocal();
+}
+
+void FFICSequencerDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
+	FDragDropOperation::OnDragged(DragDropEvent);
+}
+
+void FFICSequencerDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
+	FDragDropOperation::OnDrop(bDropWasHandled, MouseEvent);
+}
+
+FFICSequencerPanDragDrop::FFICSequencerPanDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent) : FFICSequencerDragDrop(Sequencer, InitEvent) {}
+
+void FFICSequencerPanDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
+	FFICSequencerDragDrop::OnDragged(DragDropEvent);
+
+	FVector2D Local = Sequencer->GetCachedGeometry().AbsoluteToLocal(DragDropEvent.GetScreenSpacePosition());
+	FICFrameFloat FrameDiff = (StartLocal - Local).X * StartFramePerLocal;
+	
+	Sequencer->Context->SetActiveRange(StartActiveRange + FrameDiff);
+}
+
+FFICSequencerKeyframeDragDrop::FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequencerRowAttribute> InRowAttribute, TSharedRef<SFICSequencerRowAttributeKeyframe> Keyframe, FPointerEvent InitEvent) : FFICSequencerDragDrop(InRowAttribute->GetSequencer(), InitEvent) {
 	RowAttribute = InRowAttribute;
 	Attribute = Keyframe->GetAttribute();
 	Frame = Keyframe->GetFrame();

@@ -93,9 +93,39 @@ public:
 	// End FDragDropOperation
 };
 
-class FFICSequencerKeyframeDragDrop : public FDragDropOperation {
+class FFICSequencerDragDrop : public FDragDropOperation {
 public:
-	DRAG_DROP_OPERATOR_TYPE(FFICGraphKeyframeDragDrop, FDragDropOperation)
+	DRAG_DROP_OPERATOR_TYPE(FFICSequencerDragDrop, FDragDropOperation)
+
+	TSharedRef<SFICSequencer> Sequencer;
+	FICFrameFloat StartFrameF;
+	FICFrameFloat StartFramePerLocal;
+	FFICFrameRange StartActiveRange;
+	FVector2D StartLocal;
+
+	FFICSequencerDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent);
+	
+	// Begin FDragDropOperation
+	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual void OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) override;
+	// End FDragDropOperation
+};
+
+class FFICSequencerPanDragDrop : public FFICSequencerDragDrop {
+public:
+	DRAG_DROP_OPERATOR_TYPE(FFICGraphPanDragDrop, FFICSequencerDragDrop)
+
+	FFICSequencerPanDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent);
+
+	// Begin FDragDropOperation
+	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual FCursorReply OnCursorQuery() { return FCursorReply::Cursor(EMouseCursor::Hand); }
+	// End FDragDropOperation
+};
+
+class FFICSequencerKeyframeDragDrop : public FFICSequencerDragDrop {
+public:
+	DRAG_DROP_OPERATOR_TYPE(FFICSequencerKeyframeDragDrop, FFICSequencerDragDrop)
 
 	TSharedPtr<SFICSequencerRowAttribute> RowAttribute;
 	FFICAttribute* Attribute;

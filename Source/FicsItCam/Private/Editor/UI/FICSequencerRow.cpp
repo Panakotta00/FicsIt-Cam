@@ -54,6 +54,10 @@ void SFICSequencerRow::UpdateActiveFrame(FICFrame InFrame) {
 	ActiveFrame = InFrame;
 }
 
+TSharedRef<SFICSequencer> SFICSequencerRow::GetSequencer() const {
+	return SharedThis(Sequencer);
+}
+
 void SFICSequencerRow::GetRowBrushAndColor(int32 InIndex, const TAttribute<FLinearColor>& InColorAttribute, const FSlateBrush* InBrushEven, const FSlateBrush* InBrushOdd, const FWidgetStyle& InWidgetStyle, const FSlateBrush*& OutBrush, FLinearColor& OutColor) {
 	OutBrush = (InIndex % 2 == 0) ? InBrushEven : InBrushOdd;
 
