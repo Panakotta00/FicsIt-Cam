@@ -14,16 +14,29 @@ class AFICAnimation;
 class AFICRuntimeProcessorCharacter;
 class UFICCommand;
 
-USTRUCT()
-struct FFICRenderRequest{
-	GENERATED_BODY()
+struct FFICRenderTarget {
+	virtual ~FFICRenderTarget() {}
 
-	TArray<FColor> Image;
+	virtual FRenderTarget* GetRenderTarget() = 0;
+};
+
+struct FFICRenderRequest {
 	FRenderCommandFence RenderFence;
-	FString Path;
+	
+	FRHIGPUTextureReadback Readback;
 
-	UPROPERTY()
-	UTextureRenderTarget2D* RenderTarget = nullptr;
+	FString Path;
+	TSharedRef<FFICRenderTarget> RenderTarget;
+
+	FFICRenderRequest(TSharedRef<FFICRenderTarget> RenderTarget, FString Path, FRHIGPUTextureReadback Readback) : RenderTarget(RenderTarget), Path(Path), Readback(Readback) {}
+};
+
+struct FFICRenderTarget_Raw : public FFICRenderTarget {
+	FRenderTarget* RenderTarget;
+
+	FFICRenderTarget_Raw(FRenderTarget* RenderTarget) : RenderTarget(RenderTarget) {}
+
+	virtual FRenderTarget* GetRenderTarget() override { return RenderTarget; }
 };
 
 class FFICAsyncImageCompressAndSave : public FNonAbandonableTask{
@@ -103,7 +116,7 @@ public:
 
 	AFICRuntimeProcessorCharacter* GetRuntimeProcessorCharacter() { return RuntimeProcessorCharacter; }
 	
-	void SaveRenderTargetAsJPG(const FString& FilePath, UTextureRenderTarget2D* RenderTarget);
+	void SaveRenderTargetAsJPG(const FString& FilePath, TSharedRef<FFICRenderTarget> RenderTarget);
 
 	AFICScene* FindSceneByName(const FString& InSceneName);
 	UFICRuntimeProcess* FindRuntimeProcess(const FString& InKey);

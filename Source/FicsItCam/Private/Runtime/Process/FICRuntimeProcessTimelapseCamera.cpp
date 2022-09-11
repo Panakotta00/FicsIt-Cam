@@ -30,15 +30,13 @@ void UFICRuntimeProcessTimelapseCamera::Tick(AFICRuntimeProcessorCharacter* InCh
 	if (FSP.IsEmpty()) {
 		FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/"));
 	}
-
 	FSP = FPaths::Combine(FSP, TEXT("FicsItCam/"), CameraArgument.GetSimpleName());
-
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
-
 	FSP = FPaths::Combine(FSP, FString::Printf(TEXT("%s-%i.jpg"), *CaptureStart.ToString(), CaptureIncrement));
-	
-	AFICSubsystem::GetFICSubsystem(this)->SaveRenderTargetAsJPG(FSP, CaptureCamera->RenderTarget);
+
+	AFICSubsystem::GetFICSubsystem(this)->SaveRenderTargetAsJPG(FSP, MakeShared<FFICRenderTarget_Raw>(CaptureCamera->RenderTarget->GameThread_GetRenderTargetResource()));
+
 	++CaptureIncrement;
 
 	//if (Character) Character->SetFirstPersonMode();
