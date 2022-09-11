@@ -244,8 +244,10 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	// TODO: Persist "Viewport Camera Transform" sepperately in persistent editor storage for given scene
 	Controller->Possess(Character);
 	UFGInputLibrary::UpdateInputMappings(Controller);
+	UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 	Character->SetEditorContext(Context);
 	Controller->PlayerInput->ActionMappings.Empty();
+	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(false);
 
 	// Get widgets to inject editor UI into and store necessery recovery data
 	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
@@ -320,6 +322,7 @@ void AFICEditorSubsystem::CloseEditor() {
 	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 	UGameplayStatics::SetGamePaused(this, false);
+	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(true );
 	
 	// Cleanup Editor Objects
 	EditorWidget = nullptr;

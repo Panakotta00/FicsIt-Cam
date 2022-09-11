@@ -53,6 +53,8 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			bReposses = true;
 			PController->UnPossess();
 			PController->Possess(this);
+			UFGInputLibrary::UpdateInputMappings(Cast<APlayerController>(PController));
+			UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 			bReposses = false;
 		
 			Camera->SetActive(true);
