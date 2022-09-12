@@ -2,6 +2,7 @@
 
 #include "Data/Attributes/FICAttribute.h"
 #include "Data/Attributes/FICKeyframe.h"
+#include "Editor/UI/FICSequencerRow.h"
 
 class UFICEditorContext;
 struct FFICAttribute;
@@ -17,7 +18,7 @@ DECLARE_MULTICAST_DELEGATE(FFICAttributeValueChanged)
  * so control interfaces can abstractly add, create, changed keyframes without the need to interact
  * directly with the value type of the attribute.
  */
-class FFICEditorAttributeBase : public TSharedFromThis<FFICEditorAttributeBase> {
+class FFICEditorAttributeBase : public IFICSequencerRowProvider, public TSharedFromThis<FFICEditorAttributeBase> {
 public:
 	FFICAttributeValueChanged OnValueChanged;
 	
@@ -26,6 +27,12 @@ public:
 	
 	FFICEditorAttributeBase(FLinearColor GraphColor) : GraphColor(GraphColor) {}
 	virtual ~FFICEditorAttributeBase() = default;
+
+	// Begin IFICSequencerRowProvider
+	virtual TSharedRef<SFICSequencerRow> CreateRow(SFICSequencer* InSequencer) override;
+	virtual TArray<TSharedPtr<FFICSequencerRowMeta>> GetChildRows() override;
+	virtual FText GetRowName() { return FText::FromString(TEXT("Unnamed")); }
+	// End IFICSequencerRowProvider
 
 	/**
 	 * Returns a Unique Type name for this editor attribute kind (kind of a replacement for RTTI)

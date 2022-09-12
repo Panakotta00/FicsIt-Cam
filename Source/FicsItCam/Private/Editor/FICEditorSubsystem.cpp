@@ -86,6 +86,7 @@ void AFICEditorSubsystem::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
 	if (ActiveEditorContext) {
+		//double start = FPlatformTime::Seconds();
 		FInputDeviceState InputState = CurrentMouseState;
 		InputState.InputDevice = EInputDevices::Mouse;
 
@@ -213,6 +214,8 @@ void AFICEditorSubsystem::Tick(float DeltaTime) {
 			// force rendering flush so that PDI lines get drawn
 			FlushRenderingCommands();
 		}
+		//double end = FPlatformTime::Seconds();
+		//UE_LOG(LogTemp, Warning, TEXT("code executed in %f seconds."), end-start);
 	}
 }
 
@@ -241,9 +244,12 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	// TODO: Persist "Viewport Camera Transform" sepperately in persistent editor storage for given scene
 	Controller->Possess(Character);
 	UFGInputLibrary::UpdateInputMappings(Controller);
+	UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 	Character->SetEditorContext(Context);
 	Controller->PlayerInput->ActionMappings.Empty();
-
+	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(false);
+	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHiddenHUDMode(true);
+	
 	// Get widgets to inject editor UI into and store necessery recovery data
 	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
 	GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
@@ -317,6 +323,8 @@ void AFICEditorSubsystem::CloseEditor() {
 	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 	UGameplayStatics::SetGamePaused(this, false);
+	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(true);
+	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHiddenHUDMode(false);
 	
 	// Cleanup Editor Objects
 	EditorWidget = nullptr;

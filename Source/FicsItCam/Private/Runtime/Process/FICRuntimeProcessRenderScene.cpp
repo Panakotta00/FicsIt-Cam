@@ -1,40 +1,56 @@
 #include "Runtime/Process/FICRuntimeProcessRenderScene.h"
 
+#include "EngineModule.h"
 #include "FICSubsystem.h"
+#include "IImageWrapperModule.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "GTE/Mathematics/Logger.h"
 #include "Runtime/FICCaptureCamera.h"
+#include "Slate/SceneViewport.h"
+#include "Widgets/SViewport.h"
 
 void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InCharacter) {
 	Super::Start(InCharacter);
 
-	CaptureCamera = GetWorld()->SpawnActor<AFICCaptureCamera>();
-	CaptureCamera->RenderTarget->InitCustomFormat(Scene->ResolutionWidth, Scene->ResolutionHeight, EPixelFormat::PF_B8G8R8A8, true);
-	CaptureCamera->RenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
-	CaptureCamera->RenderTarget->TargetGamma = 3.3f;
-	CaptureCamera->RenderTarget->UpdateResourceImmediate();
-	
-	if (Scene->bBulletTime) InCharacter->SetTimeDilation(0);
 
+	auto* Settings = GetWorld()->GetWorldSettings();
+	PrevMinUndilatedFrameTime = Settings->MinUndilatedFrameTime;
+	PrevMaxUndilatedFrameTime = Settings->MaxUndilatedFrameTime;
+	if (Scene->bBulletTime) {
+		Settings->MinUndilatedFrameTime = 0;
+		Settings->MaxUndilatedFrameTime = 0;
+	} else {
+		Settings->MinUndilatedFrameTime = 1.0/(double)Scene->FPS;
+		Settings->MaxUndilatedFrameTime = Settings->MinUndilatedFrameTime;
+	}
 	FrameProgress = Scene->AnimationRange.Begin;
+	
+	FViewportClient* ViewportClient = GetWorld()->GetGameViewport();
+	DummyViewport = MakeShared<FFICRendererViewport>(ViewportClient, Scene->ResolutionWidth, Scene->ResolutionHeight);
 }
 
 void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {
-	double Start = FPlatformTime::Seconds();
 	if(GetWorld()->IsLevelStreamingRequestPending(GetWorld()->GetFirstPlayerController())) return;
 
 	Progress = (float)FrameProgress / (float)Scene->FPS;
 	Super::Tick(InCharacter, DeltaSeconds);
-	if (!CaptureCamera) return;
 
-	// If no Bullet Time adjust game time dilation to fit render speed
-	if (!Scene->bBulletTime) InCharacter->SetTimeDilation(1.0f/Scene->FPS/DeltaSeconds);
-	
-	CaptureCamera->CopyCameraData(InCharacter->Camera);
+	// Capture Image
+	FlushRenderingCommands();
 
-	CaptureCamera->CaptureComponent->CaptureScene();
+	//DummyViewport->EnqueueBeginRenderFrame(false);
+	UGameViewportClient* ViewportClient = GetWorld()->GetGameViewport();
+	FCanvas Canvas(DummyViewport.Get(), NULL, ViewportClient->GetWorld(), ViewportClient->GetWorld()->FeatureLevel);
+	ViewportClient->Draw(DummyViewport.Get(), &Canvas);
+	Canvas.Flush_GameThread();
+	//FIntPoint RestoreSize(ViewportClient->Viewport->GetSizeXY().X, ViewportClient->Viewport->GetSizeXY().Y);
+	//ENQUEUE_RENDER_COMMAND(EndDrawingCommand)([RestoreSize, this](FRHICommandListImmediate& RHICmdList) {
+		//DummyViewport->EndRenderFrame(RHICmdList, false, false);
+		//GetRendererModule().SceneRenderTargetsSetBufferSize(RestoreSize.X, RestoreSize.Y);
+	//});
 
-	// Save Scene in Image
+	// Create Save Path
 	FString FSP;
 	// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
 	if (FSP.IsEmpty()) {
@@ -43,7 +59,9 @@ void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharac
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
 	FSP = FPaths::Combine(FSP, FString::FromInt(FrameProgress) + TEXT(".jpeg"));
-	AFICSubsystem::GetFICSubsystem(this)->SaveRenderTargetAsJPG(FSP, CaptureCamera->RenderTarget);
+
+	// Store Image
+	AFICSubsystem::GetFICSubsystem(this)->SaveRenderTargetAsJPG(FSP, DummyViewport.ToSharedRef());
 	
 	++FrameProgress;
 }
@@ -51,6 +69,7 @@ void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharac
 void UFICRuntimeProcessRenderScene::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
 	Super::Stop(InCharacter);
 	
-	CaptureCamera->Destroy();
-	CaptureCamera = nullptr;
+	auto* Settings = GetWorld()->GetWorldSettings();
+	Settings->MinUndilatedFrameTime = PrevMinUndilatedFrameTime;
+	Settings->MaxUndilatedFrameTime = PrevMaxUndilatedFrameTime;
 }

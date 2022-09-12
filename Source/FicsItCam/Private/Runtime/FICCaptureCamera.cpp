@@ -9,17 +9,18 @@ AFICCaptureCamera::AFICCaptureCamera() {
 	CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("CaptureComponent"));
 	CaptureComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	RenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("RenderTarget"));
-	RenderTarget->InitAutoFormat(100, 100);
-	RenderTarget->TargetGamma = 1;
+	RenderTarget->InitCustomFormat(100, 100, PF_R8G8B8A8, false);
+	RenderTarget->bGPUSharedFlag = true;
 	CaptureComponent->TextureTarget = RenderTarget;
 
 	CaptureComponent->bCaptureEveryFrame = false;
 	CaptureComponent->bCaptureOnMovement = false;
 
 	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
-	CaptureComponent->DetailMode = DM_MAX;
-	CaptureComponent->LODDistanceFactor = 0.01;
-	CaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
+	// Kinda performance intense
+//	CaptureComponent->DetailMode = DM_MAX;
+//	CaptureComponent->LODDistanceFactor = 0.01;
+//	CaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
 	CaptureComponent->bUseRayTracingIfEnabled = true;
 	CaptureComponent->ShowFlags.SetTemporalAA(true);
 }

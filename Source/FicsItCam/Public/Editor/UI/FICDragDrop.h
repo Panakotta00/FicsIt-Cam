@@ -3,6 +3,9 @@
 #include "FICGraphView.h"
 #include "Data/Attributes/FICAttribute.h"
 
+class SFICSequencerRowAttributeKeyframe;
+class SFICSequencerRowAttribute;
+
 class FFICGraphDragDrop : public FDragDropOperation {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICGraphDragDrop, FDragDropOperation)
@@ -83,6 +86,56 @@ public:
 	TSharedPtr<FFICAttribute> AttribBegin;
 
 	FFICGraphKeyframeHandleDragDrop(TSharedRef<SFICGraphViewKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent);
+
+	// Begin FDragDropOperation
+	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual void OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) override;
+	// End FDragDropOperation
+};
+
+class FFICSequencerDragDrop : public FDragDropOperation {
+public:
+	DRAG_DROP_OPERATOR_TYPE(FFICSequencerDragDrop, FDragDropOperation)
+
+	TSharedRef<SFICSequencer> Sequencer;
+	FICFrameFloat StartFrameF;
+	FICFrameFloat StartFramePerLocal;
+	FFICFrameRange StartActiveRange;
+	FVector2D StartLocal;
+
+	FFICSequencerDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent);
+	
+	// Begin FDragDropOperation
+	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual void OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) override;
+	// End FDragDropOperation
+};
+
+class FFICSequencerPanDragDrop : public FFICSequencerDragDrop {
+public:
+	DRAG_DROP_OPERATOR_TYPE(FFICGraphPanDragDrop, FFICSequencerDragDrop)
+
+	FFICSequencerPanDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent);
+
+	// Begin FDragDropOperation
+	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual FCursorReply OnCursorQuery() { return FCursorReply::Cursor(EMouseCursor::Hand); }
+	// End FDragDropOperation
+};
+
+class FFICSequencerKeyframeDragDrop : public FFICSequencerDragDrop {
+public:
+	DRAG_DROP_OPERATOR_TYPE(FFICSequencerKeyframeDragDrop, FFICSequencerDragDrop)
+
+	TSharedPtr<SFICSequencerRowAttribute> RowAttribute;
+	FFICAttribute* Attribute;
+	FICFrame Frame;
+	TSharedPtr<FFICAttribute> OldAttributeState;
+
+	FVector2D CumulativeLocalDiff = FVector2D::ZeroVector;
+	float CumulativeTimeDiff = 0;
+	
+	FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequencerRowAttribute> InRowAttribute, TSharedRef<SFICSequencerRowAttributeKeyframe> RowAttribute, FPointerEvent InitEvent);
 
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;

@@ -2,6 +2,8 @@
 
 #include "Editor/FICChangeList.h"
 #include "Editor/FICEditorContext.h"
+#include "Editor/UI/FICSequencer.h"
+#include "Editor/UI/FICSequencerTreeView.h"
 #include "Widgets/SToolTip.h"
 
 FFICGraphDragDrop::FFICGraphDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent) : GraphView(GraphView) {
@@ -170,4 +172,60 @@ void FFICGraphKeyframeHandleDragDrop::OnDrop(bool bDropWasHandled, const FPointe
 	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(KeyframeHandle->GetGraphKeyframe()->GetContext(), TimelineStart, KeyframeHandle->GetGraphKeyframe()->GetFrame()));
 	Change->PushChange(MakeShared<FFICChange_Attribute>(&KeyframeHandle->GetGraphKeyframe()->GetAttribute(), AttribBegin.ToSharedRef()));
 	KeyframeHandle->GetGraphKeyframe()->GetContext()->ChangeList.PushChange(Change);
+}
+
+FFICSequencerDragDrop::FFICSequencerDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent) : Sequencer(Sequencer) {
+	StartLocal = Sequencer->GetCachedGeometry().AbsoluteToLocal(InitEvent.GetScreenSpacePosition());
+	StartFrameF = Sequencer->LocalToFrameF(StartLocal.X);
+	StartActiveRange = Sequencer->Context->GetActiveRange();
+	StartFramePerLocal = Sequencer->GetFramePerLocal();
+}
+
+void FFICSequencerDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
+	FDragDropOperation::OnDragged(DragDropEvent);
+}
+
+void FFICSequencerDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
+	FDragDropOperation::OnDrop(bDropWasHandled, MouseEvent);
+}
+
+FFICSequencerPanDragDrop::FFICSequencerPanDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent) : FFICSequencerDragDrop(Sequencer, InitEvent) {}
+
+void FFICSequencerPanDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
+	FFICSequencerDragDrop::OnDragged(DragDropEvent);
+
+	FVector2D Local = Sequencer->GetCachedGeometry().AbsoluteToLocal(DragDropEvent.GetScreenSpacePosition());
+	FICFrameFloat FrameDiff = (StartLocal - Local).X * StartFramePerLocal;
+	
+	Sequencer->Context->SetActiveRange(StartActiveRange + FrameDiff);
+}
+
+FFICSequencerKeyframeDragDrop::FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequencerRowAttribute> InRowAttribute, TSharedRef<SFICSequencerRowAttributeKeyframe> Keyframe, FPointerEvent InitEvent) : FFICSequencerDragDrop(InRowAttribute->GetSequencer(), InitEvent) {
+	RowAttribute = InRowAttribute;
+	Attribute = Keyframe->GetAttribute();
+	Frame = Keyframe->GetFrame();
+	OldAttributeState = Attribute->Get();
+}
+
+void FFICSequencerKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
+	CumulativeLocalDiff += DragDropEvent.GetCursorDelta();
+	CumulativeTimeDiff = RowAttribute->GetFramePerLocal() * CumulativeLocalDiff.X;
+
+	double start = FPlatformTime::Seconds();
+	Attribute->LockUpdateEvent();
+	double start2 = FPlatformTime::Seconds();
+	
+	Attribute->Set(OldAttributeState.ToSharedRef());
+	double start3 = FPlatformTime::Seconds();
+	Attribute->MoveKeyframe(Frame, Frame + CumulativeTimeDiff);
+	double start4 = FPlatformTime::Seconds();
+	Attribute->RecalculateAllKeyframes();
+	double start5 = FPlatformTime::Seconds();
+	Attribute->UnlockUpdateEvent();
+	double start6 = FPlatformTime::Seconds();
+	UE_LOG(LogTemp, Warning, TEXT("Time: %f + %f + %f + %f + %f = %f"), start2-start, start3-start2, start4-start3, start5-start4, start6-start5, start6-start);
+}
+
+void FFICSequencerKeyframeDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) {
+	FDragDropOperation::OnDrop(bDropWasHandled, MouseEvent);
 }
