@@ -198,26 +198,10 @@ void AFICSubsystem::DestoryRuntimeProcessorCharacter(AFICRuntimeProcessorCharact
 }
 
 void AFICSubsystem::SaveRenderTargetAsJPG(const FString& FilePath, TSharedRef<FFICRenderTarget> RenderTarget) {
-	double start = FPlatformTime::Seconds();
-	
-	struct FReadSurfaceContext{
-		FRenderTarget* SrcRenderTarget;
-		TArray<FFloat16Color>* OutData;
-		FIntRect Rect;
-		FReadSurfaceDataFlags Flags;
-	};
-
 	TSharedRef<FFICRenderRequest> RenderRequest = MakeShared<FFICRenderRequest>(RenderTarget, FilePath, FRHIGPUTextureReadback(TEXT("FICSubsystem Texture Readback")));
 		
-	FReadSurfaceContext ReadSurfaceContext = {
-		RenderTarget->GetRenderTarget(),
-		&RenderRequest->Image,
-		FIntRect(0,0,RenderTarget->GetRenderTarget()->GetSizeXY().X, RenderTarget->GetRenderTarget()->GetSizeXY().Y),
-		FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX),
-	};
-	
-	ENQUEUE_RENDER_COMMAND(SceneDrawCompletion)([this, ReadSurfaceContext, RenderRequest](FRHICommandListImmediate& RHICmdList){
-		FTexture2DRHIRef Target = ReadSurfaceContext.SrcRenderTarget->GetRenderTargetTexture();
+	ENQUEUE_RENDER_COMMAND(SceneDrawCompletion)([this, RenderTarget, RenderRequest](FRHICommandListImmediate& RHICmdList){
+		FTexture2DRHIRef Target = RenderTarget->GetRenderTarget()->GetRenderTargetTexture();
 		RenderRequest->Readback.EnqueueCopy(RHICmdList, Target);
 	});
 

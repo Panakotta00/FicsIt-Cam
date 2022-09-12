@@ -87,7 +87,7 @@ int32 SFICSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 }
 
 FReply SFICSequencer::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	return FReply::Unhandled().DetectDrag(AsShared(), EKeys::RightMouseButton);
+	return FReply::Handled().DetectDrag(AsShared(), EKeys::RightMouseButton);
 }
 
 FReply SFICSequencer::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
@@ -100,7 +100,7 @@ FReply SFICSequencer::OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, co
 
 FReply SFICSequencer::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton)) {
-//		return FReply::Handled().BeginDragDrop(MakeShared<FFICSequencerPanDragDrop>(SharedThis(this), MouseEvent));
+		return FReply::Handled().BeginDragDrop(MakeShared<FFICSequencerPanDragDrop>(SharedThis(this), MouseEvent));
 	}
 	return FReply::Unhandled();
 }
@@ -110,6 +110,15 @@ FReply SFICSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPointerEve
 }
 
 FReply SFICSequencer::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	FFICFrameRange Range = FrameRange.Get();
+	if (MouseEvent.IsControlDown()) {
+		FICFrameFloat Delta = MouseEvent.GetWheelDelta() / 10.0f;
+		FICFrameFloat CursorFrame = LocalToFrameF(MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).X);
+		Context->SetActiveRange(FFICFrameRange(Range.Begin + Delta * (CursorFrame - Range.Begin), Range.End + Delta * (CursorFrame - Range.End)));
+	} else if (MouseEvent.IsShiftDown()) {
+		FICFrameFloat Delta = MouseEvent.GetWheelDelta() * (Range.End - Range.Begin) / 10.0f;
+		Context->SetActiveRange(Range + Delta);
+	}
 	return SPanel::OnMouseWheel(MyGeometry, MouseEvent);
 }
 

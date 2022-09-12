@@ -100,7 +100,7 @@ void SFICSequencerRowAttributeKeyframe::Construct(const FArguments& InArgs, SFIC
 }
 
 FReply SFICSequencerRowAttributeKeyframe::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	return FReply::Unhandled().DetectDrag(AsShared(), EKeys::LeftMouseButton);
+	return FReply::Handled().DetectDrag(AsShared(), EKeys::LeftMouseButton);
 }
 
 FReply SFICSequencerRowAttributeKeyframe::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {

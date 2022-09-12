@@ -248,7 +248,8 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	Character->SetEditorContext(Context);
 	Controller->PlayerInput->ActionMappings.Empty();
 	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(false);
-
+	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHiddenHUDMode(true);
+	
 	// Get widgets to inject editor UI into and store necessery recovery data
 	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
 	GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
@@ -322,7 +323,8 @@ void AFICEditorSubsystem::CloseEditor() {
 	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 	UGameplayStatics::SetGamePaused(this, false);
-	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(true );
+	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(true);
+	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHiddenHUDMode(false);
 	
 	// Cleanup Editor Objects
 	EditorWidget = nullptr;
