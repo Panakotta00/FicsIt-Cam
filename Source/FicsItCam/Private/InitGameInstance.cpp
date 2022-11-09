@@ -11,13 +11,6 @@ UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 		LOCTEXT("RollClockwise", "Rolls the camera in Editor clockwise"),
 		LOCTEXT("RollCounterclockwise", "Rolls the camera in Editor counterclockwise"),
 	});
-	ModAxisBindings.Add(FModAxisBindingInfo{
-		TEXT("FicsItCam.MoveUp"),
-		FInputAxisKeyMapping("FicsItCam.MoveUp", EKeys::SpaceBar, 1),
-		FInputAxisKeyMapping("FicsItCam.MoveUp", EKeys::LeftAlt, -1),
-		LOCTEXT("MoveUp", "Move Up in Editor"),
-		LOCTEXT("MoveDown", "Move Down in Editor"),
-	});
 	ModKeyBindings.Add({
 		TEXT("FicsItCam.ChangeFOV"),
 		FInputActionKeyMapping(TEXT("FicsItCam.ChangeFOV"), EKeys::LeftShift, false, true),
