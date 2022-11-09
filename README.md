@@ -3,6 +3,8 @@
 This Satisfactory mod is mainly intended for Content Creators to allow the creation of beautiful camera animations.
 
 The mod introduces a couple of new chat commands:
+- `/fic list`
+ Lists all animations.
 - `/fic create <animation>`
  Creates a new animation with the given name.
 - `/fic delete <animation>`
@@ -13,7 +15,7 @@ The mod introduces a couple of new chat commands:
  Opens the animation editor for the animation with the given name.
 - `/fic render <animation>`
  Renders the animation as image sequence.
-- `/fic timelapse`
+- `/fic timelapse list`
  Lists all timelapse cameras.
 - `/fic timelapse create <camera name> <seconds per frame>`
  Creates a new timelapse camera with the transformation of the player running the command.
