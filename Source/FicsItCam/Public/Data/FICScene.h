@@ -18,10 +18,10 @@ public:
 	FString SceneName = "Unnamed";
 	
 	UPROPERTY(SaveGame)
-	FFICFrameRange AnimationRange = FFICFrameRange(1, 300);
+	FFICFrameRange AnimationRange = FFICFrameRange(1, 600);
 	
 	UPROPERTY(SaveGame)
-	int64 FPS = 30;
+	int64 FPS = 60;
 	
 	UPROPERTY(SaveGame)
 	int64 ResolutionWidth = 1920;
