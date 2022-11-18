@@ -107,27 +107,6 @@ public:
 	AFICEditorCameraCharacter* GetEditorPlayerCharacter() { return EditorPlayerCharacter; }
 	TSharedPtr<SFICEditor> GetEditorWidget() { return EditorWidget; }
 
-	void SetMeshInstanced(UMeshComponent* MeshComp, bool Instanced);
-	void PatchActor(AActor* Actor, bool Instanced) {
-		for (UActorComponent* Comp : Actor->GetComponents()) {
-			if (UMeshComponent* MeshComp = Cast<UMeshComponent>(Comp)) {
-				SetMeshInstanced(MeshComp, Instanced);
-			}
-		}
-	}
-
-	void SetSelection(AActor* Actor) {
-		if (Selection == Actor) return;
-		if (Selection) {
-			PatchActor(Selection, true);
-		}
-		Selection = Actor;
-		if (Selection) {
-			PatchActor(Selection, false);
-		}
-		OnSelectionChanged.Broadcast();
-	}
-
 	AActor* GetSelection() {
 		return Selection;
 	}

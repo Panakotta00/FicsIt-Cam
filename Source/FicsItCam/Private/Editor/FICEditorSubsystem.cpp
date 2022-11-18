@@ -1,11 +1,8 @@
 #include "Editor/FICEditorSubsystem.h"
 
-#include "FGColoredInstanceMeshProxy.h"
 #include "FGGameUserSettings.h"
 #include "FGInputLibrary.h"
-#include "FGProductionIndicatorInstanceComponent.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include "Components/ProxyInstancedStaticMeshComponent.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/ITF/FICGrabTool.h"
 #include "Editor/ITF/FICSelectionInteraction.h"
@@ -329,23 +326,4 @@ void AFICEditorSubsystem::CloseEditor() {
 	// Cleanup Editor Objects
 	EditorWidget = nullptr;
 	Character->Destroy();
-}
-
-void AFICEditorSubsystem::SetMeshInstanced(UMeshComponent* MeshComp, bool Instanced) {
-	auto StaticMeshProxy = Cast<UProxyInstancedStaticMeshComponent>(MeshComp);
-	if (StaticMeshProxy) {
-		StaticMeshProxy->SetInstanced(Instanced);
-        
-	} else {
-		auto ColoredMeshProxy = Cast<UFGColoredInstanceMeshProxy>(MeshComp);
-		if (ColoredMeshProxy) {
-			ColoredMeshProxy->mBlockInstancing = !Instanced;
-			ColoredMeshProxy->SetInstanced(Instanced);
-		} else {
-			/*auto ProdIndInst = Cast<UFGProductionIndicatorInstanceComponent>(MeshComp);
-			if (ProdIndInst) {
-				ProdIndInst->SetInstanced(Instanced);
-			}*/
-		}
-	}
 }
