@@ -3,7 +3,7 @@
 #define LOCTEXT_NAMESPACE "FicsItCam"
 
 UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
-	bRootModule = true;
+	bRootModule = false;
 	ModAxisBindings.Add(FModAxisBindingInfo{
 		TEXT("FicsItCam.MoveRoll"),
 		FInputAxisKeyMapping("FicsItCam.MoveRoll", EKeys::E, 1),
