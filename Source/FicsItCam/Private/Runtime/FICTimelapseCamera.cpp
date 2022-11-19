@@ -66,7 +66,7 @@ void AFICTimelapseCamera::CaptureTick() {
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
 
-	FSP = FPaths::Combine(FSP, FString::Printf(TEXT("%s-%i.jpg"), *CaptureStart.ToString(), CaptureIncrement));
+	FSP = FPaths::Combine(FSP, FString::Printf(TEXT("%s-%06d.jpg"), *CaptureStart.ToString(), CaptureIncrement));
 	
 	AFICSubsystem::GetFICSubsystem(this)->SaveRenderTargetAsJPG(FSP, MakeShared<FFICRenderTarget_Raw>(RenderTarget->GameThread_GetRenderTargetResource()));
 	++CaptureIncrement;
