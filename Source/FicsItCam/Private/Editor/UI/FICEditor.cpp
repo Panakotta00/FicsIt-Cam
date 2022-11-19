@@ -1,5 +1,6 @@
 ﻿#include "Editor/UI/FICEditor.h"
 
+#include "FICConfigurationStruct.h"
 #include "FICSubsystem.h"
 #include "FICUtils.h"
 #include "Engine/World.h"
@@ -17,6 +18,7 @@
 #include "Editor/UI/FICViewport.h"
 #include "Slate/Private/Framework/Docking/SDockingArea.h"
 #include "Slate/Private/Framework/Docking/SDockingTabStack.h"
+#include "Widgets/Layout/SDPIScaler.h"
 
 #define LOCTEXT_NAMESPACE "FicsItCam.Editor"
 
@@ -26,7 +28,7 @@ void SFICEditor::Construct(const FArguments& InArgs, UFICEditorContext* InContex
 	Context = InContext;
 	GameWidget = InGameWidget;
 	GameViewport = InViewport;
-
+	
 	TSharedRef<SDockTab> MajorTab = SNew(SDockTab).TabRole(ETabRole::MajorTab);
 	TabManager = FGlobalTabmanager::Get()->NewTabManager(MajorTab);
 	TabManager->SetOnPersistLayout(FTabManager::FOnPersistLayout::CreateLambda([this](const TSharedRef<FTabManager::FLayout>& Layout) {
@@ -50,19 +52,25 @@ void SFICEditor::Construct(const FArguments& InArgs, UFICEditorContext* InContex
 				->Split(FTabManager::NewStack()->AddTab("Editor Settings", ETabState::OpenedTab)))
 			->Split(FTabManager::NewStack()->AddTab("Viewport", ETabState::OpenedTab)->SetSizeCoefficient(0.8)->SetHideTabWell(true)))
 		->Split(FTabManager::NewStack()->AddTab("Timeline", ETabState::OpenedTab)->SetSizeCoefficient(0.3)->SetHideTabWell(true)));
+
+	FFICConfigurationStruct Config = FFICConfigurationStruct::GetActiveConfig();
 	
 	ChildSlot[
-		SNew(SOverlay)
-		+SOverlay::Slot()[
-			SNew(SImage)
-			.Image(&Background)
-		]
-		+SOverlay::Slot()[
-			SNew(SVerticalBox)
-			+SVerticalBox::Slot().AutoHeight()[
-				CreateMenuBar().MakeWidget()
+		SNew(SDPIScaler)
+		.DPIScale(Config.DPIScaling)
+		.Content()[
+			SNew(SOverlay)
+			+SOverlay::Slot()[
+				SNew(SImage)
+				.Image(&Background)
 			]
-			+SVerticalBox::Slot().Expose(EditorSlot)
+			+SOverlay::Slot()[
+				SNew(SVerticalBox)
+				+SVerticalBox::Slot().AutoHeight()[
+					CreateMenuBar().MakeWidget()
+				]
+				+SVerticalBox::Slot().Expose(EditorSlot)
+			]
 		]
 	];
 
