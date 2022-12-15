@@ -20,5 +20,5 @@ public:
 	AFICCaptureCamera();
 	
 	void SetCamera(bool bEnabled, bool bCinematic);
-	void CopyCameraData(UCameraComponent* Camera);
+	void UpdateCaptureWithCameraData(UCameraComponent* Camera = nullptr);
 };

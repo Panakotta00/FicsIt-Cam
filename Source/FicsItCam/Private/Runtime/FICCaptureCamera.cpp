@@ -42,7 +42,9 @@ void AFICCaptureCamera::SetCamera(bool bEnabled, bool bCinematic) {
 	}
 }
 
-void AFICCaptureCamera::CopyCameraData(UCameraComponent* InCamera) {
+void AFICCaptureCamera::UpdateCaptureWithCameraData(UCameraComponent* InCamera) {
+	if (!InCamera) InCamera = Camera;
+	
 	SetActorLocation(InCamera->GetComponentLocation());
 	SetActorRotation(InCamera->GetComponentRotation());
 	

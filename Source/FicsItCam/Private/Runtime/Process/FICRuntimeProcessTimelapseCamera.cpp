@@ -21,7 +21,7 @@ void UFICRuntimeProcessTimelapseCamera::Tick(AFICRuntimeProcessorCharacter* InCh
 	//if (Character) Character->SetThirdPersonMode();
 
 	CameraArgument.UpdateCameraSettings(CaptureCamera);
-	CaptureCamera->CopyCameraData(CaptureCamera->Camera);
+	CaptureCamera->UpdateCaptureWithCameraData();
 	
 	CaptureCamera->CaptureComponent->CaptureSceneDeferred();
 
