@@ -19,10 +19,8 @@ public:
 
 	UPROPERTY()
 	float Time = 0.0f;
-	UPROPERTY()
-	FDateTime CaptureStart;
-	UPROPERTY()
-	int CaptureIncrement;
+
+	TSharedPtr<FSequenceExporter> Exporter;
 
 	// Begin IFGSaveInterface
 	virtual bool ShouldSave_Implementation() const override { return true; }

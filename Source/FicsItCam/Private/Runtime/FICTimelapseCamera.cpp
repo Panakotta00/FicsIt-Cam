@@ -68,7 +68,7 @@ void AFICTimelapseCamera::CaptureTick() {
 
 	FSP = FPaths::Combine(FSP, FString::Printf(TEXT("%s-%06d.jpg"), *CaptureStart.ToString(), CaptureIncrement));
 	
-	AFICSubsystem::GetFICSubsystem(this)->SaveRenderTargetAsJPG(FSP, MakeShared<FFICRenderTarget_Raw>(RenderTarget->GameThread_GetRenderTargetResource()));
+	//AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(FSP, MakeShared<FFICRenderTarget_Raw>(RenderTarget->GameThread_GetRenderTargetResource()));
 	++CaptureIncrement;
 
 	//if (Character) Character->SetFirstPersonMode();

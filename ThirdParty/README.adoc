@@ -1,0 +1,5 @@
+This is Folder mainly contains the FFmpeg library.
+It contains some unaltered header files and unaltered files necessary for dynamic linking.
+You can build FFmpeg from source and use it instead.
+To get FFmpeg (including source) visit https://ffmpeg.org/
+FFmpeg is licensed under LGPLv2.1 and some parts are under GPLv2.
