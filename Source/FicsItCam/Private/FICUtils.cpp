@@ -70,12 +70,12 @@ bool UFICUtils::IsValidFICObjectName(const FString& InName) {
 }
 
 bool UFICUtils::IsAction(UObject* WorldContext, const FKeyEvent& InKeyEvent, const FName& InActionName) {
-	const FInputActionKeyMapping& Mapping = AFICEditorSubsystem::GetFICEditorSubsystem(WorldContext)->KeyMappings[InActionName];
-	return Mapping.Key == InKeyEvent.GetKey() &&
-		Mapping.bAlt == InKeyEvent.GetModifierKeys().IsAltDown() &&
-		Mapping.bCmd == InKeyEvent.GetModifierKeys().IsCommandDown() &&
-		Mapping.bCtrl == InKeyEvent.GetModifierKeys().IsControlDown() &&
-		Mapping.bShift == InKeyEvent.GetModifierKeys().IsShiftDown();
+	const FInputActionKeyMapping* Mapping = AFICEditorSubsystem::GetFICEditorSubsystem(WorldContext)->KeyMappings.Find(InActionName);
+	return Mapping && Mapping->Key == InKeyEvent.GetKey() &&
+		Mapping->bAlt == InKeyEvent.GetModifierKeys().IsAltDown() &&
+		Mapping->bCmd == InKeyEvent.GetModifierKeys().IsCommandDown() &&
+		Mapping->bCtrl == InKeyEvent.GetModifierKeys().IsControlDown() &&
+		Mapping->bShift == InKeyEvent.GetModifierKeys().IsShiftDown();
 }
 
 FRotator UFICUtils::AdditiveRotation(FRotator OldRotation, FRotator NewRotation) {
