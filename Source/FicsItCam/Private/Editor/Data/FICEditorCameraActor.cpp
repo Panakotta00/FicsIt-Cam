@@ -1,5 +1,6 @@
 #include "Editor/Data/FICEditorCameraActor.h"
 
+#include "FicsItCamModule.h"
 #include "BaseGizmos/TransformGizmo.h"
 #include "Components/LineBatchComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -72,10 +73,10 @@ uint32 FFICEditorCameraPathSceneProxy::GetMemoryFootprint() const {
 }*/
 
 void UFICEditorCameraPathComponent::UpdateFramePoints() {
-	FramePoints.SetNumUninitialized(EditorContext->GetScene()->AnimationRange.Length());
+	FramePoints.SetNumUninitialized(EditorContext->GetActiveRange().Length());
 	FramePoints.SetNumUninitialized(0, false);
 	KeyframePoints.Empty();
-	for (int64 Time : EditorContext->GetScene()->AnimationRange) {
+	for (int64 Time : EditorContext->GetActiveRange()) {
 		bool bIsKeyframe = EditorContext->GetEditorAttributes()[Camera]->Get<FFICEditorAttributeBase>("Position").GetKeyframe(Time).IsValid();
 		FVector Loc = FFICAttributePosition::FromEditorAttribute(EditorContext->GetEditorAttributes()[Camera]->Get<FFICEditorAttributeGroup>("Position"), Time);
 		if (bIsKeyframe) KeyframePoints.Add(FramePoints.Num());
@@ -135,6 +136,8 @@ void AFICEditorCameraActor::Tick(float DeltaSeconds) {
 			LineBatcher->DrawBox(FBox(FVector(-1, -1, -1), FVector(1, 1, 1)), Transform.GetScaled(FVector(60, 40, 40)).ToMatrixWithScale(), Color, SDPG_World);
 			LineBatcher->DrawDirectionalArrow((FTransform(FVector(60, 0, 0)) * GetActorTransform()).ToMatrixNoScale(), Color, 100, 20, SDPG_World);
 			LineBatcher->DrawLine(GetActorTransform().TransformPositionNoScale(FVector(0, 0, 40)), GetActorTransform().TransformPositionNoScale(FVector(0, 0, 100)), Color, SDPG_World);
+
+			CameraPathComponent->UpdateFramePoints();
 		}
 
 		CaptureComponent->HiddenActors.Empty();
@@ -149,8 +152,6 @@ void AFICEditorCameraActor::Tick(float DeltaSeconds) {
 		CameraPreview.Reset();
 		CaptureComponent->bCaptureEveryFrame = false;
 	}
-
-	CameraPathComponent->UpdateFramePoints();
 }
 
 UObject* AFICEditorCameraActor::Select() {
