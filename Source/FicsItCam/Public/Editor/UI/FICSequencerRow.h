@@ -77,6 +77,8 @@ public:
 	virtual void UpdateFrameRange(FFICFrameRange InFrameRange);
 	virtual void UpdateActiveFrame(FICFrame InFrame);
 
+	virtual TArray<TTuple<FFICAttribute&, FICFrame>> GetKeyframesInBox(const FBox2D& InBox) { return TArray<TTuple<FFICAttribute&, FICFrame>>(); }
+
 	TSharedRef<SFICSequencer> GetSequencer() const;
 
 	static void GetRowBrushAndColor(int32 InIndex, const TAttribute<FLinearColor>& InColorAttribute, const FSlateBrush* InBrushEven, const FSlateBrush* InBrushOdd, const FWidgetStyle& InWidgetStyle, const FSlateBrush*& OutBrush, FLinearColor& OutColor);
@@ -142,6 +144,8 @@ public:
 	virtual FChildren* GetChildren() override;
 	virtual void OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const override;
 	// End SWidget
+
+	virtual TArray<TTuple<FFICAttribute&, FICFrame>> GetKeyframesInBox(const FBox2D& InBox) override;
 
 	void UpdateKeyframes();
 

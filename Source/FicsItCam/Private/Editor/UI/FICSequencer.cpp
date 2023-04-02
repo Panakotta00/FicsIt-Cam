@@ -33,6 +33,21 @@ void SFICSequencer::Construct(const FArguments& InArgs, UFICEditorContext* InCon
 
 SFICSequencer::SFICSequencer() : Children(this) {
 	Clipping = EWidgetClipping::ClipToBoundsAlways;
+
+	SelectionManager.OnSelectionChanged.BindLambda([this]() {
+		Invalidate(EInvalidateWidgetReason::Layout);
+	});
+	SelectionManager.OnHandleBoxSelection.BindLambda([this](const FBox2D& InBox, const FModifierKeysState& InModifiers) {
+		for (TSharedPtr<ITableRow> Row : LinearRows) {
+			TSharedPtr<FFICSequencerRowMeta> RowMeta = *TreeView->ItemFromWidget(Row.Get());
+			TSharedPtr<SFICSequencerRow> Widget = MetaToWidget[RowMeta];
+			
+			FGeometry Geometry = Widget->GetCachedGeometry();
+			for (const TTuple<FFICAttribute&, FICFrame>& Keyframe : Widget->GetKeyframesInBox(InBox)) {
+				SelectionManager.ToggleKeyframeSelection(Keyframe.Get<0>(), Keyframe.Get<1>(), &InModifiers);
+			}
+		}
+	});
 }
 
 SFICSequencer::~SFICSequencer() {
@@ -78,6 +93,15 @@ int32 SFICSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	// Draw Active Frame
 	FSlateDrawElement::MakeLines(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), {FVector2D(FrameToLocal(ActiveFrame.Get()), 0), FVector2D(FrameToLocal(ActiveFrame.Get()), AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None, Style->ActiveFrameColor, true, 2);
 
+	// Draw Box Selection
+	FBox2D BoxSelection = SelectionManager.GetSelectionBox();
+	if (BoxSelection.bIsValid) {
+		float BeginTime = BoxSelection.Min.X;
+		float EndTime = BoxSelection.Max.X;
+		float BeginValue = BoxSelection.Min.Y;
+		float EndValue = BoxSelection.Max.Y;
+		FSlateDrawElement::MakeBox(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(FVector2D(EndTime - BeginTime, EndValue - BeginValue), FSlateLayoutTransform(FVector2D(BeginTime, BeginValue))), &Style->SelectionBoxBrush, ESlateDrawEffect::None, Style->SelectionBoxBrush.TintColor.GetSpecifiedColor());
+	}
 	
 	LayerId = SPanel::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
@@ -101,6 +125,8 @@ FReply SFICSequencer::OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, co
 FReply SFICSequencer::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton)) {
 		return FReply::Handled().BeginDragDrop(MakeShared<FFICSequencerPanDragDrop>(SharedThis(this), MouseEvent));
+	} else if (MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)) {
+		return FReply::Handled().BeginDragDrop(MakeShared<FFICSequencerSelectionDragDrop>(SharedThis(this), MouseEvent));
 	}
 	return FReply::Unhandled();
 }
@@ -123,6 +149,13 @@ FReply SFICSequencer::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEv
 }
 
 FReply SFICSequencer::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) {
+	if (InKeyEvent.GetKey() == EKeys::Delete) {
+		for (TTuple<FFICAttribute*, FICFrame> Keyframe : SelectionManager.GetSelection()) {
+			Keyframe.Key->RemoveKeyframe(Keyframe.Value);
+		}
+		SelectionManager.SetSelection({});
+		return FReply::Handled();
+	}
 	return SPanel::OnKeyDown(MyGeometry, InKeyEvent);
 }
 
@@ -147,6 +180,14 @@ void SFICSequencer::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrang
 		FVector2D ParentOffset = FVector2D(0, AllottedGeometry.AbsoluteToLocal(TableRowGeometry.GetAbsolutePosition()).Y);
 		ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(Child.ToSharedRef(), ParentOffset, Size, 1));
 	}
+}
+
+FSelectionManager& SFICSequencer::GetSelectionManager() {
+	return SelectionManager;
+}
+
+const FSelectionManager& SFICSequencer::GetSelectionManager() const {
+	return SelectionManager;
 }
 
 void SFICSequencer::UpdateRows() {

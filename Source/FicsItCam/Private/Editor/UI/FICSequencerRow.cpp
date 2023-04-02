@@ -87,14 +87,14 @@ void SFICSequencerRowAttributeKeyframe::Construct(const FArguments& InArgs, SFIC
 	ChildSlot[
 		SNew(SFICKeyframeIcon)
 		.Style(&Style->KeyframeIcon)
+		.IsSelected_Lambda([this]() {
+			return RowAttribute->GetSequencer()->GetSelectionManager().IsKeyframeSelected(*Attribute, Frame);
+		})
 		.Keyframe_Lambda([this]() {
 			TSharedPtr<FFICKeyframe> Keyframe;
 			TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attribute->GetKeyframes();
 			if (const TSharedRef<FFICKeyframe>* KeyframePtr = Keyframes.Find(Frame)) Keyframe = *KeyframePtr;
 			return Keyframe;
-		})
-		.IsSelected_Lambda([this]() {
-			return false;
 		})
 	];
 }
@@ -104,11 +104,20 @@ FReply SFICSequencerRowAttributeKeyframe::OnMouseButtonDown(const FGeometry& MyG
 }
 
 FReply SFICSequencerRowAttributeKeyframe::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+	FSelectionManager& SelectionManager = RowAttribute->GetSequencer()->GetSelectionManager();
+	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
+		SelectionManager.ToggleKeyframeSelection(*Attribute, GetFrame(), &MouseEvent.GetModifierKeys());
+		return FReply::Handled();
+	}
 	return SCompoundWidget::OnMouseButtonUp(MyGeometry, MouseEvent);
 }
 
 FReply SFICSequencerRowAttributeKeyframe::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-	return FReply::Handled().BeginDragDrop(MakeShared<FFICSequencerKeyframeDragDrop>(SharedThis(RowAttribute), SharedThis(this), MouseEvent));
+	if (MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)) {
+		if (!RowAttribute->GetSequencer()->GetSelectionManager().IsKeyframeSelected(*Attribute, GetFrame())) RowAttribute->GetSequencer()->GetSelectionManager().SetSelection({TPair<FFICAttribute*, FICFrame>(Attribute, GetFrame())});
+		return FReply::Handled().BeginDragDrop(MakeShared<FFICSequencerKeyframeDragDrop>(RowAttribute->GetSequencer(), MouseEvent));
+	}
+	return FReply::Unhandled();
 }
 
 void SFICSequencerRowAttribute::Construct(const FArguments& InArgs, SFICSequencer* InSequencer, TSharedRef<FFICEditorAttributeBase> InAttribute) {
@@ -153,6 +162,26 @@ void SFICSequencerRowAttribute::OnArrangeChildren(const FGeometry& AllottedGeome
 		Offset.X += FrameToLocal(Child->GetFrame());
 		ArrangedChildren.AddWidget(AllottedGeometry.MakeChild(Child, Offset, Size));
 	}
+}
+
+TArray<TTuple<FFICAttribute&, FICFrame>> SFICSequencerRowAttribute::GetKeyframesInBox(const FBox2D& InBox) {
+	TArray<TTuple<FFICAttribute&, FICFrame>> Keyframes;
+	for (TTuple<FICFrame, TSharedRef<FFICKeyframe>> Keyframe : Attribute->GetAttribute().GetKeyframes()) {
+		FGeometry Geometry = GetCachedGeometry();
+		FGeometry SeqGeometry = Sequencer->GetCachedGeometry();
+		bool isInBox = true;
+		FBox2D Box = InBox;
+		Box.Min = SeqGeometry.LocalToAbsolute(Box.Min);
+		Box.Max = SeqGeometry.LocalToAbsolute(Box.Max);
+		isInBox = isInBox && LocalToFrameF(Geometry.AbsoluteToLocal(Box.Min).X) <= Keyframe.Key;
+		isInBox = isInBox && LocalToFrameF(Geometry.AbsoluteToLocal(Box.Max).X) >= Keyframe.Key;
+		isInBox = isInBox && Box.Min.Y <= Geometry.GetAbsolutePositionAtCoordinates(FVector2D(1.0)).Y;
+		isInBox = isInBox && Box.Max.Y >= Geometry.GetAbsolutePositionAtCoordinates(FVector2D(0.0)).Y;
+		if (isInBox) {
+			Keyframes.Add(TTuple<FFICAttribute&, FICFrame>(Attribute->GetAttribute(), Keyframe.Key));
+		}
+	}
+	return Keyframes;
 }
 
 void SFICSequencerRowAttribute::UpdateKeyframes() {
