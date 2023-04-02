@@ -3,6 +3,7 @@
 #include "Editor/FICChangeList.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICDragDrop.h"
+#include "Editor/UI/FICUIUtil.h"
 
 const FName FFICGraphViewStyle::TypeName = TEXT("FFICGraphViewStyle");
 
@@ -206,59 +207,9 @@ FReply SFICGraphViewKeyframe::OnMouseButtonUp(const FGeometry& MyGeometry, const
 		if (!SelectionManager.GetSelection().Contains(KF_Selection)) {
 			SelectionManager.SetSelection({KF_Selection});
 		}
-		TSet<TPair<FFICAttribute*, FICFrame>> Keyframes = SelectionManager.GetSelection();
-		TFunction<void(EFICKeyframeType)> SetKeyframeType;
-		SetKeyframeType = [Keyframes, this](EFICKeyframeType Type) {
-			TSharedRef<FFICChange_Group> Group = MakeShared<FFICChange_Group>();
-			TMap<FFICAttribute*, TSharedRef<FFICAttribute>> Snapshots;
-			for (const TPair<FFICAttribute*, FICFrame>& KF : Keyframes) {
-				TSharedRef<FFICAttribute>* Snapshot = Snapshots.Find(KF.Key);
-				if (!Snapshot) Snapshots.Add(KF.Key, KF.Key->Get());
-				TMap<FICFrame, TSharedRef<FFICKeyframe>> KFS = KF.Key->GetKeyframes();
-				TSharedRef<FFICKeyframe>* NKF = KFS.Find(KF.Value);
-				if (NKF) (*NKF)->SetType(Type);
-				KF.Key->LockUpdateEvent();
-				KF.Key->RecalculateAllKeyframes();
-				KF.Key->UnlockUpdateEvent(false);
-			}
-			for (const TPair<FFICAttribute*, TSharedRef<FFICAttribute>>& Snapshot : Snapshots) {
-				Group->PushChange(MakeShared<FFICChange_Attribute>(Snapshot.Key, Snapshot.Value));
-			}
-			GraphView->Context->ChangeList.PushChange(Group);
-			for (const TPair<FFICAttribute*, FICFrame>& KF : Keyframes) KF.Key->OnUpdate.Broadcast();
-		};
-		
-		TSharedPtr<IMenu> MenuHandle;
-		FMenuBuilder MenuBuilder(true, NULL);
-		MenuBuilder.AddMenuEntry(
-            FText::FromString("Ease"),
-            FText(),
-            FSlateIcon(),
-            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
-            	SetKeyframeType(FIC_KF_EASE);
-            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-		MenuBuilder.AddMenuEntry(
-            FText::FromString("Ease-In/Out"),
-            FText(),
-            FSlateIcon(),
-            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
-                SetKeyframeType(FIC_KF_EASEINOUT);
-            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-		MenuBuilder.AddMenuEntry(
-            FText::FromString("Linear"),
-            FText(),
-            FSlateIcon(),
-            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
-                SetKeyframeType(FIC_KF_LINEAR);
-            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-		MenuBuilder.AddMenuEntry(
-            FText::FromString("Step"),
-            FText(),
-            FSlateIcon(),
-            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
-                SetKeyframeType(FIC_KF_STEP);
-            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-	
+		FMenuBuilder MenuBuilder = FICCreateKeyframeTypeChangeMenu(GraphView->Context, [this] {
+			return GraphView->GetSelectionManager().GetSelection();
+		});
 		FSlateApplication::Get().PushMenu(SharedThis(this), *Event.GetEventPath(), MenuBuilder.MakeWidget(), Event.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
 		return FReply::Handled();
 	}

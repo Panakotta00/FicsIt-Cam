@@ -3,6 +3,7 @@
 #include "Editor/UI/FICDragDrop.h"
 #include "Editor/UI/FICKeyframeIcon.h"
 #include "Editor/UI/FICSequencer.h"
+#include "Editor/UI/FICUIUtil.h"
 
 TArray<TSharedPtr<FFICSequencerRowMeta>> FFICSequencerRowMeta::GetChildren() {
 	if (!CachedChildren.IsSet()) {
@@ -108,6 +109,15 @@ FReply SFICSequencerRowAttributeKeyframe::OnMouseButtonUp(const FGeometry& MyGeo
 	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
 		SelectionManager.ToggleKeyframeSelection(*Attribute, GetFrame(), &MouseEvent.GetModifierKeys());
 		return FReply::Handled();
+	} else if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton) {
+		TPair<FFICAttribute*, FICFrame> KF_Selection(GetAttribute(), GetFrame());
+		if (!SelectionManager.GetSelection().Contains(KF_Selection)) {
+			SelectionManager.SetSelection({KF_Selection});
+		}
+		FMenuBuilder MenuBuilder = FICCreateKeyframeTypeChangeMenu(RowAttribute->GetSequencer()->Context, [this] {
+			return RowAttribute->GetSequencer()->GetSelectionManager().GetSelection();
+		});
+		FSlateApplication::Get().PushMenu(SharedThis(this), *MouseEvent.GetEventPath(), MenuBuilder.MakeWidget(), MouseEvent.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
 	}
 	return SCompoundWidget::OnMouseButtonUp(MyGeometry, MouseEvent);
 }

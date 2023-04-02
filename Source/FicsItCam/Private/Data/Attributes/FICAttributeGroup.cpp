@@ -14,7 +14,8 @@ TMap<FICFrame, TSharedRef<FFICKeyframe>> FFICGroupAttribute::GetKeyframes() {
 
 void FFICKeyframeGroup::SetType(EFICKeyframeType Type) {
 	for (TPair<FString, FFICAttribute*> Child : Attribute->Children) {
-		TSharedRef<FFICKeyframe>* KF = Child.Value->GetKeyframes().Find(Frame);
+		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Child.Value->GetKeyframes();
+		TSharedRef<FFICKeyframe>* KF = Keyframes.Find(Frame);
 		if (KF) {
 			(*KF)->SetType(Type);
 		}
