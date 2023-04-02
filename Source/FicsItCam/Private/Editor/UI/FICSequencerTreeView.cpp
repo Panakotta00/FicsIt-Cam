@@ -40,6 +40,8 @@ void SFICSequencerTreeView::Construct(const FArguments& InArgs, UFICEditorContex
 
 	OnUpdate = InArgs._OnUpdate;
 
+	OnSceneObjectsChangedDelegate = Context->OnSceneObjectsChanged.AddRaw(this, &SFICSequencerTreeView::UpdateRoot);
+
 	STreeView<TSharedPtr<FFICSequencerRowMeta>>::FArguments SuperArgs;
 	SuperArgs.TreeItemsSource(&RootRows);
 	SuperArgs.OnGenerateRow_Raw(this, &SFICSequencerTreeView::GenerateRow);
@@ -62,6 +64,10 @@ void SFICSequencerTreeView::Construct(const FArguments& InArgs, UFICEditorContex
 	STreeView<TSharedPtr<FFICSequencerRowMeta>>::Construct(SuperArgs);
 
 	UpdateRoot();
+}
+
+SFICSequencerTreeView::~SFICSequencerTreeView() {
+	Context->OnSceneObjectsChanged.Remove(OnSceneObjectsChangedDelegate);
 }
 
 void SFICSequencerTreeView::RequestListRefresh() {

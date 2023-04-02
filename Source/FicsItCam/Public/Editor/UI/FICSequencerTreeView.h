@@ -67,12 +67,16 @@ private:
 
 	FFICSequencerUpdate OnUpdate;
 
+	FDelegateHandle OnSceneObjectsChangedDelegate;
+
 	TArray<TSharedPtr<FFICSequencerRowMeta>> RootRows;
 
 	bool bDirty = false;
 
 public:
 	FOnTableViewScrolled OnScrolled;
+
+	virtual ~SFICSequencerTreeView() override;
 
 	// Begin STreeView
 	virtual void RequestListRefresh() override;
