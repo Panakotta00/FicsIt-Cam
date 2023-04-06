@@ -479,7 +479,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 			+SGridPanel::Slot(1, 2)
 			.HAlign(HAlign_Fill)
 			.VAlign(VAlign_Fill)[
-				SNew(SWidgetSwitcher)
+				SAssignNew(Switcher, SWidgetSwitcher)
 				.WidgetIndex_Lambda([this]() {
 					return Mode;
 				})
@@ -560,6 +560,14 @@ SFICTimelinePanel::~SFICTimelinePanel() {
 
 void SFICTimelinePanel::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
 	SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+}
+
+bool SFICTimelinePanel::SupportsKeyboardFocus() const {
+	return true;
+}
+
+FReply SFICTimelinePanel::OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& InFocusEvent) {
+	return FReply::Handled().SetUserFocus(Switcher->GetActiveWidget().ToSharedRef());
 }
 
 void SFICTimelinePanel::UpdateEditorAttributes() {

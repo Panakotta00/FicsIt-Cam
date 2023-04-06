@@ -14,9 +14,9 @@ public:
 	FFICKeyframeGroup(struct FFICGroupAttribute* InAttribute = nullptr, FICFrame InFrame = 0) : Attribute(InAttribute), Frame(InFrame) {}
 	
 	virtual FICValue GetValue() const { return FICValue(); }
-	virtual FFICValueTimeFloat GetInControl() { return FFICValueTimeFloat(); }
-	virtual FFICValueTimeFloat GetOutControl() { return FFICValueTimeFloat(); }
-	virtual EFICKeyframeType GetType() { return EFICKeyframeType::FIC_KF_CUSTOM; }
+	virtual FFICValueTimeFloat GetInControl() const { return FFICValueTimeFloat(); }
+	virtual FFICValueTimeFloat GetOutControl() const { return FFICValueTimeFloat(); }
+	virtual EFICKeyframeType GetType() const { return EFICKeyframeType::FIC_KF_CUSTOM; }
 	virtual void SetValue(FICValue InValue) { }
 	virtual void SetInControl(const FFICValueTimeFloat& InInControl) { }
 	virtual void SetOutControl(const FFICValueTimeFloat& InOutControl) { }
@@ -49,11 +49,14 @@ public:
 	virtual void MoveKeyframe(FICFrame From, FICFrame To) override;
 	virtual void RecalculateKeyframe(FICFrame Time) override;
 	virtual FICValue GetFloatValue(FICFrameFloat Time) override { return 0.0f; }
+	virtual bool HasKeyframe(FICFrame Time) const override;
 
 	virtual void Set(TSharedRef<FFICAttribute> InAttrib) override;
 	virtual TSharedRef<FFICAttribute> Get() override;
 
 	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute() override;
+	
+	virtual const TMap<FString, FFICAttribute*>& GetChildAttributes() const override;
 	// End FFICAttribute
 
 	void AddChildAttribute(FString Name, FFICAttribute* Attribute);

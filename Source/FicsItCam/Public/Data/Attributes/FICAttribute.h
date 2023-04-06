@@ -40,11 +40,17 @@ public:
 	virtual void MoveKeyframe(FICFrame From, FICFrame To) { checkf(false, TEXT("Not Implemented!")); }
 	virtual void RecalculateKeyframe(FICFrame Time) { checkf(false, TEXT("Not Implemented!")); }
 	virtual FICValue GetFloatValue(FICFrameFloat Time) { checkf(false, TEXT("Not Implemented!")); return 0.0f; }
+	virtual bool HasKeyframe(FICFrame Time) const { checkf(false, TEXT("Not Implemented!")); return false; }
 	
 	virtual void Set(TSharedRef<FFICAttribute> InAttrib) { checkf(false, TEXT("Not Implemented!")); }
 	virtual TSharedRef<FFICAttribute> Get() { checkf(false, TEXT("Not Implemented!")); return MakeShareable<FFICAttribute>(nullptr); }
 
 	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute() { checkf(false, TEXT("Not Implemented!")); return MakeShareable<FFICEditorAttributeBase>(nullptr); }
+
+	virtual const TMap<FString, FFICAttribute*>& GetChildAttributes() const {
+		static TMap<FString, FFICAttribute*> Keyframes;
+		return Keyframes;
+	}
 
 	void RecalculateAllKeyframes();
 

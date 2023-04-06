@@ -94,6 +94,9 @@ private:
 	TMap<TSharedPtr<SFICSequencerRow>, TSharedPtr<FFICSequencerRowMeta>> WidgetToMeta;
 
 	FFICFrameRange OldFrameRange;
+
+	FSoftObjectPtr CopiedKeyframesSceneObject;
+	TArray<TTuple<FICFrame, FFICAttribute*, FFICKeyframeData>> CopiedKeyframes;
 	
 public:
 	UFICEditorContext* Context = nullptr;

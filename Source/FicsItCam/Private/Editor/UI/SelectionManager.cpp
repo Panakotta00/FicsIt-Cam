@@ -1,27 +1,57 @@
 ﻿#include "Editor/UI/SelectionManager.h"
 
+#include "Data/Attributes/FICAttributeGroup.h"
+
 const TSet<TPair<FFICAttribute*, int64>>& FSelectionManager::GetSelection() const {
 	return SelectedKeyframes;
 }
 
 void FSelectionManager::SetSelection(const TSet<TPair<FFICAttribute*, FICFrame>>& InSelection) {
-	SelectedKeyframes = InSelection;
+	SelectedKeyframes.Empty();
+	for (const TPair<FFICAttribute*, FICFrame>& Keyframe : InSelection) {
+		AddKeyframeToSelection(*Keyframe.Key, Keyframe.Value, false);
+	}
 	SelectedWithBox = SelectedKeyframes;
 	auto _ = OnSelectionChanged.ExecuteIfBound();
 }
 
-void FSelectionManager::AddKeyframeToSelection(FFICAttribute& InAttribute, FICFrame InFrame) {
-	SelectedKeyframes.Add(TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame));
-	auto _ = OnSelectionChanged.ExecuteIfBound();
+void FSelectionManager::AddKeyframeToSelection(FFICAttribute& InAttribute, FICFrame InFrame, bool TriggerUpdate) {
+	const TMap<FString, FFICAttribute*>& Children = InAttribute.GetChildAttributes();
+	if (Children.Num() > 0) {
+		for (const TTuple<FString, FFICAttribute*>& Attr : Children) {
+			AddKeyframeToSelection(*Attr.Value, InFrame);
+		}
+	} else {
+		SelectedKeyframes.Add(TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame));
+	}
+	if (TriggerUpdate) auto _ = OnSelectionChanged.ExecuteIfBound();
 }
 
 void FSelectionManager::RemoveKeyframeFromSelection(FFICAttribute& InAttribute, FICFrame InFrame) {
-	SelectedKeyframes.Remove(TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame));
+	const TMap<FString, FFICAttribute*>& Children = InAttribute.GetChildAttributes();
+	if (Children.Num() > 0) {
+		for (const TTuple<FString, FFICAttribute*>& Attr : Children) {
+			RemoveKeyframeFromSelection(*Attr.Value, InFrame);
+		}
+	} else {
+		SelectedKeyframes.Remove(TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame));
+	}
 	auto _ = OnSelectionChanged.ExecuteIfBound();
 }
 
 bool FSelectionManager::IsKeyframeSelected(FFICAttribute& InAttribute, FICFrame InFrame) const {
-	return GetSelection().Contains(TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame));
+	const TMap<FString, FFICAttribute*>& Children = InAttribute.GetChildAttributes();
+	if (Children.Num() > 0) {
+		bool IsGroupSelected = true;
+		for (const TTuple<FString, FFICAttribute*>& Attr : Children) {
+			if (Attr.Value->HasKeyframe(InFrame)) {
+				IsGroupSelected = IsGroupSelected & IsKeyframeSelected(*Attr.Value, InFrame);
+			}
+		}
+		return IsGroupSelected;
+	} else {
+		return GetSelection().Contains(TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame));
+	}
 }
 
 void FSelectionManager::ToggleKeyframeSelection(FFICAttribute& InAttribute, FICFrame InFrame, const FModifierKeysState* InModifiers) {

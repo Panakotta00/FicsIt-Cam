@@ -28,9 +28,9 @@ struct FFICFloatKeyframe : public FFICKeyframe {
 
 	virtual FICValue GetValue() const override { return Value; }
 	virtual void SetValue(FICValue InValue) override { Value = InValue; }
-	virtual FFICValueTimeFloat GetInControl() override { return FFICValueTimeFloat(InTanTime, InTanValue); }
+	virtual FFICValueTimeFloat GetInControl() const override { return FFICValueTimeFloat(InTanTime, InTanValue); }
 	virtual void SetInControl(const FFICValueTimeFloat& InInControl) override { InTanTime = FMath::Max(InInControl.Frame, 0.f); InTanValue = InInControl.Value; }
-	virtual FFICValueTimeFloat GetOutControl() { return FFICValueTimeFloat(OutTanTime, OutTanValue); }
+	virtual FFICValueTimeFloat GetOutControl() const { return FFICValueTimeFloat(OutTanTime, OutTanValue); }
 	virtual void SetOutControl(const FFICValueTimeFloat& InOutControl) override { OutTanTime = FMath::Max(InOutControl.Frame, 0.f); OutTanValue = InOutControl.Value; }
 };
 
@@ -62,6 +62,7 @@ public:
 	virtual void MoveKeyframe(FICFrame From, FICFrame To) override;
 	virtual void RecalculateKeyframe(FICFrame Time) override;
 	virtual FICValue GetFloatValue(FICFrameFloat Time) override;
+	virtual bool HasKeyframe(FICFrame Time) const override;
 
 	virtual void Set(TSharedRef<FFICAttribute> InAttrib) override;
 	virtual TSharedRef<FFICAttribute> Get() override;
@@ -88,18 +89,18 @@ public:
 	
 	virtual FICValue GetValue() const override { return GetKeyframe()->GetValue(); }
 	virtual void SetValue(FICValue InValue) override { GetKeyframe()->SetValue(InValue); }
-	virtual FFICValueTimeFloat GetInControl() override {
+	virtual FFICValueTimeFloat GetInControl() const override {
 		return GetKeyframe()->GetInControl();
 	}
 	virtual void SetInControl(const FFICValueTimeFloat& InInControl) override {
 		GetKeyframe()->SetInControl(InInControl);
 	}
-	virtual FFICValueTimeFloat GetOutControl() {
+	virtual FFICValueTimeFloat GetOutControl() const {
 		return GetKeyframe()->GetOutControl();
 	}
 	virtual void SetOutControl(const FFICValueTimeFloat& InOutControl) override {
 		GetKeyframe()->SetOutControl(InOutControl);
 	}
-	virtual EFICKeyframeType GetType() override { return GetKeyframe()->GetType(); }
+	virtual EFICKeyframeType GetType() const override { return GetKeyframe()->GetType(); }
 	virtual void SetType(EFICKeyframeType InType) override { return GetKeyframe()->SetType(InType); }
 };

@@ -155,6 +155,38 @@ FReply SFICSequencer::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& In
 		}
 		SelectionManager.SetSelection({});
 		return FReply::Handled();
+	} else if (InKeyEvent.GetKey() == EKeys::C && InKeyEvent.GetModifierKeys().IsControlDown()) {
+		CopiedKeyframes.Empty();
+		CopiedKeyframesSceneObject = FSoftObjectPtr(Context->GetSelectedSceneObject());
+		if (CopiedKeyframesSceneObject.IsValid()) {
+			FICFrame MaxFrame = TNumericLimits<FICFrame>::Min();
+			FICFrame MinFrame = TNumericLimits<FICFrame>::Max();
+			for (TTuple<FFICAttribute*, FICFrame> Keyframe : SelectionManager.GetSelection()) {
+				MaxFrame = FMath::Max(MaxFrame, Keyframe.Value);
+				MinFrame = FMath::Min(MinFrame, Keyframe.Value);
+				TSharedRef<FFICKeyframe> KF = Keyframe.Key->GetKeyframes()[Keyframe.Value];
+				CopiedKeyframes.Add(TTuple<FICFrame, FFICAttribute*, FFICKeyframeData>{Keyframe.Value, Keyframe.Key, KF->GetKeyframeData()});
+			}
+			FICFrame Offset = MinFrame + (MaxFrame - MinFrame)/2;
+			for (TTuple<FICFrame, FFICAttribute*, FFICKeyframeData>& Keyframe : CopiedKeyframes) {
+				Keyframe.Get<0>() -= Offset;
+			}
+		}
+		return FReply::Handled();
+	} else if (InKeyEvent.GetKey() == EKeys::V && InKeyEvent.GetModifierKeys().IsControlDown()) {
+		UObject* CopiedKeyframesFromSceneObject = CopiedKeyframesSceneObject.Get();
+		if (CopiedKeyframesFromSceneObject && CopiedKeyframesFromSceneObject == Context->GetSelectedSceneObject()) {
+			FICFrame Offset = Context->GetCurrentFrame();
+			SelectionManager.SetSelection({});
+			for (const TTuple<FICFrame, FFICAttribute*, FFICKeyframeData>& Keyframe : CopiedKeyframes) {
+				FICFrame Time = Keyframe.Get<0>() + Offset;
+				TSharedRef<FFICKeyframe> KF = Keyframe.Get<1>()->AddKeyframe(Time);
+				KF->SetKeyframeData(Keyframe.Get<2>());
+				SelectionManager.AddKeyframeToSelection(*Keyframe.Get<1>(), Time , false);
+			}
+			auto _ = SelectionManager.OnSelectionChanged.ExecuteIfBound();
+		}
+		return FReply::Handled();
 	}
 	return SPanel::OnKeyDown(MyGeometry, InKeyEvent);
 }

@@ -17,7 +17,7 @@ public:
 	
 	const TSet<TPair<FFICAttribute*, int64>>& GetSelection() const;
 	void SetSelection(const TSet<TPair<FFICAttribute*, FICFrame>>& InSelection);
-	void AddKeyframeToSelection(FFICAttribute& InAttribute, FICFrame InFrame);
+	void AddKeyframeToSelection(FFICAttribute& InAttribute, FICFrame InFrame, bool TriggerUpdate = true);
 	void RemoveKeyframeFromSelection(FFICAttribute& InAttribute, FICFrame InFrame);
 	bool IsKeyframeSelected(FFICAttribute& InAttribute, FICFrame InFrame) const;
 	void ToggleKeyframeSelection(FFICAttribute& InAttribute, FICFrame InFrame, const FModifierKeysState* InModifiers = nullptr);
