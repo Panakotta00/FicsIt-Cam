@@ -3,6 +3,7 @@
 #include "FICEditorStyle.h"
 #include "Data/FICTypes.h"
 #include "FICEvents.h"
+#include "SelectionManager.h"
 #include "Data/Attributes/FICKeyframe.h"
 #include "Editor/Data/FICEditorAttributeBase.h"
 #include "FICGraphView.generated.h"
@@ -149,9 +150,7 @@ private:
 	TArray<TSharedRef<FFICEditorAttributeBase>> Attributes;
 	TMap<TSharedRef<FFICEditorAttributeBase>, FDelegateHandle> DelegateHandles;
 
-	TSet<TPair<FFICAttribute*, FICFrame>> SelectedKeyframes;
-	TSet<TPair<FFICAttribute*, FICFrame>> SelectedWithBox;
-	FBox2D BoxSelection;
+	FSelectionManager SelectionManager;
 
 public:
 	UFICEditorContext* Context = nullptr;
@@ -176,16 +175,8 @@ public:
 	virtual void OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const override;
 	// End SWidget
 
-	const TSet<TPair<FFICAttribute*, int64>>& GetSelection();
-	void SetSelection(const TSet<TPair<FFICAttribute*, FICFrame>>& InSelection);
-	void AddKeyframeToSelection(FFICAttribute& InAttribute, FICFrame InFrame);
-	void RemoveKeyframeFromSelection(FFICAttribute& InAttribute, FICFrame InFrame);
-	bool IsKeyframeSelected(FFICAttribute& InAttribute, FICFrame InFrame);
-	void ToggleKeyframeSelection(FFICAttribute& InAttribute, FICFrame InFrame, const FModifierKeysState* InModifiers = nullptr);
-	void BeginBoxSelection(const FModifierKeysState& InModifiers);
-	void EndBoxSelection(const FModifierKeysState& InModifiers);
-	void SetBoxSelection(FBox2D InBox, const FModifierKeysState& InModifiers);
-	FBox2D GetSelectionBox() { return BoxSelection; }
+	FSelectionManager& GetSelectionManager();
+	const FSelectionManager& GetSelectionManager() const;
 
 	void SetAttributes(const TArray<TSharedRef<FFICEditorAttributeBase>>& InAttributes);
 	void Update();

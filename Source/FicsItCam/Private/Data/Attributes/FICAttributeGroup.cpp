@@ -14,7 +14,8 @@ TMap<FICFrame, TSharedRef<FFICKeyframe>> FFICGroupAttribute::GetKeyframes() {
 
 void FFICKeyframeGroup::SetType(EFICKeyframeType Type) {
 	for (TPair<FString, FFICAttribute*> Child : Attribute->Children) {
-		TSharedRef<FFICKeyframe>* KF = Child.Value->GetKeyframes().Find(Frame);
+		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Child.Value->GetKeyframes();
+		TSharedRef<FFICKeyframe>* KF = Keyframes.Find(Frame);
 		if (KF) {
 			(*KF)->SetType(Type);
 		}
@@ -56,6 +57,13 @@ void FFICGroupAttribute::RecalculateKeyframe(FICFrame Time) {
 	}
 }
 
+bool FFICGroupAttribute::HasKeyframe(FICFrame Time) const {
+	for (TTuple<FString, FFICAttribute*> Child : Children) {
+		if (Child.Value->HasKeyframe(Time)) return true;
+	}
+	return false;
+}
+
 void FFICGroupAttribute::Set(TSharedRef<FFICAttribute> InAttrib) {
 	TSharedRef<FFICGroupAttribute> Attrib = StaticCastSharedRef<FFICGroupAttribute>(InAttrib);
 	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
@@ -74,6 +82,10 @@ TSharedRef<FFICAttribute> FFICGroupAttribute::Get() {
 
 TSharedRef<FFICEditorAttributeBase> FFICGroupAttribute::CreateEditorAttribute() {
 	return MakeShared<FFICEditorAttributeGroup>(*this);
+}
+
+const TMap<FString, FFICAttribute*>& FFICGroupAttribute::GetChildAttributes() const {
+	return Children;
 }
 
 void FFICGroupAttribute::AddChildAttribute(FString Name, FFICAttribute* Attribute) {

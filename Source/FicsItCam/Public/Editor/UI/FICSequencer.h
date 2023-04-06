@@ -4,6 +4,7 @@
 #include "FICKeyframeIcon.h"
 #include "Data/FICTypes.h"
 #include "FICSequencerRow.h"
+#include "SelectionManager.h"
 #include "Editor/Data/FICEditorAttributeBase.h"
 #include "FICSequencer.generated.h"
 
@@ -20,6 +21,7 @@ struct FFICSequencerStyle : public FSlateWidgetStyle {
 
 	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
 		OutBrushes.Add(&HighlightRangeBrush);
+		OutBrushes.Add(&SelectionBoxBrush);
 		OutBrushes.Add(&RowBackgroundOdd);
 		OutBrushes.Add(&RowBackgroundEven);
 		KeyframeIcon.GetResources(OutBrushes);
@@ -31,6 +33,13 @@ struct FFICSequencerStyle : public FSlateWidgetStyle {
 	FLinearColor ActiveFrameColor;
 	UPROPERTY(EditAnywhere)
 	FLinearColor GridColor;
+
+	UPROPERTY(EditAnywhere)
+	FSlateColor KeyframeSelectedColor;
+	UPROPERTY(EditAnywhere)
+	FSlateColor KeyframeUnselectedColor;
+	UPROPERTY(EditAnywhere)
+	FSlateBrush SelectionBoxBrush;
 	
 	UPROPERTY(EditAnywhere)
 	FSlateBrush RowBackgroundOdd;
@@ -77,6 +86,7 @@ private:
 	TAttribute<FICFrame> ActiveFrame;
 	TAttribute<FFICFrameRange> FrameRange;
 	TAttribute<FFICFrameRange> FrameHighlightRange;
+	FSelectionManager SelectionManager;
 
 	FDelegateHandle ActiveFrameDelegate;
 
@@ -84,6 +94,9 @@ private:
 	TMap<TSharedPtr<SFICSequencerRow>, TSharedPtr<FFICSequencerRowMeta>> WidgetToMeta;
 
 	FFICFrameRange OldFrameRange;
+
+	FSoftObjectPtr CopiedKeyframesSceneObject;
+	TArray<TTuple<FICFrame, FFICAttribute*, FFICKeyframeData>> CopiedKeyframes;
 	
 public:
 	UFICEditorContext* Context = nullptr;
@@ -109,6 +122,9 @@ public:
 	virtual FChildren* GetChildren() override;
 	virtual void OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const override;
 	// End SWidget
+
+	FSelectionManager& GetSelectionManager();
+	const FSelectionManager& GetSelectionManager() const;
 
 	void UpdateRows();
 

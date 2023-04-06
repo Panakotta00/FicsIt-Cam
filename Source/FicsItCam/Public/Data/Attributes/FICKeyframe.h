@@ -17,6 +17,16 @@ enum EFICKeyframeType {
 	FIC_KF_ALL			= 0b0111111,
 };
 
+USTRUCT()
+struct FFICKeyframeData {
+	GENERATED_BODY()
+	
+	FICValue Value;
+	FFICValueTimeFloat InControl;
+	FFICValueTimeFloat OutControl;
+	EFICKeyframeType Type;
+};
+
 USTRUCT(BlueprintType)
 struct FFICKeyframe {
 	GENERATED_BODY()
@@ -30,13 +40,24 @@ public:
 	 * Intended to be used for attibute viewers like graph view.
 	 */
 	virtual FICValue GetValue() const { checkf(false, TEXT("Not Implemented!")); return FICValue(); }
-	virtual FFICValueTimeFloat GetInControl() { checkf(false, TEXT("Not Implemented!")); return FFICValueTimeFloat(); }
-	virtual FFICValueTimeFloat GetOutControl() { checkf(false, TEXT("Not Implemented!")); return FFICValueTimeFloat(); }
-	virtual EFICKeyframeType GetType() { return KeyframeType; }
+	virtual FFICValueTimeFloat GetInControl() const { checkf(false, TEXT("Not Implemented!")); return FFICValueTimeFloat(); }
+	virtual FFICValueTimeFloat GetOutControl() const { checkf(false, TEXT("Not Implemented!")); return FFICValueTimeFloat(); }
+	virtual EFICKeyframeType GetType() const { return KeyframeType; }
 	virtual void SetValue(FICValue InValue) { checkf(false, TEXT("Not Implemented!")); }
 	virtual void SetInControl(const FFICValueTimeFloat& InInControl) { checkf(false, TEXT("Not Implemented!")); }
 	virtual void SetOutControl(const FFICValueTimeFloat& InOutControl) { checkf(false, TEXT("Not Implemented!")); }
 	virtual void SetType(EFICKeyframeType Type) { KeyframeType = Type; }
+
+	FFICKeyframeData GetKeyframeData() const {
+		return FFICKeyframeData{GetValue(), GetInControl(), GetOutControl(), GetType()};
+	}
+
+	void SetKeyframeData(const FFICKeyframeData& Data) {
+		SetValue(Data.Value);
+		SetInControl(Data.InControl);
+		SetOutControl(Data.OutControl);
+		SetType(Data.Type);
+	}
 
 	UPROPERTY(SaveGame)
 	TEnumAsByte<EFICKeyframeType> KeyframeType = FIC_KF_EASE;

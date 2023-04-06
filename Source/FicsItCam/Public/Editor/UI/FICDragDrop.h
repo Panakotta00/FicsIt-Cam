@@ -64,7 +64,7 @@ public:
 	TMap<FFICAttribute*, TSharedRef<FFICAttribute>> OldAttributeState;
 	
 	FFICGraphKeyframeDragDrop(TSharedRef<SFICGraphView> GraphView, FPointerEvent InitEvent) : FFICGraphDragDrop(GraphView, InitEvent) {
-		OldKeyframes = GraphView->GetSelection();
+		OldKeyframes = GraphView->GetSelectionManager().GetSelection();
 		for (const TPair<FFICAttribute*, FICFrame>& Keyframe : OldKeyframes) {
 			TSharedRef<FFICAttribute>* State = OldAttributeState.Find(Keyframe.Key);
 			if (State) continue;
@@ -102,6 +102,7 @@ public:
 	FICFrameFloat StartFramePerLocal;
 	FFICFrameRange StartActiveRange;
 	FVector2D StartLocal;
+	FVector2D CumulativeLocalDiff = FVector2D::ZeroVector;
 
 	FFICSequencerDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent);
 	
@@ -127,18 +128,28 @@ class FFICSequencerKeyframeDragDrop : public FFICSequencerDragDrop {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FFICSequencerKeyframeDragDrop, FFICSequencerDragDrop)
 
-	TSharedPtr<SFICSequencerRowAttribute> RowAttribute;
-	FFICAttribute* Attribute;
-	FICFrame Frame;
-	TSharedPtr<FFICAttribute> OldAttributeState;
-
-	FVector2D CumulativeLocalDiff = FVector2D::ZeroVector;
+	TSet<TPair<FFICAttribute*, FICFrame>> OldKeyframes;
+	TMap<FFICAttribute*, TSharedRef<FFICAttribute>> OldAttributeState;
+	
 	float CumulativeTimeDiff = 0;
 	
-	FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequencerRowAttribute> InRowAttribute, TSharedRef<SFICSequencerRowAttributeKeyframe> RowAttribute, FPointerEvent InitEvent);
+	FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent);
 
 	// Begin FDragDropOperation
 	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
 	virtual void OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) override;
+	// End FDragDropOperation
+};
+
+class FFICSequencerSelectionDragDrop : public FFICSequencerDragDrop {
+public:
+	DRAG_DROP_OPERATOR_TYPE(FFICGraphSelectionDragDrop, FFICSequencerDragDrop)
+
+	FFICSequencerSelectionDragDrop(TSharedRef<SFICSequencer> Sequencer, FPointerEvent InitEvent);
+
+	// Begin FDragDropOperation
+	virtual void OnDragged( const FDragDropEvent& DragDropEvent ) override;
+	virtual void OnDrop(bool bDropWasHandled, const FPointerEvent& MouseEvent) override;
+	virtual FCursorReply OnCursorQuery() { return FCursorReply::Cursor(EMouseCursor::Crosshairs); }
 	// End FDragDropOperation
 };

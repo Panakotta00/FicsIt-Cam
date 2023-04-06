@@ -45,12 +45,12 @@ void UFICRuntimeProcessCameraFeed::Start(AFICRuntimeProcessorCharacter* InCharac
 
 	Camera->CaptureComponent->bCaptureEveryFrame = true;
 
-	Camera->CopyCameraData(Cast<UCameraComponent>(Cast<AFGCharacterPlayer>(GetWorld()->GetFirstPlayerController()->GetCharacter())->GetComponentByClass(UCameraComponent::StaticClass())));
+	Camera->UpdateCaptureWithCameraData(Cast<UCameraComponent>(Cast<AFGCharacterPlayer>(GetWorld()->GetFirstPlayerController()->GetCharacter())->GetComponentByClass(UCameraComponent::StaticClass())));
 }
 
 void UFICRuntimeProcessCameraFeed::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {
-	Camera->CopyCameraData(Camera->Camera);
 	CameraArgument.UpdateCameraSettings(Camera);
+	Camera->UpdateCaptureWithCameraData();
 	/*if (CameraArgument.CameraReference.IsAnimated()) {
 	} else {
 //		FSlateApplication::Get().GetGameViewport()->GetViewportInterface().Pin()->GetViewportRenderTargetTexture()-> 

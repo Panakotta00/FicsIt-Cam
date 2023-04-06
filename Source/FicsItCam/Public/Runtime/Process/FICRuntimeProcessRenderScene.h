@@ -2,6 +2,7 @@
 
 #include "FICRuntimeProcessPlayScene.h"
 #include "FICSubsystem.h"
+#include "Util/SequenceExporter.h"
 #include "FICRUntimeProcessRenderScene.generated.h"
 
 inline FName NAME_FICRendererViewport = TEXT("FICRendererViewport");
@@ -86,8 +87,9 @@ class UFICRuntimeProcessRenderScene : public UFICRuntimeProcessPlayScene {
 public:
 	UPROPERTY()
 	AFICCaptureCamera* CaptureCamera = nullptr;
-
 	TSharedPtr<FFICRendererViewport> DummyViewport = nullptr;
+	TSharedPtr<FSequenceExporter> Exporter;
+	FString Path;
 
 	FICFrame FrameProgress = 0;
 

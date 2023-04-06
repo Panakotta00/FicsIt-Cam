@@ -87,7 +87,7 @@ struct FFICCameraArgument {
 		FFICCameraSettingsSnapshot CameraSettings = GetCameraSettingsSnapshot(CaptureCamera);
 		CaptureCamera->SetActorLocation(CameraSettings.Location);
 		CaptureCamera->SetActorRotation(CameraSettings.Rotation);
-		CaptureCamera->Camera->FieldOfView = CameraSettings.FOV;
+		CaptureCamera->Camera->SetFieldOfView(CameraSettings.FOV);
 		UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(CaptureCamera->Camera);
 		if (CineCamera) {
 			CineCamera->CurrentAperture = CameraSettings.Aperture;

@@ -45,7 +45,7 @@ FReply SFICViewport::OnDragOver(const FGeometry& MyGeometry, const FDragDropEven
 			APlayerController* PlayerController = Cast<APlayerController>(Context->GetPlayerCharacter()->GetController());
 			FVector WorldOrigin;
 			FVector WorldDirection;
-			FVector2D MousePosition = MyGeometry.AbsoluteToLocal(DragDropEvent.GetScreenSpacePosition());
+			FVector2D MousePosition = MyGeometry.AbsoluteToLocal(DragDropEvent.GetScreenSpacePosition()) * MyGeometry.Scale;
 			UGameplayStatics::DeprojectScreenToWorld(PlayerController, MousePosition, WorldOrigin, WorldDirection);
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(SceneObject3D->GetActor());

@@ -5,21 +5,11 @@
 #include "Command/FICCommand.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"
-#include "Engine/TextureRenderTarget2D.h"
 #include "Engine/World.h"
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 #include "Runtime/FICTimelapseCamera.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
-#include "Runtime/Process/FICRuntimeProcessTimelapseCamera.h"
-
-FFICAsyncImageCompressAndSave::FFICAsyncImageCompressAndSave(TSharedPtr<IImageWrapper> Image, FString Path) : Image(Image), Path(Path) {}
-
-FFICAsyncImageCompressAndSave::~FFICAsyncImageCompressAndSave() {}
-
-void FFICAsyncImageCompressAndSave::DoWork() {
-	TArray64<uint8> CompressedData = Image->GetCompressed(100);
-	FFileHelper::SaveArrayToFile(CompressedData, *Path);
-}
+#include "Util/SequenceExporter.h"
 
 AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
 	UWorld* WorldObject = GEngine->GetWorldFromContextObjectChecked(WorldContext);
@@ -63,18 +53,15 @@ void AFICSubsystem::Tick(float DeltaSeconds) {
 		TSharedPtr<FFICRenderRequest> NextRequest = *RenderRequestQueue.Peek();
 		if (NextRequest) {
 			if (NextRequest->RenderFence.IsFenceComplete() && NextRequest->Readback.IsReady()) {
-				IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
-				TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
-
 				FRenderTarget* Target = NextRequest->RenderTarget->GetRenderTarget();
-
 				FIntPoint Size = NextRequest->RenderTarget->GetRenderTarget()->GetSizeXY();
 				int64 RawSize = Size.X * Size.Y * sizeof(FColor);
-				bool bRaw = ImageWrapper->SetRaw(NextRequest->Readback.Lock(RawSize), RawSize, Target->GetSizeXY().X, Target->GetSizeXY().Y, ERGBFormat::RGBA, 8);
-				if (!bRaw) return;
+				ENQUEUE_RENDER_COMMAND(ReadbackFICCameraFootage)( [&](FRHICommandListImmediate& RHICmdList) {
+					void* data = NextRequest->Readback.Lock(RawSize);
+					if (data) NextRequest->Exporter->AddFrame(data, RawSize);
+				});
+				FlushRenderingCommands();
 				RenderRequestQueue.Pop();
-				
-				(new FAutoDeleteAsyncTask<FFICAsyncImageCompressAndSave>(ImageWrapper, NextRequest->Path))->StartBackgroundTask();
 			}
 		}
 	}
@@ -197,8 +184,8 @@ void AFICSubsystem::DestoryRuntimeProcessorCharacter(AFICRuntimeProcessorCharact
 	OriginalPlayerCharacter = nullptr;
 }
 
-void AFICSubsystem::SaveRenderTargetAsJPG(const FString& FilePath, TSharedRef<FFICRenderTarget> RenderTarget) {
-	TSharedRef<FFICRenderRequest> RenderRequest = MakeShared<FFICRenderRequest>(RenderTarget, FilePath, FRHIGPUTextureReadback(TEXT("FICSubsystem Texture Readback")));
+void AFICSubsystem::ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget) {
+	TSharedRef<FFICRenderRequest> RenderRequest = MakeShared<FFICRenderRequest>(RenderTarget, Exporter, FRHIGPUTextureReadback(TEXT("FICSubsystem Texture Readback")));
 		
 	ENQUEUE_RENDER_COMMAND(SceneDrawCompletion)([this, RenderTarget, RenderRequest](FRHICommandListImmediate& RHICmdList){
 		FTexture2DRHIRef Target = RenderTarget->GetRenderTarget()->GetRenderTargetTexture();

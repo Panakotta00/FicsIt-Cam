@@ -41,7 +41,7 @@ void UFICEditorContext::Load(AFICEditorCameraCharacter* InEditorPlayerCharacter,
 	});
 
 	if (Scene->bViewportEverSaved) {
-		SetSelectedSceneObject(Scene->LastSelectedSceneObject);
+		if (Scene->GetSceneObjects().Contains(Scene->LastSelectedSceneObject)) SetSelectedSceneObject(Scene->LastSelectedSceneObject);
 		InEditorPlayerCharacter->SetActorLocation(Scene->LastCameraTransform.GetLocation());
 		InEditorPlayerCharacter->SetActorRotation(Scene->LastCameraTransform.GetRotation().Rotator());
 	}
@@ -229,6 +229,7 @@ FFICFrameRange UFICEditorContext::GetActiveRange() {
 void UFICEditorContext::SetSelectedSceneObject(UObject* SceneObject) {
 	if (SelectedSceneObject) Cast<IFICSceneObject>(SelectedSceneObject)->Unselect(this);
 	SelectedSceneObject = SceneObject;
+	Scene->LastSelectedSceneObject = SceneObject;
 	if (SelectedSceneObject) Cast<IFICSceneObject>(SelectedSceneObject)->Select(this);
 	OnSceneObjectSelectionChanged.Broadcast();
 }

@@ -108,6 +108,10 @@ FICValue FFICFloatAttribute::GetFloatValue(FICFrameFloat Time) {
 	return GetValue(Time);
 }
 
+bool FFICFloatAttribute::HasKeyframe(FICFrame Time) const {
+	return Keyframes.Contains(Time);
+}
+
 void FFICFloatAttribute::Set(TSharedRef<FFICAttribute> InAttrib) {
 	FOnUpdate OnUpdateBuf = OnUpdate;
 	if (InAttrib->GetAttributeType() == GetAttributeType()) {

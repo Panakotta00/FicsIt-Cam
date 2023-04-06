@@ -3,6 +3,7 @@
 #include "Editor/FICChangeList.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICDragDrop.h"
+#include "Editor/UI/FICUIUtil.h"
 
 const FName FFICGraphViewStyle::TypeName = TEXT("FFICGraphViewStyle");
 
@@ -89,7 +90,7 @@ void SFICGraphViewKeyframe::Construct(const FArguments& InArgs, SFICGraphView* I
 				SNew(SImage)
 				.ColorAndOpacity_Lambda([this]() {
 					TSharedPtr<FFICKeyframe> KF = GetKeyframe();
-					if (GraphView->IsKeyframeSelected(*Attribute, Frame))return Style->KeyframeSelectedColor;
+					if (GraphView->GetSelectionManager().IsKeyframeSelected(*Attribute, Frame))return Style->KeyframeSelectedColor;
 					return Style->KeyframeUnselectedColor;
 				})
 				.Image_Lambda([this]() {
@@ -123,7 +124,7 @@ void SFICGraphViewKeyframe::Construct(const FArguments& InArgs, SFICGraphView* I
 			SAssignNew(InHandle, SFICGraphViewKeyframeHandle, this)
 			.Style(Style)
 			.Visibility_Lambda([this]() {
-				return GraphView->IsKeyframeSelected(*Attribute, GetFrame()) ? EVisibility::All : EVisibility::Collapsed;
+				return GraphView->GetSelectionManager().IsKeyframeSelected(*Attribute, GetFrame()) ? EVisibility::All : EVisibility::Collapsed;
 			}));
 	}
 	if (GetKeyframe() && GetKeyframe()->KeyframeType & FIC_KF_HANDLES) {
@@ -132,13 +133,13 @@ void SFICGraphViewKeyframe::Construct(const FArguments& InArgs, SFICGraphView* I
 			.IsOutHandle(true)
 			.Style(Style)
 			.Visibility_Lambda([this]() {
-				return GraphView->IsKeyframeSelected(*Attribute, GetFrame()) ? EVisibility::All : EVisibility::Collapsed;
+				return GraphView->GetSelectionManager().IsKeyframeSelected(*Attribute, GetFrame()) ? EVisibility::All : EVisibility::Collapsed;
 			}));
 	}
 }
 
 int SFICGraphViewKeyframe::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId,	const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
-	if (GetKeyframe() && GraphView->IsKeyframeSelected(*Attribute, GetFrame())) {
+	if (GetKeyframe() && GraphView->GetSelectionManager().IsKeyframeSelected(*Attribute, GetFrame())) {
 		FFICValueTimeFloat InControl = GetKeyframe()->GetInControl();
 		FFICValueTimeFloat OutControl = GetKeyframe()->GetOutControl();
 		TArray<FVector2D> PlotPoints;
@@ -191,73 +192,24 @@ FReply SFICGraphViewKeyframe::OnMouseButtonDown(const FGeometry& MyGeometry, con
 
 FReply SFICGraphViewKeyframe::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 	if (MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)) {
-		if (!GraphView->IsKeyframeSelected(*Attribute, GetFrame())) GraphView->SetSelection({TPair<FFICAttribute*, FICFrame>(Attribute, GetFrame())});
+		if (!GraphView->GetSelectionManager().IsKeyframeSelected(*Attribute, GetFrame())) GraphView->GetSelectionManager().SetSelection({TPair<FFICAttribute*, FICFrame>(Attribute, GetFrame())});
 		return FReply::Handled().BeginDragDrop(MakeShared<FFICGraphKeyframeDragDrop>(SharedThis(GraphView), MouseEvent));
 	}
 	return FReply::Handled();
 }
 
 FReply SFICGraphViewKeyframe::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& Event) {
+	FSelectionManager& SelectionManager = GraphView->GetSelectionManager();
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton) {
-		GraphView->ToggleKeyframeSelection(*Attribute, GetFrame(), &Event.GetModifierKeys());
+		SelectionManager.ToggleKeyframeSelection(*Attribute, GetFrame(), &Event.GetModifierKeys());
 	} else	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
 		TPair<FFICAttribute*, FICFrame> KF_Selection(&GetAttribute(), GetFrame());
-		if (!GraphView->GetSelection().Contains(KF_Selection)) {
-			GraphView->SetSelection({KF_Selection});
+		if (!SelectionManager.GetSelection().Contains(KF_Selection)) {
+			SelectionManager.SetSelection({KF_Selection});
 		}
-		TSet<TPair<FFICAttribute*, FICFrame>> Keyframes = GraphView->GetSelection();
-		TFunction<void(EFICKeyframeType)> SetKeyframeType;
-		SetKeyframeType = [Keyframes, this](EFICKeyframeType Type) {
-			TSharedRef<FFICChange_Group> Group = MakeShared<FFICChange_Group>();
-			TMap<FFICAttribute*, TSharedRef<FFICAttribute>> Snapshots;
-			for (const TPair<FFICAttribute*, FICFrame>& KF : Keyframes) {
-				TSharedRef<FFICAttribute>* Snapshot = Snapshots.Find(KF.Key);
-				if (!Snapshot) Snapshots.Add(KF.Key, KF.Key->Get());
-				TMap<FICFrame, TSharedRef<FFICKeyframe>> KFS = KF.Key->GetKeyframes();
-				TSharedRef<FFICKeyframe>* NKF = KFS.Find(KF.Value);
-				if (NKF) (*NKF)->SetType(Type);
-				KF.Key->LockUpdateEvent();
-				KF.Key->RecalculateAllKeyframes();
-				KF.Key->UnlockUpdateEvent(false);
-			}
-			for (const TPair<FFICAttribute*, TSharedRef<FFICAttribute>>& Snapshot : Snapshots) {
-				Group->PushChange(MakeShared<FFICChange_Attribute>(Snapshot.Key, Snapshot.Value));
-			}
-			GraphView->Context->ChangeList.PushChange(Group);
-			for (const TPair<FFICAttribute*, FICFrame>& KF : Keyframes) KF.Key->OnUpdate.Broadcast();
-		};
-		
-		TSharedPtr<IMenu> MenuHandle;
-		FMenuBuilder MenuBuilder(true, NULL);
-		MenuBuilder.AddMenuEntry(
-            FText::FromString("Ease"),
-            FText(),
-            FSlateIcon(),
-            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
-            	SetKeyframeType(FIC_KF_EASE);
-            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-		MenuBuilder.AddMenuEntry(
-            FText::FromString("Ease-In/Out"),
-            FText(),
-            FSlateIcon(),
-            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
-                SetKeyframeType(FIC_KF_EASEINOUT);
-            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-		MenuBuilder.AddMenuEntry(
-            FText::FromString("Linear"),
-            FText(),
-            FSlateIcon(),
-            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
-                SetKeyframeType(FIC_KF_LINEAR);
-            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-		MenuBuilder.AddMenuEntry(
-            FText::FromString("Step"),
-            FText(),
-            FSlateIcon(),
-            FUIAction(FExecuteAction::CreateLambda([SetKeyframeType, this]() {
-                SetKeyframeType(FIC_KF_STEP);
-            }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-	
+		FMenuBuilder MenuBuilder = FICCreateKeyframeTypeChangeMenu(GraphView->Context, [this] {
+			return GraphView->GetSelectionManager().GetSelection();
+		});
 		FSlateApplication::Get().PushMenu(SharedThis(this), *Event.GetEventPath(), MenuBuilder.MakeWidget(), Event.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
 		return FReply::Handled();
 	}
@@ -295,7 +247,23 @@ void SFICGraphView::Construct(const FArguments& InArgs, UFICEditorContext* InCon
 
 SFICGraphView::SFICGraphView() : Children(this) {
 	Clipping = EWidgetClipping::ClipToBoundsAlways;
-	BoxSelection.bIsValid = false;
+
+	SelectionManager.OnSelectionChanged.BindLambda([this]() {
+		Invalidate(EInvalidateWidgetReason::Layout);
+	});
+	SelectionManager.OnHandleBoxSelection.BindLambda([this](const FBox2D& InBox, const FModifierKeysState& InModifiers) {
+		FFICFrameRange Frames(InBox.Min.X, InBox.Max.X);
+		FFICValueRange Values(InBox.Min.Y, InBox.Max.Y);
+		
+		for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
+			TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attribute->GetAttribute().GetKeyframes();
+			for (const TPair<FICFrame, TSharedRef<FFICKeyframe>>& Keyframe : Keyframes) {
+				if (Frames.IsInRange(Keyframe.Key) && Values.IsInRange(Keyframe.Value->GetValue())) {
+					SelectionManager.ToggleKeyframeSelection(Attribute->GetAttribute(), Keyframe.Key, &InModifiers);
+				}
+			}
+		}
+	});
 }
 
 SFICGraphView::~SFICGraphView() {
@@ -353,6 +321,7 @@ int32 SFICGraphView::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 	}
 
 	// Draw Box Selection
+	FBox2D BoxSelection = SelectionManager.GetSelectionBox();
 	if (BoxSelection.bIsValid) {
 		float BeginTime = FrameToLocal(BoxSelection.Min.X);
 		float EndTime = FrameToLocal(BoxSelection.Max.X);
@@ -403,7 +372,7 @@ FReply SFICGraphView::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointe
 				}
 			}
 		}
-		SetSelection({});
+		SelectionManager.SetSelection({});
 	}
 	return FReply::Unhandled();
 }
@@ -465,7 +434,7 @@ FReply SFICGraphView::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEv
 
 FReply SFICGraphView::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) {
 	if (InKeyEvent.GetKey() == EKeys::Delete) {
-		TSet<TPair<FFICAttribute*, FICFrame>> Selection = GetSelection();
+		TSet<TPair<FFICAttribute*, FICFrame>> Selection = SelectionManager.GetSelection();
 		TMap<FFICAttribute*, TSharedRef<FFICAttribute>> Snapshots;
 		for (const TPair<FFICAttribute*, FICFrame>& SelectedKeyframe : Selection) {
 			TSharedRef<FFICAttribute>* Snapshot = Snapshots.Find(SelectedKeyframe.Key);
@@ -503,79 +472,12 @@ void SFICGraphView::OnArrangeChildren(const FGeometry& AllottedGeometry, FArrang
 	}
 }
 
-const TSet<TPair<FFICAttribute*, int64>>& SFICGraphView::GetSelection() {
-	return SelectedKeyframes;
+FSelectionManager& SFICGraphView::GetSelectionManager() {
+	return SelectionManager;
 }
 
-void SFICGraphView::SetSelection(const TSet<TPair<FFICAttribute*, FICFrame>>& InSelection) {
-	SelectedKeyframes = InSelection;
-	SelectedWithBox = SelectedKeyframes;
-	Invalidate(EInvalidateWidgetReason::Layout);
-}
-
-void SFICGraphView::AddKeyframeToSelection(FFICAttribute& InAttribute, FICFrame InFrame) {
-	SelectedKeyframes.Add(TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame));
-	Invalidate(EInvalidateWidgetReason::Layout);
-}
-
-void SFICGraphView::RemoveKeyframeFromSelection(FFICAttribute& InAttribute, FICFrame InFrame) {
-	SelectedKeyframes.Remove(TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame));
-	Invalidate(EInvalidateWidgetReason::Layout);
-}
-
-bool SFICGraphView::IsKeyframeSelected(FFICAttribute& InAttribute, FICFrame InFrame) {
-	return GetSelection().Contains(TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame));
-}
-
-void SFICGraphView::ToggleKeyframeSelection(FFICAttribute& InAttribute, FICFrame InFrame, const FModifierKeysState* InModifiers) {
-	bool bIsSelected = IsKeyframeSelected(InAttribute, InFrame);
-	if (!InModifiers || InModifiers->IsShiftDown()) {
-		if (bIsSelected) {
-			RemoveKeyframeFromSelection(InAttribute, InFrame);
-		} else {
-			AddKeyframeToSelection(InAttribute, InFrame);
-		}
-	} else if (InModifiers->IsControlDown()) {
-		if (!bIsSelected) AddKeyframeToSelection(InAttribute, InFrame);
-	} else if (InModifiers->IsAltDown()) {
-		if (bIsSelected) RemoveKeyframeFromSelection(InAttribute, InFrame);
-	} else if (!BoxSelection.bIsValid) {
-		SetSelection({TPair<FFICAttribute*, FICFrame>(&InAttribute, InFrame)});
-	} else {
-		if (!bIsSelected) AddKeyframeToSelection(InAttribute, InFrame);
-	}
-}
-
-void SFICGraphView::BeginBoxSelection(const FModifierKeysState& InModifiers) {
-	SelectedWithBox = SelectedKeyframes;
-	if (!InModifiers.IsCommandDown() && !InModifiers.IsShiftDown() && !InModifiers.IsAltDown()) {
-		SetSelection({});
-	}
-	BoxSelection = FBox2D(0);
-	BoxSelection.bIsValid = true;
-}
-
-void SFICGraphView::EndBoxSelection(const FModifierKeysState& InModifiers) {
-	SelectedWithBox = SelectedKeyframes;
-	BoxSelection.bIsValid = false;
-}
-
-void SFICGraphView::SetBoxSelection(FBox2D InBox, const FModifierKeysState& InModifiers) {
-	BoxSelection = InBox;
-	BoxSelection.bIsValid = true;
-	SelectedKeyframes = SelectedWithBox;
-	
-	FFICFrameRange Frames(InBox.Min.X, InBox.Max.X);
-	FFICValueRange Values(InBox.Min.Y, InBox.Max.Y);
-
-	for (TSharedRef<FFICEditorAttributeBase> Attribute : Attributes) {
-		TMap<FICFrame, TSharedRef<FFICKeyframe>> Keyframes = Attribute->GetAttribute().GetKeyframes();
-		for (const TPair<FICFrame, TSharedRef<FFICKeyframe>>& Keyframe : Keyframes) {
-			if (Frames.IsInRange(Keyframe.Key) && Values.IsInRange(Keyframe.Value->GetValue())) {
-				ToggleKeyframeSelection(Attribute->GetAttribute(), Keyframe.Key, &InModifiers);
-			}
-		}
-	}
+const FSelectionManager& SFICGraphView::GetSelectionManager() const {
+	return SelectionManager;
 }
 
 void SFICGraphView::SetAttributes(const TArray<TSharedRef<FFICEditorAttributeBase>>& InAttributes) {

@@ -1,9 +1,9 @@
 ﻿#pragma once
 
-
 #include "Subsystem/ModSubsystem.h"
 #include "FGSaveInterface.h"
 #include "IImageWrapper.h"
+#include "Util/SequenceExporter.h"
 #include "FICSubsystem.generated.h"
 
 class UFICRuntimeProcess;
@@ -21,14 +21,14 @@ struct FFICRenderTarget {
 };
 
 struct FFICRenderRequest {
-	FRenderCommandFence RenderFence;
+	FRenderCommandFence RenderFence = FRenderCommandFence();
 	
 	FRHIGPUTextureReadback Readback;
 
-	FString Path;
+	TSharedRef<FSequenceExporter> Exporter;
 	TSharedRef<FFICRenderTarget> RenderTarget;
 
-	FFICRenderRequest(TSharedRef<FFICRenderTarget> RenderTarget, FString Path, FRHIGPUTextureReadback Readback) : RenderTarget(RenderTarget), Path(Path), Readback(Readback) {}
+	FFICRenderRequest(TSharedRef<FFICRenderTarget> RenderTarget, TSharedRef<FSequenceExporter> Exporter, FRHIGPUTextureReadback Readback) : RenderTarget(RenderTarget), Exporter(Exporter), Readback(Readback) {}
 };
 
 struct FFICRenderTarget_Raw : public FFICRenderTarget {
@@ -37,24 +37,6 @@ struct FFICRenderTarget_Raw : public FFICRenderTarget {
 	FFICRenderTarget_Raw(FRenderTarget* RenderTarget) : RenderTarget(RenderTarget) {}
 
 	virtual FRenderTarget* GetRenderTarget() override { return RenderTarget; }
-};
-
-class FFICAsyncImageCompressAndSave : public FNonAbandonableTask{
-public:
-	FFICAsyncImageCompressAndSave(TSharedPtr<IImageWrapper> Image, FString Path);
-	~FFICAsyncImageCompressAndSave();
-
-	// Required by UE4!
-	FORCEINLINE TStatId GetStatId() const{
-		RETURN_QUICK_DECLARE_CYCLE_STAT(AsyncSaveImageToDiskTask, STATGROUP_ThreadPoolAsyncTasks);
-	}
-
-protected:
-	TSharedPtr<IImageWrapper> Image;
-	FString Path = "";
-
-public:
-	void DoWork();
 };
 
 UCLASS()
@@ -116,7 +98,7 @@ public:
 
 	AFICRuntimeProcessorCharacter* GetRuntimeProcessorCharacter() { return RuntimeProcessorCharacter; }
 	
-	void SaveRenderTargetAsJPG(const FString& FilePath, TSharedRef<FFICRenderTarget> RenderTarget);
+	void ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget);
 
 	AFICScene* FindSceneByName(const FString& InSceneName);
 	UFICRuntimeProcess* FindRuntimeProcess(const FString& InKey);

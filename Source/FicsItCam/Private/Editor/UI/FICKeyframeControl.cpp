@@ -3,6 +3,7 @@
 #include "Brushes/SlateColorBrush.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICDragDrop.h"
+#include "Editor/UI/FICUIUtil.h"
 #include "Engine/Texture2D.h"
 #include "Widgets/Images/SImage.h"
 
@@ -104,49 +105,9 @@ FReply SFICKeyframeControl::OnMouseButtonUp(const FGeometry& MyGeometry, const F
 	} else 	if (Event.GetEffectingButton() == EKeys::RightMouseButton) {
         TSharedPtr<FFICKeyframe> KF = Attribute->GetKeyframe(GetFrame());
 		if (KF) {
-			TSharedPtr<IMenu> MenuHandle;
-			FMenuBuilder MenuBuilder(true, NULL);
-			MenuBuilder.AddMenuEntry(
-                FText::FromString("Ease"),
-                FText(),
-                FSlateIcon(),
-                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    KF->SetType(FIC_KF_EASE);
-                	Attribute->GetAttribute().RecalculateAllKeyframes();
-                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
-                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-			MenuBuilder.AddMenuEntry(
-                FText::FromString("Ease-In/Out"),
-                FText(),
-                FSlateIcon(),
-                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    KF->SetType(FIC_KF_EASEINOUT);
-                	Attribute->GetAttribute().RecalculateAllKeyframes();
-                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
-                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-			MenuBuilder.AddMenuEntry(
-                FText::FromString("Linear"),
-                FText(),
-                FSlateIcon(),
-                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    KF->SetType(FIC_KF_LINEAR);
-                	Attribute->GetAttribute().RecalculateAllKeyframes();
-                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
-                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-			MenuBuilder.AddMenuEntry(
-                FText::FromString("Step"),
-                FText(),
-                FSlateIcon(),
-                FUIAction(FExecuteAction::CreateLambda([KF, this]() {
-                	BEGIN_QUICK_ATTRIB_CHANGE(Context, Attribute->GetAttribute(), GetFrame(), GetFrame())
-                    KF->SetType(FIC_KF_STEP);
-                	Attribute->GetAttribute().RecalculateAllKeyframes();
-                	END_QUICK_ATTRIB_CHANGE(Context->ChangeList)
-                }), FCanExecuteAction::CreateRaw(&FSlateApplication::Get(), &FSlateApplication::IsNormalExecution)));
-		
+			FMenuBuilder MenuBuilder = FICCreateKeyframeTypeChangeMenu(Context, [this] {
+				return TSet{TPair<FFICAttribute*, FICFrame>(&Attribute->GetAttribute(), GetFrame())};
+			});
 			FSlateApplication::Get().PushMenu(SharedThis(this), *Event.GetEventPath(), MenuBuilder.MakeWidget(), Event.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
 		}
 		return FReply::Handled();

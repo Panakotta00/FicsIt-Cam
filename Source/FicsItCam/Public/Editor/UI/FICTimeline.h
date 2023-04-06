@@ -81,6 +81,7 @@ private:
 	TSharedPtr<SFICTimelineScrubber> Scrubber;
 	TSharedPtr<STreeView<TSharedPtr<FFICEditorAttributeReference>>> AttributeTree;
 	TSharedPtr<SFICGraphView> Graph;
+	TSharedPtr<SWidgetSwitcher> Switcher;
 	
 	TSharedPtr<SFICSequencer> Sequencer;
 	TSharedPtr<SFICSequencerTreeView> SequencerTreeView;
@@ -100,6 +101,8 @@ public:
 	
 	// Begin SWidget
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
+	virtual bool SupportsKeyboardFocus() const override;
+	virtual FReply OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& InFocusEvent) override;
 	// End SWidget
 
 	void UpdateEditorAttributes();
