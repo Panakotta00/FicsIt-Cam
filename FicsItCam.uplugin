@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 0,
 	"VersionName": "0.3",
-	"SemVersion": "0.3.5",
+	"SemVersion": "0.3.6",
 	"AcceptsAnyRemoteVersion": true,
 	"FriendlyName": "FicsIt-Cam",
 	"Description": "This mod allows you to create beautiful camera animations in-game.",
@@ -26,7 +26,7 @@
 	"Plugins": [
         {
             "Name": "SML",
-            "SemVersion": "^3.3.2",
+            "SemVersion": "^3.5.0",
             "Enabled": true
         }
     ]
