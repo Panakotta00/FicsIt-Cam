@@ -5,6 +5,7 @@
 #include "Data/Objects/FICCamera.h"
 #include "Data/Objects/FICSceneObject.h"
 #include "Editor/Data/FICEditorAttributeBool.h"
+#include "Editor/Data/FICEditorAttributeGroupDynamic.h"
 
 void UFICEditorContext::SetAnimPlayer(EFICAnimPlayerState InAnimPlayerState, float InAnimPlayerFactor) {
 	AnimPlayerFactor = InAnimPlayerFactor;

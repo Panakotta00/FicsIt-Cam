@@ -86,8 +86,8 @@ public:
 	UPROPERTY(SaveGame)
 	FString LastEditorLayout;
 
-	UPROPERTY()
-	TMap<FName, FInputActionKeyMapping> KeyMappings;
+	//UPROPERTY()
+	//TMap<FName, FInputActionKeyMapping> KeyMappings;
 	
 	AFICEditorSubsystem();
 

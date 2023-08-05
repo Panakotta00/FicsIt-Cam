@@ -10,14 +10,15 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Data/Objects/FICCamera.h"
-#include "Editor/Data/FICEditorCameraActor.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"
+#include "Editor/Data/FICEditorAttributeBase.h"
+#include "Editor/Data/FICEditorAttributeGroupDynamic.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerController.h"
-#include "Slate/SceneViewport.h"
+#include "Input/FGEnhancedInputComponent.h"
 
 AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	PrimaryActorTick.bCanEverTick = true;
@@ -53,7 +54,7 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			bReposses = true;
 			PController->UnPossess();
 			PController->Possess(this);
-			UFGInputLibrary::UpdateInputMappings(Cast<APlayerController>(PController));
+			//UFGInputLibrary::UpdateInputMappings(Cast<APlayerController>(PController));
 			UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 			bReposses = false;
 		
@@ -139,32 +140,31 @@ void AFICEditorCameraCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason
 
 void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	UInputSettings* Settings = const_cast<UInputSettings*>(GetDefault<UInputSettings>());
-	Settings->AddAxisMapping(FInputAxisKeyMapping("FicsItCam.Zoom", EKeys::MouseWheelAxis));
 	
-	PlayerInputComponent->BindAxis("MoveForward", this, &AFICEditorCameraCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AFICEditorCameraCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("DefaultPawn_MoveUp", this, &AFICEditorCameraCharacter::FlyUp);
-	PlayerInputComponent->BindAxis("FicsItCam.MoveRoll", this, &AFICEditorCameraCharacter::RotateRoll);
-	PlayerInputComponent->BindAxis("FicsItCam.Zoom", this, &AFICEditorCameraCharacter::Zoom);
+	UFGEnhancedInputComponent* EnhancedInputComponent = Cast<UFGEnhancedInputComponent>(PlayerInputComponent);
+	const UFGInputSettings* Settings = UFGInputSettings::Get();
 
-	PlayerInputComponent->BindAxis("Turn", this, &AFICEditorCameraCharacter::RotateYaw);
-	PlayerInputComponent->BindAxis("LookUp", this, &AFICEditorCameraCharacter::RotatePitch);
-
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Movement"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Move);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Rotation"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Rotate);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Redo"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Redo);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Undo"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Undo);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Frame"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ChangeFrame);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.NextKeyframe"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::NextKeyframe);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.PrevKeyframe"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::PrevKeyframe);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleAllKeyframes"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleAllKeyframes);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleAutoKeyframe"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleAutoKeyframe);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleCursor"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleCursor);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleLockCamera"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleLockCamera);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleShowPath"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleShowPath);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Grab"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Grab);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.FOV"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ChangeFOV);
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Speed"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ChangeSpeed);
+	
 	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::RightMousePress);
 	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::RightMouseRelease);
 	
 	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &AFICEditorCameraCharacter::OnLeftMouseDown);
 	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &AFICEditorCameraCharacter::OnLeftMouseUp);
-
-	TArray<FInputActionKeyMapping>& Mappings = Cast<APlayerController>(GetController())->PlayerInput->ActionMappings;
-	TMap<FName, FInputActionKeyMapping>& KeyMappings = AFICEditorSubsystem::GetFICEditorSubsystem(this)->KeyMappings;
-	KeyMappings.Empty();
-	for (const FInputActionKeyMapping& KeyMapping : Mappings) {
-		KeyMappings.Add(KeyMapping.ActionName, KeyMapping);
-	}
-	Mappings.Empty();
 }
 
 void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
@@ -195,43 +195,100 @@ void AFICEditorCameraCharacter::UnPossessed() {
 	}
 }
 
-void AFICEditorCameraCharacter::MoveForward(float Value) {
-	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
+void AFICEditorCameraCharacter::Move(const FInputActionValue& ActionValue) {
+	if (!IsControlView()) return;
+
 	float Multi = FlyMultiplier;
-	if (Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed()) Multi *= 3;
-	AddMovementInput(Direction, Value * Multi);
+	// if (Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed()) Multi *= 3; TODO: Check if SpeedUp
+	AddMovementInput(Controller->GetCharacter()->GetTransform().TransformVector(ActionValue.Get<FVector>()).GetSafeNormal(), ActionValue.GetMagnitude() * Multi);
 }
 
-void AFICEditorCameraCharacter::MoveRight(float Value) {
+void AFICEditorCameraCharacter::Rotate(const FInputActionValue& ActionValue) {
 	if (!IsControlView()) return;
-	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
-	float Multi = FlyMultiplier;
-	if (Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed()) Multi *= 3;
-	AddMovementInput(Direction, Value * Multi);
-}
-void AFICEditorCameraCharacter::RotatePitch(float Value) {
-	if (!IsControlView()) return;
-	AddControllerPitchInput(Value);
+
+	FVector Value = ActionValue.Get<FVector>();
+	AddControllerPitchInput(Value.X);
+	AddControllerYawInput(Value.Z);
+	AddControllerRollInput(Value.Y);
 }
 
-void AFICEditorCameraCharacter::RotateYaw(float Value) {
-	if (!IsControlView()) return;
-	AddControllerYawInput(Value);
+void AFICEditorCameraCharacter::ChangeFOV(const FInputActionValue& ActionValue) {
+	float Delta = ActionValue.GetMagnitude();
+	// if (bIsSprinting) Delta *= 2; TODO: Check if SpeedUp
+	if (EditorContext->GetLockCameraToView()) {
+		TFICEditorAttribute<FFICFloatAttribute>& FOV_Attr = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV");
+		EditorContext->CommitAutoKeyframe(this);
+		FOV_Attr.SetValue(FOV_Attr.GetValue() + Delta);
+		EditorContext->CommitAutoKeyframe(nullptr);
+	} else {
+		FOV += Delta;
+	}
 }
 
-void AFICEditorCameraCharacter::RotateRoll(float Value) {
-	if (!IsControlView()) return;
-	AddControllerRollInput(Value);
-	RollRotationFixValue += Value;
+void AFICEditorCameraCharacter::ChangeSpeed(const FInputActionValue& ActionValue) {
+	float Delta = ActionValue.GetMagnitude() * 100;
+	// if (bIsSprinting) Delta *= 2; TODO: Check if SpeedUp
+	//if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
+	// TODO: Fly Speed!
 }
 
-void AFICEditorCameraCharacter::FlyUp(float Value) {
-	if (!IsControlView()) return;
-	FVector Direction = GetActorUpVector();
-	float Multi = FlyMultiplier;
-	if (Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed()) Multi *= 3;
-	AddMovementInput(Direction, Value * Multi);
-	AddActorLocalRotation(FRotator(0, 0, Value));
+void AFICEditorCameraCharacter::ChangeFrame(const FInputActionValue& ActionValue) {
+	float Delta = ActionValue.GetMagnitude();
+	// if (bIsSprinting) Delta *= 2; TODO: Check if SpeedUp
+	if (Delta) EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame() + Delta);
+}
+
+void AFICEditorCameraCharacter::Redo() {
+	TSharedPtr<FFICChange> Change = EditorContext->ChangeList.PushChange();
+	if (Change) Change->RedoChange();
+}
+
+void AFICEditorCameraCharacter::Undo() {
+	TSharedPtr<FFICChange> Change = EditorContext->ChangeList.PopChange();
+	if (Change) Change->UndoChange();
+}
+
+void AFICEditorCameraCharacter::NextKeyframe() {
+	int64 Time;
+	TSharedPtr<FFICKeyframe> KF = EditorContext->GetAllAttributes()->GetAttribute().GetNextKeyframe(EditorContext->GetCurrentFrame(), Time);
+	if (KF) EditorContext->SetCurrentFrame(Time);
+}
+
+void AFICEditorCameraCharacter::PrevKeyframe() {
+	int64 Time;
+	TSharedPtr<FFICKeyframe> KF = EditorContext->GetAllAttributes()->GetAttribute().GetPrevKeyframe(EditorContext->GetCurrentFrame(), Time);
+	if (KF) EditorContext->SetCurrentFrame(Time);
+}
+
+void AFICEditorCameraCharacter::ToggleAllKeyframes() {
+	auto Change = MakeShared<FFICChange_Group>();
+	Change->PushChange(MakeShared<FFICChange_ActiveFrame>(EditorContext, TNumericLimits<int64>::Min(), EditorContext->GetCurrentFrame()));
+	BEGIN_ATTRIB_CHANGE(EditorContext->GetAllAttributes()->GetAttribute())
+	EditorContext->ToggleCurrentKeyframes();
+	END_ATTRIB_CHANGE(Change)
+	EditorContext->ChangeList.PushChange(Change);
+}
+
+void AFICEditorCameraCharacter::ToggleAutoKeyframe() {
+	EditorContext->SetLockCameraToView(!EditorContext->GetLockCameraToView());
+}
+
+void AFICEditorCameraCharacter::ToggleCursor() {
+	EditorContext->GetPlayerCharacter()->ControlViewToggle();
+}
+
+void AFICEditorCameraCharacter::ToggleLockCamera() {
+	EditorContext->SetLockCameraToView(!EditorContext->GetLockCameraToView());
+}
+
+void AFICEditorCameraCharacter::ToggleShowPath() {
+	EditorContext->bShowPath = !EditorContext->bShowPath;
+}
+
+void AFICEditorCameraCharacter::Grab() {
+	UInteractiveToolManager* ToolManager = AFICEditorSubsystem::GetFICEditorSubsystem(EditorContext)->ToolsContext->ToolManager;
+	ToolManager->SelectActiveToolType(EToolSide::Mouse, "Grab");
+	ToolManager->ActivateTool(EToolSide::Mouse);
 }
 
 void AFICEditorCameraCharacter::RightMousePress() {
@@ -244,43 +301,12 @@ void AFICEditorCameraCharacter::RightMouseRelease() {
 	}
 }
 
-void AFICEditorCameraCharacter::Zoom(float Value) {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	bool bIsSprinting = PlayerController->PlayerInput->IsShiftPressed();
-	if (bIsSprinting && PlayerController->PlayerInput->IsCtrlPressed()) {
-		float Delta = Value;
-		if (bIsSprinting) Delta *= 2;
-		if (EditorContext->GetLockCameraToView()) {
-			TFICEditorAttribute<FFICFloatAttribute>& FOV_Attr = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV");
-			EditorContext->CommitAutoKeyframe(this);
-			FOV_Attr.SetValue(FOV_Attr.GetValue() + Delta);
-			EditorContext->CommitAutoKeyframe(nullptr);
-		} else {
-			FOV += Delta;
-		}
-	} else if (PlayerController->PlayerInput->IsCtrlPressed()) {
-		float Delta = Value * 100;
-		if (bIsSprinting) Delta *= 2;
-		//if (Delta) EditorContext->SetFlySpeed(EditorContext->GetFlySpeed() + Delta);
-		// TODO: Fly Speed!
-	} else {
-		float Delta = Value;
-		int64 Range = EditorContext->GetScene()->AnimationRange.Length();
-		while (Range > 300) {
-			Range /= 10;
-			Delta *= 10;
-		}
-		if (bIsSprinting) Delta *= 2;
-		if (Delta) EditorContext->SetCurrentFrame(EditorContext->GetCurrentFrame() + Delta);
-	}
-}
-
 void AFICEditorCameraCharacter::OnLeftMouseDown() {
-	AFICEditorSubsystem::GetFICEditorSubsystem(GetWorld())->OnLeftMouseDown();
+	AFICEditorSubsystem::GetFICEditorSubsystem(GetWorld())->OnLeftMouseDown(); // TODO: Register Input Handler in EditorSubsystem Instead
 }
 
 void AFICEditorCameraCharacter::OnLeftMouseUp() {
-	AFICEditorSubsystem::GetFICEditorSubsystem(GetWorld())->OnLeftMouseUp();
+	AFICEditorSubsystem::GetFICEditorSubsystem(GetWorld())->OnLeftMouseUp(); // TODO: Register Input Handler in EditorSubsystem Instead
 }
 
 void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorContext) {

@@ -1,7 +1,11 @@
 #include "Editor/FICEditorSubsystem.h"
 
+#include "ContextObjectStore.h"
+#include "EnhancedInputSubsystems.h"
 #include "FGGameUserSettings.h"
 #include "FGInputLibrary.h"
+#include "TestLibWrapper.h"
+#include "BaseGizmos/GizmoViewContext.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/ITF/FICGrabTool.h"
@@ -10,6 +14,7 @@
 #include "Editor/ITF/FICToolsContextRender.h"
 #include "Editor/ITF/FICTransformInteraction.h"
 #include "Engine/GameEngine.h"
+#include "Input/FGInputMappingContext.h"
 #include "Slate/SceneViewport.h"
 #include "Slate/SGameLayerManager.h"
 
@@ -39,6 +44,7 @@ void AFICEditorSubsystem::InitInteractiveTools() {
 
 	// register tools
 	ToolsContext->ToolManager->RegisterToolType("Grab", NewObject<UFICGrabToolBuilder>(ToolsContext->ToolManager));
+
 }
 
 void AFICEditorSubsystem::ShutdownInteractiveTools() {
@@ -77,6 +83,9 @@ AFICEditorSubsystem::AFICEditorSubsystem() {
 
 void AFICEditorSubsystem::BeginPlay() {
 	Super::BeginPlay();
+
+	//FString nice = TestLibWrapper_foo();
+	//UE_LOG(LogTemp, Warning, TEXT("Nice!"));
 }
 
 void AFICEditorSubsystem::Tick(float DeltaTime) {
@@ -160,11 +169,11 @@ void AFICEditorSubsystem::Tick(float DeltaTime) {
 			// fudge factor so we don't hit actor...
 			Origin += 1.0 * Direction;
 
-			InputState.Mouse.Position2D = ViewportMousePos;
-			InputState.Mouse.Delta2D = CurrentMouseState.Mouse.Position2D - PrevMousePosition;
-			PrevMousePosition = InputState.Mouse.Position2D;
+			InputState.Mouse.Delta2D = ViewportMousePos - PrevMousePosition;
+			PrevMousePosition = InputState.Mouse.Position2D = ViewportMousePos;
 			InputState.Mouse.WorldRay = FRay(Origin, Direction);
 
+			ToolsContext->ToolManager->GetContextObjectStore()->FindContext<UGizmoViewContext>()->ResetFromSceneView(*SceneView);
 
 			// if we are in camera control we don't send any events
 			bool bInCameraControl = ActiveEditorContext->IsViewportCameraControl();
@@ -240,7 +249,7 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	// Initialize Editor Player Character
 	// TODO: Persist "Viewport Camera Transform" sepperately in persistent editor storage for given scene
 	Controller->Possess(Character);
-	UFGInputLibrary::UpdateInputMappings(Controller);
+	//UFGInputLibrary::UpdateInputMappings(Controller);
 	UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 	Character->SetEditorContext(Context);
 	Controller->PlayerInput->ActionMappings.Empty();
@@ -268,6 +277,10 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	// Finish Editor Opening
 	ActiveEditorContext = Context;
 	EditorPlayerCharacter = Character;
+
+	// Add Editor Input Context
+	UFGInputMappingContext* InputMappingContext = LoadObject<UFGInputMappingContext>(nullptr, TEXT("/FicsItCam/Input/IC_FIC_Editor.IC_FIC_Editor"));
+	Controller->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(InputMappingContext, -2);
 		
 	InitInteractiveTools();
 }
@@ -281,6 +294,8 @@ void AFICEditorSubsystem::CloseEditor() {
 	// Don't do anything if no scene is opened in editor
 	if (!Context) return;
 
+	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
+	
 	// Copy Editor Settings
 	bAutoKeyframe = Context->GetAutoKeyframe();
 	bLockCameraToView = Context->GetLockCameraToView();
@@ -293,6 +308,10 @@ void AFICEditorSubsystem::CloseEditor() {
 	// Shutdown Interactive Tools
 	ShutdownInteractiveTools();
 
+	// Remove Editor Input Context
+	UFGInputMappingContext* InputMappingContext = LoadObject<UFGInputMappingContext>(nullptr, TEXT("/FicsItCam/Input/IC_FIC_Editor.IC_FIC_Editor"));
+	Controller->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->RemoveMappingContext(InputMappingContext);
+
 	// Focus back to viewport
 	Character->SetControlView(true);
 	
@@ -304,7 +323,7 @@ void AFICEditorSubsystem::CloseEditor() {
 	
 	// Swap PlayerCharacter to FG Player Character 
 	GetWorld()->GetFirstPlayerController()->Possess(OriginalPlayerCharacter);
-	UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
+	//UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
 	UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 
 	// Add Game Viewport Back
@@ -317,7 +336,6 @@ void AFICEditorSubsystem::CloseEditor() {
 	Cast<UGameEngine>(GEngine)->CreateGameViewport(GEngine->GameViewport);
 
 	// Enabled Game Inputs/WorldControl
-	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 	UGameplayStatics::SetGamePaused(this, false);
 	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(true);

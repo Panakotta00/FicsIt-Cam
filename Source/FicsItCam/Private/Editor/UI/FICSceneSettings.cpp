@@ -80,8 +80,9 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 				.MinValue(1)
 				.LinearDeltaSensitivity(10)
 				.AllowSpin(false)
-				.OnValueCommitted_Lambda([this](int Val, auto) {
-					Context->GetScene()->ResolutionWidth = FMath::Max(1, Val);
+				.OnValueCommitted_Lambda([this](int Value, auto) {
+					if (Value % 2 != 0) Value += 1;
+					Context->GetScene()->ResolutionWidth = FMath::Max(1, Value);
 				})
 				.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
 				.ToolTipText(FText::FromString(TEXT("Resolution Width")))
@@ -100,8 +101,9 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 				.MinValue(1)
 				.LinearDeltaSensitivity(10)
 				.AllowSpin(false)
-				.OnValueCommitted_Lambda([this](int Val, auto) {
-					Context->GetScene()->ResolutionHeight = FMath::Max(1, Val);
+				.OnValueCommitted_Lambda([this](int Value, auto) {
+					if (Value % 2 != 0) Value += 1;
+					Context->GetScene()->ResolutionHeight = FMath::Max(1, Value);
 				})
 				.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
 				.ToolTipText(FText::FromString(TEXT("Resolution Height")))

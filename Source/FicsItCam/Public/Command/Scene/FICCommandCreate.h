@@ -28,8 +28,8 @@ public:
 		AFICScene* Scene = InSender->GetWorld()->SpawnActor<AFICScene>();
 		
 		FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
-		Scene->ResolutionWidth = Resolution.X;
-		Scene->ResolutionHeight = Resolution.Y;
+		Scene->ResolutionWidth = Resolution.X + (Resolution.X % 2 != 0 ? 1 : 0);
+		Scene->ResolutionHeight = Resolution.Y + (Resolution.Y % 2 != 0 ? 1 : 0);
 		Scene->SceneName = InArgs[0];
 		UFICCamera* CDO = UFICCamera::StaticClass()->GetDefaultObject<UFICCamera>();
 		if (CDO) Scene->AddSceneObject(CDO->CreateNewObject(AFICSubsystem::GetFICSubsystem(InSender), Scene));

@@ -4,7 +4,7 @@
 #include "FICTransformInteraction.generated.h"
 
 class UTransformProxy;
-class UTransformGizmo;
+class UCombinedTransformGizmo;
 class URuntimeMeshSceneObject;
 
 UCLASS()
@@ -22,7 +22,7 @@ protected:
 	UTransformProxy* TransformProxy;
 
 	UPROPERTY()
-	UTransformGizmo* TransformGizmo;
+	UCombinedTransformGizmo* TransformGizmo;
 	
 public:
 	// Begin FTickableGameObject

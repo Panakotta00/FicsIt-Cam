@@ -92,6 +92,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 										return &Style->SequencerIcon;
 									}
 								})
+								.ColorAndOpacity(FSlateColor::UseForeground())
 							]
 						]
 					]

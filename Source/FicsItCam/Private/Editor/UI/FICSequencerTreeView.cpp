@@ -71,12 +71,12 @@ SFICSequencerTreeView::~SFICSequencerTreeView() {
 }
 
 void SFICSequencerTreeView::RequestListRefresh() {
-	STreeView<TSharedPtr<FFICSequencerRowMeta, ESPMode::NotThreadSafe>>::RequestListRefresh();
+	STreeView<TSharedPtr<FFICSequencerRowMeta>>::RequestListRefresh();
 	bDirty = true;
 }
 
 void SFICSequencerTreeView::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) {
-	STreeView<TSharedPtr<FFICSequencerRowMeta, ESPMode::NotThreadSafe>>::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+	STreeView<TSharedPtr<FFICSequencerRowMeta>>::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
 	if (bDirty) {
 		TriggerUpdate();
 		bDirty = false;

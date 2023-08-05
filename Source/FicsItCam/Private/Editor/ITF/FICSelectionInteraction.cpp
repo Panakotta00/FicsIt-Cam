@@ -23,7 +23,8 @@ FInputRayHit UFICSelectionInteraction::IsHitByClick(const FInputDeviceRay& Click
 		
 	FHitResult Result;
 	GetWorld()->LineTraceSingleByChannel(Result, ClickPos.WorldRay.Origin, ClickPos.WorldRay.Origin + ClickPos.WorldRay.Direction * 10000, ECollisionChannel::ECC_GameTraceChannel10);
-	if (Result.Actor.IsValid() && Result.GetActor()->Implements<UFICSelectionInteractionTarget>()) {
+	//GetWorld()->LineBatcher->DrawLine(ClickPos.WorldRay.Origin, ClickPos.WorldRay.Origin + ClickPos.WorldRay.Direction * 1000, FColor::Green, 0, 10, 10000);
+	if (IsValid(Result.GetActor()) && Result.GetActor()->Implements<UFICSelectionInteractionTarget>()) {
 		RayHit.bHit = true;
 		RayHit.HitDepth = Result.Distance;
 		//RayHit.HitNormal = ;			// todo - can compute from bary coords
@@ -52,7 +53,7 @@ FInputRayHit UFICSelectionInteraction::IsHitByClick(const FInputDeviceRay& Click
 void UFICSelectionInteraction::OnClicked(const FInputDeviceRay& ClickPos) {
 	FHitResult Result;
 	GetWorld()->LineTraceSingleByChannel(Result, ClickPos.WorldRay.Origin, ClickPos.WorldRay.Origin + ClickPos.WorldRay.Direction * 10000, ECollisionChannel::ECC_GameTraceChannel10);
-	if (Result.Actor.IsValid() && Result.GetActor()->Implements<UFICSelectionInteractionTarget>()) {
+	if (IsValid(Result.GetActor()) && Result.GetActor()->Implements<UFICSelectionInteractionTarget>()) {
 		UObject* SelectedObject = Cast<IFICSelectionInteractionTarget>(Result.GetActor())->Select();
 		if (SelectedObject) Context->SetSelectedSceneObject(SelectedObject);
 	} else {
@@ -89,7 +90,7 @@ void UFICSelectionInteraction::OnBeginHover(const FInputDeviceRay& DevicePos) {
 	int32 Frame;
 	float Distance;
 	if (HitCameraPath(DevicePos.WorldRay, LastHovered, Frame, Distance)) {
-		LastHovered->EditorCameraActor->CameraPathComponent->Hovered = Frame - Context->GetScene()->AnimationRange.Begin;
+		LastHovered->EditorCameraActor->CameraPathComponent->Hovered = Frame - Context->GetActiveRange().Begin;
 	}
 }
 
@@ -98,7 +99,7 @@ bool UFICSelectionInteraction::OnUpdateHover(const FInputDeviceRay& DevicePos) {
 	int32 Frame;
 	float Distance;
 	if (HitCameraPath(DevicePos.WorldRay, LastHovered, Frame, Distance)) {
-		LastHovered->EditorCameraActor->CameraPathComponent->Hovered = Frame - Context->GetScene()->AnimationRange.Begin;
+		LastHovered->EditorCameraActor->CameraPathComponent->Hovered = Frame - Context->GetActiveRange().Begin;
 		return true;
 	}
 	return false;
@@ -124,7 +125,7 @@ bool UFICSelectionInteraction::HitCameraPath(const FRay& InRay, UFICCamera*& Out
 				float OriginDistance = FVector::Distance(Point, InRay.Origin);
 				if (OriginDistance < OutDistance) {
 					OutDistance = OriginDistance;
-					OutFrame = Context->GetScene()->AnimationRange.Begin + PointIndex;
+					OutFrame = Context->GetActiveRange().Begin + PointIndex;
 					BestCamera = Camera;
 				}
 			}

@@ -1,4 +1,6 @@
-#include "FicsItCam/Public/Data/Attributes/FICAttribute.h"
+#include "Data/Attributes/FICAttribute.h"
+
+TSharedRef<FFICEditorAttributeBase> FFICAttribute::CreateEditorAttribute() { checkf(false, TEXT("Not Implemented!")); return MakeShareable<FFICEditorAttributeBase>(nullptr); }
 
 void FFICAttribute::RecalculateAllKeyframes() {
 	TArray<int64> Keys;

@@ -5,6 +5,7 @@
 #include "FICSceneObject3D.h"
 #include "FICSceneObjectActive.h"
 #include "Data/Attributes/FICAttributeBool.h"
+#include "Data/Attributes/FICAttributeFloat.h"
 #include "Data/Attributes/FICAttributePosition.h"
 #include "Data/Attributes/FICAttributeRotation.h"
 #include "Data/Objects/FICSceneObject.h"

@@ -1,9 +1,11 @@
 ﻿#include "FICUtils.h"
 #include "FicsItCam/Public/FICUtils.h"
 
+#include "EnhancedPlayerInput.h"
 #include "Editor/FICEditorSubsystem.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
+#include "Input/FGEnhancedInputComponent.h"
 #include "Runtime/FICCameraReference.h"
 
 FRotator UFICUtils::NormalizeRotator(FRotator Rot) {
@@ -70,12 +72,16 @@ bool UFICUtils::IsValidFICObjectName(const FString& InName) {
 }
 
 bool UFICUtils::IsAction(UObject* WorldContext, const FKeyEvent& InKeyEvent, const FName& InActionName) {
-	const FInputActionKeyMapping* Mapping = AFICEditorSubsystem::GetFICEditorSubsystem(WorldContext)->KeyMappings.Find(InActionName);
+	//UInputAction* Action;
+	//Cast<UFGEnhancedInputComponent>(WorldContext->GetWorld()->GetFirstPlayerController()->GetCharacter()->InputComponent)->KeyBindings
+	/*const FInputActionKeyMapping* Mapping = AFICEditorSubsystem::GetFICEditorSubsystem(WorldContext)->KeyMappings.Find(InActionName);
 	return Mapping && Mapping->Key == InKeyEvent.GetKey() &&
 		Mapping->bAlt == InKeyEvent.GetModifierKeys().IsAltDown() &&
 		Mapping->bCmd == InKeyEvent.GetModifierKeys().IsCommandDown() &&
 		Mapping->bCtrl == InKeyEvent.GetModifierKeys().IsControlDown() &&
-		Mapping->bShift == InKeyEvent.GetModifierKeys().IsShiftDown();
+		Mapping->bShift == InKeyEvent.GetModifierKeys().IsShiftDown();*/
+	return false;
+	// TODO: Maybe use Enhanced Input System directly, even if Editor Widget is Focused... needs some experiments
 }
 
 FRotator UFICUtils::AdditiveRotation(FRotator OldRotation, FRotator NewRotation) {

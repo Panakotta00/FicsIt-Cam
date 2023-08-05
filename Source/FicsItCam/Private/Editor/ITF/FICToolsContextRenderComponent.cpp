@@ -68,8 +68,7 @@ public:
 
 	virtual uint32 GetMemoryFootprint(void) const override { return sizeof * this + GetAllocatedSize(); }
 	uint32 GetAllocatedSize(void) const { return FPrimitiveSceneProxy::GetAllocatedSize(); }
-
-
+	
 	// set to lambda that steals current lines/points from the Component
 	TUniqueFunction<void(TArray<UFICToolsContextRenderComponent::FPDILine>&, TArray<UFICToolsContextRenderComponent::FPDIPoint>&)> GetGeometryQueryFunc;
 };
@@ -93,29 +92,34 @@ public:
 		LineBatchComponent = LineBatchComponentIn;
 	}
 
-	virtual bool IsHitTesting() { return false; }
-	virtual void SetHitProxy(HHitProxy* HitProxy) { };
-	virtual void RegisterDynamicResource(FDynamicPrimitiveResource* DynamicResource) { ensure(false); }
-	virtual void AddReserveLines(uint8 DepthPriorityGroup, int32 NumLines, bool bDepthBiased = false, bool bThickLines = false) { ensure(false); }
-	virtual int32 DrawMesh(const FMeshBatch& Mesh) { ensure(false); return 0; }
-	virtual void DrawSprite(
-		const FVector& Position, float SizeX, float SizeY,
-		const FTexture* Sprite, const FLinearColor& Color, uint8 DepthPriorityGroup,
-		float U, float UL, float V, float VL, uint8 BlendMode = 1 /*SE_BLEND_Masked*/ ) { ensure(false); }
-
+	virtual bool IsHitTesting() override { return false; }
+	virtual void SetHitProxy(HHitProxy* HitProxy) override { };
+	virtual void RegisterDynamicResource(FDynamicPrimitiveResource* DynamicResource) override { ensure(false); }
+	virtual void AddReserveLines(uint8 DepthPriorityGroup, int32 NumLines, bool bDepthBiased = false, bool bThickLines = false) override { ensure(false); }
+	virtual int32 DrawMesh(const FMeshBatch& Mesh) override { ensure(false); return 0; }
 	virtual void DrawLine( const FVector& Start, const FVector& End, const FLinearColor& Color,
-		uint8 DepthPriorityGroup, float Thickness = 0.0f, float DepthBias = 0.0f, bool bScreenSpace = false	)
+		uint8 DepthPriorityGroup, float Thickness = 0.0f, float DepthBias = 0.0f, bool bScreenSpace = false	) override
 	{
 		if (RenderComponent) RenderComponent->DrawLine(Start, End, Color, DepthPriorityGroup, Thickness, DepthBias, bScreenSpace);
 		if (LineBatchComponent) LineBatchComponent->DrawLine(Start, End, Color, DepthPriorityGroup, Thickness);
 	}
 
-	virtual void DrawPoint( const FVector& Position, const FLinearColor& Color, float PointSize, uint8 DepthPriorityGroup )
+	virtual void DrawPoint( const FVector& Position, const FLinearColor& Color, float PointSize, uint8 DepthPriorityGroup ) override
 	{
 		if (RenderComponent) RenderComponent->DrawPoint(Position, Color, PointSize, DepthPriorityGroup);
 		if (LineBatchComponent) LineBatchComponent->DrawPoint(Position, Color, PointSize, DepthPriorityGroup);
 	}
 
+	virtual void DrawSprite(const FVector& Position, float SizeX, float SizeY, const FTexture* Sprite,
+		const FLinearColor& Color, uint8 DepthPriorityGroup, float U, float UL, float V, float VL, uint8 BlendMode,
+		float OpacityMaskRefVal) override {
+		ensure(false);
+	}
+	virtual void DrawTranslucentLine(const FVector& Start, const FVector& End, const FLinearColor& Color,
+		uint8 DepthPriorityGroup, float Thickness, float DepthBias, bool bScreenSpace) override {
+		if (RenderComponent) RenderComponent->DrawLine(Start, End, Color, DepthPriorityGroup, Thickness, DepthBias, bScreenSpace);
+		if (LineBatchComponent) LineBatchComponent->DrawLine(Start, End, Color, DepthPriorityGroup, Thickness);
+	}
 };
 
 

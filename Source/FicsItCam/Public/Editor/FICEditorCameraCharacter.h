@@ -8,9 +8,8 @@ class UFICCamera;
 class UCineCameraComponent;
 class AFICEditorCameraActor;
 class UTransformProxy;
-class ATransformGizmoActor;
-
 class UFICEditorContext;
+
 UCLASS()
 class AFICEditorCameraCharacter : public ACharacter {
 	GENERATED_BODY()
@@ -55,28 +54,42 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void UnPossessed() override;
 	// End ACharacter
+
+	UFUNCTION()
+	void Move(const FInputActionValue& ActionValue);
+	UFUNCTION()
+	void Rotate(const FInputActionValue& ActionValue);
+	UFUNCTION()
+	void ChangeFOV(const FInputActionValue& ActionValue);
+	UFUNCTION()
+	void ChangeSpeed(const FInputActionValue& ActionValue);
+	UFUNCTION()
+	void ChangeFrame(const FInputActionValue& ActionValue);
+	UFUNCTION()
+	void Redo();
+	UFUNCTION()
+	void Undo();
+	UFUNCTION()
+	void NextKeyframe();
+	UFUNCTION()
+	void PrevKeyframe();
+	UFUNCTION()
+	void ToggleAllKeyframes();
+	UFUNCTION()
+	void ToggleAutoKeyframe();
+	UFUNCTION()
+	void ToggleCursor();
+	UFUNCTION()
+	void ToggleLockCamera();
+	UFUNCTION()
+	void ToggleShowPath();
+	UFUNCTION()
+	void Grab();
 	
-	UFUNCTION()
-    void MoveForward(float Value);
-	UFUNCTION()
-    void MoveRight(float Value);
-	UFUNCTION()
-	void RotatePitch(float Value);
-	UFUNCTION()
-	void RotateYaw(float Value);
-	UFUNCTION()
-	void RotateRoll(float Value);
-
-	UFUNCTION()
-	void FlyUp(float Value);
-
 	UFUNCTION()
 	void RightMousePress();
 	UFUNCTION()
 	void RightMouseRelease();
-
-	UFUNCTION()
-	void Zoom(float Value);
 
 	UFUNCTION()
 	void OnLeftMouseDown();

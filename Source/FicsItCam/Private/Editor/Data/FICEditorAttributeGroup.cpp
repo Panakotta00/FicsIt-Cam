@@ -1,7 +1,6 @@
 #include "Editor/Data/FICEditorAttributeGroup.h"
 
 #include "Data/Attributes/FICAttributeGroup.h"
-#include "Widgets/Layout/SExpandableArea.h"
 
 FFICEditorAttributeGroupBase::FFICEditorAttributeGroupBase(FFICAttributeValueChanged OnValueChanged, FLinearColor GraphColor): FFICEditorAttributeBase(GraphColor) {
 	OnCreateAttributeDetailsWidget.BindLambda([this](UFICEditorContext* Context) {
@@ -47,7 +46,7 @@ void FFICEditorAttributeGroupBase::UpdateValue(FICFrame Time) {
 	}
 }
 
-float FFICEditorAttributeGroupBase::GetValue(FICFrame InFrame) const {
+FICValue FFICEditorAttributeGroupBase::GetValue(FICFrame InFrame) const {
 	float Sum = 0.0f;
 	for (const TTuple<FString, TSharedRef<FFICEditorAttributeBase>>& Attribute : Attributes) {
 		Sum += Attribute.Value->GetValue(InFrame);

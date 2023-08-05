@@ -56,7 +56,7 @@ struct FFICChangeSource {
 
 	bool IsValid() { return !!SourcePtr; }
 
-	bool operator==(const FFICChangeSource& Other) {
+	bool operator==(const FFICChangeSource& Other) const {
 		return SourcePtr == Other.SourcePtr && SourceKey == Other.SourceKey;
 	}
 };

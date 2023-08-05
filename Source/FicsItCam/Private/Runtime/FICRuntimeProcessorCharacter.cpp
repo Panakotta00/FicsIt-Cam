@@ -1,9 +1,14 @@
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 
 #include "CineCameraComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "FGInputSettings.h"
 #include "Engine/World.h"
 #include "FGPlayerController.h"
+#include "FGPlayerInput.h"
 #include "FICSubsystem.h"
+#include "Input/FGEnhancedInputComponent.h"
+#include "Input/FGInputMappingContext.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
 
 void AFICRuntimeProcessorCharacter::StopProcess() {
@@ -32,7 +37,10 @@ void AFICRuntimeProcessorCharacter::BeginPlay() {
 }
 
 void AFICRuntimeProcessorCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
-	PlayerInputComponent->BindAction("FicsItCam.StopAnimation", EInputEvent::IE_Pressed, this, &AFICRuntimeProcessorCharacter::StopProcess);
+	UFGEnhancedInputComponent* EnhancedInputComponent = Cast<UFGEnhancedInputComponent>(PlayerInputComponent);
+	const UFGInputSettings* Settings = UFGInputSettings::Get();
+	
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Playback.StopAnimation"))), ETriggerEvent::Triggered, this, &AFICRuntimeProcessorCharacter::StopProcess);
 }
 
 void AFICRuntimeProcessorCharacter::PossessedBy(AController* NewController) {
@@ -42,6 +50,9 @@ void AFICRuntimeProcessorCharacter::PossessedBy(AController* NewController) {
 		AFGPlayerController* PlayerController = Cast<AFGPlayerController>(NewController);
 		NewController->DisableInput(PlayerController);
 		PlayerController->GetHUD<AFGHUD>()->SetPumpiMode(true);
+
+		UFGInputMappingContext* InputMappingContext = LoadObject<UFGInputMappingContext>(nullptr, TEXT("/FicsItCam/Input/IC_FIC_Playback.IC_FIC_Playback"));
+		PlayerController->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(InputMappingContext, -2);
 	}
 }
 
@@ -57,6 +68,8 @@ void AFICRuntimeProcessorCharacter::UnPossessed() {
 	if (OldController) {
 		// Make sure if not able to recover, game is interactable
 		AFGPlayerController* PlayerController = Cast<AFGPlayerController>(OldController);
+		UFGInputMappingContext* InputMappingContext = LoadObject<UFGInputMappingContext>(nullptr, TEXT("/FicsItCam/Input/IC_FIC_Playback.IC_FIC_Playback"));
+		PlayerController->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->RemoveMappingContext(InputMappingContext);
 		PlayerController->GetHUD<AFGHUD>()->SetPumpiMode(false);
 		OldController->EnableInput(PlayerController);
 

@@ -1,25 +1,9 @@
 #include "Editor/ITF/FICTransformInteraction.h"
 
-#include "FGColoredInstanceMeshProxy.h"
-#include "BaseGizmos/TransformGizmo.h"
+#include "BaseGizmos/CombinedTransformGizmo.h"
 #include "BaseGizmos/TransformProxy.h"
-#include "Buildables/FGBuildable.h"
-#include "Components/ProxyInstancedStaticMeshComponent.h"
 #include "Editor/FICEditorSubsystem.h"
-
-#pragma optimize("", off)
-void Test(UTransformProxy* Proxy, FTransform Transform) {
-	AFICEditorSubsystem* SubSys = AFICEditorSubsystem::GetFICEditorSubsystem(Proxy->GetWorld());
-	AActor* Selection = SubSys->GetSelection();
-	auto SavedMobility = Selection->GetRootComponent()->Mobility;
-	Selection->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-	Selection->GetRootComponent()->SetWorldTransform(Transform, false, nullptr, ETeleportType::TeleportPhysics);
-	Selection->GetRootComponent()->SetMobility(SavedMobility);
-
-	Selection->RerunConstructionScripts();
-	UE_LOG(LogTemp, Warning, TEXT("MeeP!!!!"));
-}
-#pragma optimize("", on)
+#include "Editor/Data/FICEditorAttributeBase.h"
 
 void UFICTransformInteraction::Tick(float DeltaTime) {
 	/*if (Context && TransformGizmo) {
