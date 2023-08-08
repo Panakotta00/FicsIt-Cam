@@ -3,8 +3,6 @@
 #include "ContextObjectStore.h"
 #include "EnhancedInputSubsystems.h"
 #include "FGGameUserSettings.h"
-#include "FGInputLibrary.h"
-#include "TestLibWrapper.h"
 #include "BaseGizmos/GizmoViewContext.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Editor/FICEditorContext.h"
@@ -249,14 +247,12 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	// Initialize Editor Player Character
 	// TODO: Persist "Viewport Camera Transform" sepperately in persistent editor storage for given scene
 	Controller->Possess(Character);
-	//UFGInputLibrary::UpdateInputMappings(Controller);
-	UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 	Character->SetEditorContext(Context);
-	Controller->PlayerInput->ActionMappings.Empty();
 	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(false);
 	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHiddenHUDMode(true);
 	
 	// Get widgets to inject editor UI into and store necessery recovery data
+	PrevResolution = GSystemResolution;
 	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(false);
 	GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
 	Cast<UGameEngine>(GEngine)->CleanupGameViewport();
@@ -265,7 +261,7 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	GameViewport = FSlateApplication::Get().GetGameViewport();
 	GameViewportContainer = StaticCastSharedPtr<SVerticalBox>(GameViewport->GetParentWidget());
 	GameOverlay = StaticCastSharedPtr<SOverlay>(GameViewportContainer->GetParentWidget());
-	
+
 	check(GameOverlay->RemoveSlot(GameViewportContainer.ToSharedRef()) == true);
 
 	// Create & Inject Editor Widget
@@ -323,8 +319,6 @@ void AFICEditorSubsystem::CloseEditor() {
 	
 	// Swap PlayerCharacter to FG Player Character 
 	GetWorld()->GetFirstPlayerController()->Possess(OriginalPlayerCharacter);
-	//UFGInputLibrary::UpdateInputMappings(GetWorld()->GetFirstPlayerController());
-	UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 
 	// Add Game Viewport Back
 	GameOverlay->AddSlot()[
@@ -333,6 +327,7 @@ void AFICEditorSubsystem::CloseEditor() {
 	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(true);
 	GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
 	Cast<UGameEngine>(GEngine)->CleanupGameViewport();
+	GSystemResolution = PrevResolution;
 	Cast<UGameEngine>(GEngine)->CreateGameViewport(GEngine->GameViewport);
 
 	// Enabled Game Inputs/WorldControl

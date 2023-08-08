@@ -54,8 +54,6 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			bReposses = true;
 			PController->UnPossess();
 			PController->Possess(this);
-			//UFGInputLibrary::UpdateInputMappings(Cast<APlayerController>(PController));
-			UFGGameUserSettings::GetFGGameUserSettings()->ApplySettings(false);
 			bReposses = false;
 		
 			Camera->SetActive(true);
@@ -171,7 +169,6 @@ void AFICEditorCameraCharacter::PossessedBy(AController* NewController) {
 	Super::PossessedBy(NewController);
 
 	if (bReposses) return;
-	if (NewController) NewController->DisableInput(Cast<APlayerController>(NewController));
 }
 
 void AFICEditorCameraCharacter::UnPossessed() {
@@ -185,9 +182,6 @@ void AFICEditorCameraCharacter::UnPossessed() {
 	CustomTimeDilation = 1;
 
 	if (OldController) {
-		// Make sure if not able to recover, game is interactable
-		OldController->EnableInput(Cast<APlayerController>(OldController));
-
 		// Force Close the editor
 		AFICEditorSubsystem* SubSys = AFICEditorSubsystem::GetFICEditorSubsystem(this);
 		if (SubSys->GetEditorPlayerCharacter() == this) SubSys->CloseEditor();

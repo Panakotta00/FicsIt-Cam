@@ -13,7 +13,7 @@ public:
 	virtual ~FSequenceExporter() = default;
 
 	virtual bool Init() = 0;
-	virtual void AddFrame(void* ptr, size_t len) = 0;
+	virtual void AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) = 0;
 	virtual void Finish() = 0;
 };
 
@@ -38,7 +38,7 @@ public:
 	~FSequenceMP4Exporter();
 	
 	virtual bool Init() override;
-	virtual void AddFrame(void* ptr, size_t len) override;
+	virtual void AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
 	virtual void Finish() override;
 	
 	void ReadBuffer();
@@ -55,6 +55,6 @@ public:
 	FSequenceImageExporter(FString InPath, FIntPoint InImageSize);
 
 	virtual bool Init() override;
-	virtual void AddFrame(void* ptr, size_t len) override;
+	virtual void AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
 	virtual void Finish() override;
 };

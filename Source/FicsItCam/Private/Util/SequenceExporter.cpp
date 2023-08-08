@@ -137,7 +137,7 @@ void FSequenceMP4Exporter::Finish() {
 	}
 }
 
-void FSequenceMP4Exporter::AddFrame(void* ptr, size_t len) {
+void FSequenceMP4Exporter::AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) {
 	if (bFinished) return;
 
 	int64 FramePts = FrameNr++;
@@ -149,7 +149,7 @@ void FSequenceMP4Exporter::AddFrame(void* ptr, size_t len) {
 	}
 
 	const uint8* data[] = {(uint8*)ptr, NULL};
-	int stride[] = {ImageSize.X*4, 0};
+	int stride[] = {ReadSize.X*4, 0};
 		
 	ret = sws_scale(SwsContext, data, stride, 0, CodecContext->height, Frame->data, Frame->linesize);
 	if (ret < 0) {
@@ -194,12 +194,12 @@ bool FSequenceImageExporter::Init() {
 	return true;
 }
 
-void FSequenceImageExporter::AddFrame(void* ptr, size_t len) {
+void FSequenceImageExporter::AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) {
 	FString FilePath = FPaths::Combine(Path, FString::Printf(TEXT("%s-%05llu.jpg"), *StartTime.ToString(), Increment++));
 	
 	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
 	TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
-	ImageWrapper->SetRaw(ptr, len, ImageSize.X, ImageSize.Y, ERGBFormat::RGBA, 8);
+	ImageWrapper->SetRaw(ptr, ReadSize.X*ReadSize.Y*4, Size.X, Size.Y, ERGBFormat::RGBA, 8, ReadSize.X*4);
 	TArray64<uint8> CompressedData = ImageWrapper->GetCompressed(100);
 
 	FFileHelper::SaveArrayToFile(CompressedData, *FilePath);

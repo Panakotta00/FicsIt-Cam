@@ -25,7 +25,7 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 		Settings->MaxUndilatedFrameTime = Settings->MinUndilatedFrameTime;
 	}
 	FrameProgress = Scene->AnimationRange.Begin;
-	//FAudioDeviceManager::Get()->GetActiveAudioDevice().GetAudioDevice()->)
+	//FAudioDeviceManager::Get()->GetActiveAudioDevice().GetAudioDevice()->) // TODO: Audio Capture?
 	FAudioThread::StopAudioThread();
 	
 	FViewportClient* ViewportClient = GetWorld()->GetGameViewport();
@@ -43,6 +43,7 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 	Path = FPaths::Combine(FSP, FDateTime::Now().ToString() + TEXT(".mp4"));
 	
 	Exporter = MakeShared<FSequenceMP4Exporter>(FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight), Scene->FPS, Path);
+	//Exporter = MakeShared<FSequenceImageExporter>(Path, FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight));
 	Exporter->Init();
 }
 
@@ -54,17 +55,11 @@ void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharac
 
 	// Capture Image
 	FlushRenderingCommands();
-
-	//DummyViewport->EnqueueBeginRenderFrame(false);
+	
 	UGameViewportClient* ViewportClient = GetWorld()->GetGameViewport();
 	FCanvas Canvas(DummyViewport.Get(), NULL, ViewportClient->GetWorld(), ViewportClient->GetWorld()->FeatureLevel);
 	ViewportClient->Draw(DummyViewport.Get(), &Canvas);
 	Canvas.Flush_GameThread();
-	//FIntPoint RestoreSize(ViewportClient->Viewport->GetSizeXY().X, ViewportClient->Viewport->GetSizeXY().Y);
-	//ENQUEUE_RENDER_COMMAND(EndDrawingCommand)([RestoreSize, this](FRHICommandListImmediate& RHICmdList) {
-		//DummyViewport->EndRenderFrame(RHICmdList, false, false);
-		//GetRendererModule().SceneRenderTargetsSetBufferSize(RestoreSize.X, RestoreSize.Y);
-	//});
 
 	// Store Image
 	AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(Exporter.ToSharedRef(), DummyViewport.ToSharedRef());

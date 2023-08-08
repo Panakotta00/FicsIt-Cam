@@ -43,6 +43,7 @@ private:
 	TSharedPtr<SViewport> GameViewport;
 	TSharedPtr<SVerticalBox> GameViewportContainer;
 	TSharedPtr<SOverlay> GameOverlay;
+	FSystemResolution PrevResolution;
 
 	// Interactive Tools
 	UPROPERTY()
