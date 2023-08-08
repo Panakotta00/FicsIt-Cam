@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Editor/FICEditorContext.h"
-#include "BaseGizmos/TransformGizmo.h"
 #include "Editor/ITF/FICSelectionInteraction.h"
 #include "FICEditorCameraActor.generated.h"
 
@@ -57,7 +56,7 @@ public:
 	USceneCaptureComponent2D* CaptureComponent = nullptr;
 	UPROPERTY()
 	UTextureRenderTarget2D* RenderTarget = nullptr;
-	FSlateImageBrush CameraPreviewBrush = FSlateImageBrush("CameraPreview", FVector2D(1,1), FColor::Green);
+	FSlateImageBrush CameraPreviewBrush = FSlateImageBrush(TEXT("CameraPreview"), FVector2D(1,1), FLinearColor::Green);
 
 	UPROPERTY()
 	ULineBatchComponent* LineBatcher = nullptr;

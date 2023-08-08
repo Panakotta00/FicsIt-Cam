@@ -1,11 +1,10 @@
 #include "Editor/Data/FICEditorCameraActor.h"
 
-#include "FicsItCamModule.h"
-#include "BaseGizmos/TransformGizmo.h"
 #include "Components/LineBatchComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Editor/Data/FICEditorAttributeBool.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "BaseGizmos/CombinedTransformGizmo.h"
 
 UFICEditorCameraPathComponent::UFICEditorCameraPathComponent() {
 	bAutoActivate = true;
@@ -141,8 +140,8 @@ void AFICEditorCameraActor::Tick(float DeltaSeconds) {
 		}
 
 		CaptureComponent->HiddenActors.Empty();
-		for (TActorIterator<ATransformGizmoActor> Gizmo(GetWorld()); Gizmo; ++Gizmo) {
-			CaptureComponent->HiddenActors.Add(*Gizmo);
+		for (TActorIterator<ACombinedTransformGizmoActor> Gizmo(GetWorld()); Gizmo; ++Gizmo) {
+			CaptureComponent->HiddenActors.Add(TObjectPtr<AActor>((AActor*)*Gizmo));
 		}
 		// TODO: This is a shitty fix for something that would require a big change (layer system to define when what editor stuff needs to get rendered)
 	}

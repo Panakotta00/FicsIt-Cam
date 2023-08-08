@@ -6,6 +6,7 @@
 #include "FGTimeSubsystem.h"
 #include "FICUtils.h"
 #include "Editor/FICEditorContext.h"
+#include "Editor/Data/FICEditorAttributeBase.h"
 
 UFICWorldSettings::UFICWorldSettings() {
 	RootAttribute.AddChildAttribute(TEXT("Active"), &Active);

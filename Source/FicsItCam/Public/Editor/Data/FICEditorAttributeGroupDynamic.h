@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FICEditorAttributeBase.h"
 #include "FICEditorAttributeGroup.h"
 #include "Data/Attributes/FICAttributeGroup.h"
 

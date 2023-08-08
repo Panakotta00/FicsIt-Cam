@@ -26,7 +26,7 @@ void FFICEditorAttributeBool::UpdateValue(FICFrame Time) {
 	SetActiveValue(Attribute->GetValue(Time));
 }
 
-float FFICEditorAttributeBool::GetValue(FICFrame InFrame) const {
+FICValue FFICEditorAttributeBool::GetValue(FICFrame InFrame) const {
 	return Attribute->GetValue(InFrame) ? 1.0 : 0.0;
 }
 

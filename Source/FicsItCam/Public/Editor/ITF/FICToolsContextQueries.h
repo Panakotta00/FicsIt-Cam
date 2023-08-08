@@ -1,10 +1,16 @@
 #pragma once
 
+#include "CoreMinimal.h"
+#include "HitProxies.h"
 #include "InteractiveToolsContext.h"
 #include "GameFramework/Character.h"
+#include "Materials/Material.h"
+#include "SceneQueries/SceneSnappingManager.h"
 
 class FFICToolsContextQueries : public IToolsContextQueriesAPI {
 public:
+	// TODO: Check Updates on InteractiveToolsFramework (Snapping, Viewports, World etc.)
+	
 	FFICToolsContextQueries(UInteractiveToolsContext* InContext, UWorld* InWorld) {
 		ToolsContext = InContext;
 		TargetWorld = InWorld;
@@ -41,15 +47,28 @@ public:
 		return EToolContextCoordinateSystem::Local;
 	}
 
-	virtual bool ExecuteSceneSnapQuery(const FSceneSnapQueryRequest& Request, TArray<FSceneSnapQueryResult>& Results) const override {
-		return false;
-	}
-
 	virtual UMaterialInterface* GetStandardMaterial(EStandardToolContextMaterials MaterialType) const override {
 		return UMaterial::GetDefaultMaterial(MD_Surface);
 	}
 
-	virtual HHitProxy* GetHitProxy(int32 X, int32 Y) const { return nullptr; }
+	virtual UWorld* GetCurrentEditingWorld() const override {
+		 return TargetWorld;
+	}
+
+	virtual FToolContextSnappingConfiguration GetCurrentSnappingSettings() const override {
+		FToolContextSnappingConfiguration Config;
+		Config.bEnablePositionGridSnapping = false;
+		Config.bEnableRotationGridSnapping = false;
+		return Config;
+	}
+
+	virtual FViewport* GetHoveredViewport() const override {
+		return nullptr;
+	}
+
+	virtual FViewport* GetFocusedViewport() const override {
+		return nullptr;
+	}
 
 protected:
 	UInteractiveToolsContext* ToolsContext;

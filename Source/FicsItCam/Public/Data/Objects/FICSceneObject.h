@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "Data/FICTypes.h"
 #include "Data/Attributes/FICAttributeGroup.h"
-#include "Editor/Data/FICEditorAttributeBase.h"
 #include "UObject/Interface.h"
 #include "FICSceneObject.generated.h"
 

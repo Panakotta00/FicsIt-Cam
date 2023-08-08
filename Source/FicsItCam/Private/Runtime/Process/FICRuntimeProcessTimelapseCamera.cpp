@@ -28,12 +28,14 @@ void UFICRuntimeProcessTimelapseCamera::Tick(AFICRuntimeProcessorCharacter* InCh
 	Time -= SecondsPerFrame;
 	
 	AFGPlayerController* Controller = Cast<AFGPlayerController>(GetWorld()->GetFirstPlayerController());
+	//AFGCharacterPlayer* Character = Cast<AFGCharacterPlayer>(Controller->GetCharacter());
 	//if (Character) Character->SetThirdPersonMode();
+	// TODO: Fix character and creature animation in capture
 
 	CameraArgument.UpdateCameraSettings(CaptureCamera);
 	CaptureCamera->UpdateCaptureWithCameraData();
 	
-	CaptureCamera->CaptureComponent->CaptureSceneDeferred();
+	CaptureCamera->CaptureComponent->CaptureScene();
 	
 	AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(Exporter.ToSharedRef(), MakeShared<FFICRenderTarget_Raw>(CaptureCamera->RenderTarget->GameThread_GetRenderTargetResource()));
 

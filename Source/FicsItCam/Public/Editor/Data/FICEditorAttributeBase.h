@@ -1,10 +1,11 @@
 ﻿#pragma once
 
-#include "Data/Attributes/FICAttribute.h"
 #include "Data/Attributes/FICKeyframe.h"
 #include "Editor/UI/FICSequencerRow.h"
+#include "Editor/FICEditorContext.h"
+#include "Editor/UI/FICKeyframeControl.h"
+#include "Widgets/Input/SNumericEntryBox.h"
 
-class UFICEditorContext;
 struct FFICAttribute;
 
 DECLARE_MULTICAST_DELEGATE(FFICAttributeValueChanged)
@@ -160,7 +161,7 @@ public:
 		SetValue(Attribute.GetValue(Time));
 	}
 
-	virtual float GetValue(FICFrame InFrame) const override {
+	virtual FICValue GetValue(FICFrame InFrame) const override {
 		return Attribute.GetValue(InFrame);
 	}
 

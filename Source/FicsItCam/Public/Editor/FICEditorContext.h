@@ -3,11 +3,11 @@
 #include "FICChangeList.h"
 #include "FICEditorCameraCharacter.h"
 #include "Data/FICActiveSceneObjectManager.h"
-#include "Data/FICEditorAttributeBool.h"
-#include "Data/FICEditorAttributeGroupDynamic.h"
 #include "Data/FICScene.h"
-#include "UI/FICEditor.h"
 #include "FICEditorContext.generated.h"
+
+class FFICEditorAttributeBase;
+class FFICEditorAttributeGroupDynamic;
 
 #define FICAttributeCacheFuncs(Name) \
 	void Set ## Name (float inVal) { \
@@ -46,6 +46,7 @@ private:
 	FFICFrameRange ActiveRange;
 
 	TSharedPtr<FFICEditorAttributeGroupDynamic> AllAttributes;
+
 	TMap<UObject*, TSharedRef<FFICEditorAttributeBase>> EditorAttributes;
 	TMap<UObject*, FDelegateHandle> DataAttributeOnUpdateDelegateHandles;
 	TMap<FFICAttribute*, TSharedRef<FFICEditorAttributeBase>> EditorAttributeMap;
@@ -53,7 +54,8 @@ private:
 	EFICAnimPlayerState AnimPlayerState = FIC_PLAY_PAUSED;
 	float AnimPlayerDelta = 0.0f;
 	float AnimPlayerFactor = 1.0f;
-	
+
+	UPROPERTY()
 	UObject* SelectedSceneObject = nullptr;
 
 	TArray<TSharedRef<SWidget>> OverlayWidgets;

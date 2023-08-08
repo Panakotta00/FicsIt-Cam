@@ -20,7 +20,7 @@ public:
 	virtual void RemoveKeyframe(FICFrame Time) override;
 	virtual bool HasChanged(FICFrame Time) const override;
 	virtual void UpdateValue(FICFrame Time) override;
-	virtual float GetValue(FICFrame InFrame) const override;
+	virtual FICValue GetValue(FICFrame InFrame) const override;
 	virtual void SetKeyframe(FFICValueTime InValueFrame, EFICKeyframeType InType = FIC_KF_EASE, bool bCreate = true) override;
 	virtual TMap<FString, TSharedRef<FFICEditorAttributeBase>> GetChildAttributes() override;
 	virtual TSharedRef<SWidget> CreateDetailsWidget(UFICEditorContext* Context) override;

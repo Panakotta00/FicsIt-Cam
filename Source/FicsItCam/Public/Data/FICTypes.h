@@ -1,9 +1,10 @@
 #pragma once
 
+#include "CoreMinimal.h"
 #include "FICTypes.generated.h"
 
 typedef int64 FICFrame;
-typedef float FICFrameFloat;
+typedef double FICFrameFloat;
 
 struct FFICFrameRangeIterator {
 	FICFrame Frame;
@@ -114,7 +115,7 @@ struct TStructOpsTypeTraits<FFICFrameRange> : TStructOpsTypeTraitsBase2<FFICFram
 	};
 };
 
-typedef float FICValue;
+typedef double FICValue;
 
 struct FFICValueRange {
 	FICValue Begin;

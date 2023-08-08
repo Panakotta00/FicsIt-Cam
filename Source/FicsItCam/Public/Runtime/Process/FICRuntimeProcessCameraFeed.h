@@ -7,6 +7,8 @@
 
 #include "FICRuntimeProcessCameraFeed.generated.h"
 
+class FFICFeedView;
+
 UCLASS()
 class UFICRuntimeProcessCameraFeed : public UFICRuntimeProcess, public IFGSaveInterface {
 	GENERATED_BODY()
@@ -19,6 +21,7 @@ public:
 
 	FSlateImageBrush Brush = FSlateImageBrush("CameraFeed", FVector2D(1,1));
 	TSharedPtr<SWindow> Window;
+	TSharedPtr<FFICFeedView> View;
 
 	UPROPERTY(SaveGame)
 	FVector2D WindowLocation;

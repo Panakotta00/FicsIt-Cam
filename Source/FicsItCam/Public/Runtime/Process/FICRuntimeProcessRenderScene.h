@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CoreMinimal.h"
 #include "FICRuntimeProcessPlayScene.h"
 #include "FICSubsystem.h"
 #include "Util/SequenceExporter.h"
@@ -62,7 +63,7 @@ public:
 	virtual void InitDynamicRHI() override {
 		FTexture2DRHIRef ShaderResourceTextureRHI;
 
-		FRHIResourceCreateInfo CreateInfo;
+		FRHIResourceCreateInfo CreateInfo(TEXT("FIC Renderer Surface"));
 		RHICreateTargetableShaderResource2D( SizeX, SizeY, PF_R8G8B8A8, 1, TexCreate_Shared | TexCreate_Dynamic | TexCreate_DisableSRVCreation, TexCreate_RenderTargetable, false, CreateInfo, RenderTargetTextureRHI, ShaderResourceTextureRHI );
 	}
 

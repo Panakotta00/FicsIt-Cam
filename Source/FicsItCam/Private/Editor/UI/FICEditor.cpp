@@ -1,12 +1,13 @@
 ﻿#include "Editor/UI/FICEditor.h"
 
+#include "EnhancedPlayerInput.h"
 #include "FICConfigurationStruct.h"
 #include "FICSubsystem.h"
 #include "FICUtils.h"
 #include "Engine/World.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"
+#include "Editor/Data/FICEditorAttributeGroupDynamic.h"
 #include "Slate/SceneViewport.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Editor/UI/FICTimeline.h"
@@ -16,8 +17,6 @@
 #include "Editor/UI/FICSceneObjectOutliner.h"
 #include "Editor/UI/FICSceneSettings.h"
 #include "Editor/UI/FICViewport.h"
-#include "Slate/Private/Framework/Docking/SDockingArea.h"
-#include "Slate/Private/Framework/Docking/SDockingTabStack.h"
 #include "Widgets/Layout/SDPIScaler.h"
 
 #define LOCTEXT_NAMESPACE "FicsItCam.Editor"
@@ -261,64 +260,7 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 	InputState.Keyboard.ActiveKey.SetStates(true, true, !false);
 	AFICEditorSubsystem::GetFICEditorSubsystem(Context)->ToolsContext->InputRouter->PostInputEvent(InputState);
 	
-	if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleCursor"))) {
-		Context->GetPlayerCharacter()->ControlViewToggle();
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleAllKeyframes"))) {
-		auto Change = MakeShared<FFICChange_Group>();
-		Change->PushChange(MakeShared<FFICChange_ActiveFrame>(Context, TNumericLimits<int64>::Min(), Context->GetCurrentFrame()));
-		BEGIN_ATTRIB_CHANGE(Context->GetAllAttributes()->GetAttribute())
-		Context->ToggleCurrentKeyframes();
-		END_ATTRIB_CHANGE(Change)
-		Context->ChangeList.PushChange(Change);
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.PrevFrame"))) {
-		int64 Rate = 1;
-		if (InKeyEvent.GetModifierKeys().IsControlDown()) Rate = 10;
-		Context->SetCurrentFrame(Context->GetCurrentFrame()-Rate);
-		bIsLeft = true;
-		KeyPressTime = 0;
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.NextFrame"))) {
-		int64 Rate = 1;
-		if (InKeyEvent.GetModifierKeys().IsControlDown()) Rate = 10;
-		Context->SetCurrentFrame(Context->GetCurrentFrame()+Rate);
-		bIsRight= true;
-		KeyPressTime = 0;
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.PrevKeyframe"))) {
-		int64 Time;
-		TSharedPtr<FFICKeyframe> KF = Context->GetAllAttributes()->GetAttribute().GetPrevKeyframe(Context->GetCurrentFrame(), Time);
-		if (KF) Context->SetCurrentFrame(Time);
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.NextKeyframe"))) {
-		int64 Time;
-		TSharedPtr<FFICKeyframe> KF = Context->GetAllAttributes()->GetAttribute().GetNextKeyframe(Context->GetCurrentFrame(), Time);
-		if (KF) Context->SetCurrentFrame(Time);
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleAutoKeyframe"))) {
-		Context->SetLockCameraToView(!Context->GetLockCameraToView());
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleShowPath"))) {
-		Context->bShowPath = !Context->bShowPath;
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.ToggleLockCamera"))) {
-		Context->SetLockCameraToView(!Context->GetLockCameraToView());
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.Undo"))) {
-		TSharedPtr<FFICChange> Change = Context->ChangeList.PopChange();
-		if (Change) Change->UndoChange();
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.Redo"))) {
-		TSharedPtr<FFICChange> Change = Context->ChangeList.PushChange();
-		if (Change) Change->RedoChange();
-		return FReply::Handled();
-	} else if (UFICUtils::IsAction(Context, InKeyEvent, TEXT("FicsItCam.Grab"))) {
-		UInteractiveToolManager* ToolManager = AFICEditorSubsystem::GetFICEditorSubsystem(Context)->ToolsContext->ToolManager;
-		ToolManager->SelectActiveToolType(EToolSide::Mouse, "Grab");
-		ToolManager->ActivateTool(EToolSide::Mouse);
-		return FReply::Handled();
-	} else if (InKeyEvent.GetKey() == EKeys::Delete) {
+	if (InKeyEvent.GetKey() == EKeys::Delete) {
 		if (Context->GetSelectedSceneObject()) {
 			Context->ChangeList.PushChange(MakeShared<FFICChange_RemoveSceneObject>(Context, Context->GetSelectedSceneObject()));
 			Context->RemoveSceneObject(Context->GetSelectedSceneObject());
@@ -332,7 +274,13 @@ FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKey
 			Context->GetPlayerCharacter()->SetControlView(false);
 		}
 	}
-	return SCompoundWidget::OnKeyDown(MyGeometry, InKeyEvent);
+	FReply Reply = SCompoundWidget::OnKeyDown(MyGeometry, InKeyEvent);
+	if (!Reply.IsEventHandled()) {
+		FInputKeyParams Params(InKeyEvent.GetKey(), IE_Pressed, 1.0);
+		Context->GetWorld()->GetFirstPlayerController()->InputKey(Params);
+		return FReply::Handled();
+	}
+	return Reply;
 }
 
 FReply SFICEditor::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) {
@@ -352,7 +300,13 @@ FReply SFICEditor::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& InKeyEv
 		bIsRight = false;
 		return FReply::Handled();
 	}
-	return SCompoundWidget::OnKeyUp(MyGeometry, InKeyEvent);
+	FReply Reply = SCompoundWidget::OnKeyUp(MyGeometry, InKeyEvent);
+	if (!Reply.IsEventHandled()) {
+		FInputKeyParams Params(InKeyEvent.GetKey(), IE_Released, 1.0);
+		Context->GetWorld()->GetFirstPlayerController()->InputKey(Params);
+		return FReply::Handled();
+	}
+	return Reply;
 }
 
 FReply SFICEditor::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {

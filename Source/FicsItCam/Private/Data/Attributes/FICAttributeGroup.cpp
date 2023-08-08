@@ -1,4 +1,4 @@
-#include "FicsItCam/Public/Data/Attributes/FICAttributeGroup.h"
+#include "Data/Attributes/FICAttributeGroup.h"
 
 #include "Editor/Data/FICEditorAttributeGroup.h"
 

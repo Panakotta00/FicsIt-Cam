@@ -14,17 +14,10 @@ public class FicsItCam : ModuleRules
             "Core", "CoreUObject",
             "Engine",
             "InputCore",
-            "OnlineSubsystem", "OnlineSubsystemUtils", "OnlineSubsystemNULL",
-            "SignificanceManager",
-            "PhysX", "APEX", "PhysXVehicles", "ApexDestruction",
-            "AkAudio",
             "ReplicationGraph",
             "UMG",
-            "AIModule",
-            "NavigationSystem",
             "AssetRegistry",
             "GameplayTasks",
-            "AnimGraphRuntime",
             "Slate", "SlateCore",
             "InteractiveToolsFramework",
             "CinematicCamera",
@@ -32,7 +25,9 @@ public class FicsItCam : ModuleRules
             "Renderer",
             "RenderCore",
             "ImageWrapper",
-            "Niagara"
+            "Niagara",
+            "EnhancedInput",
+            "GameplayTags"
 		});
 			
 		if (Target.Type == TargetRules.TargetType.Editor) {

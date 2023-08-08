@@ -1,4 +1,4 @@
-﻿#include "FicsItCam/Public/Editor/Data/FICEditorAttributeBase.h"
+﻿#include "Editor/Data/FICEditorAttributeBase.h"
 
 #include "Data/Attributes/FICAttribute.h"
 #include "Editor/UI/FICSequencer.h"

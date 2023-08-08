@@ -78,7 +78,7 @@ void FSelectionManager::BeginBoxSelection(const FModifierKeysState& InModifiers)
 	if (!InModifiers.IsCommandDown() && !InModifiers.IsShiftDown() && !InModifiers.IsAltDown()) {
 		SetSelection({});
 	}
-	BoxSelection = FBox2D(0);
+	BoxSelection = FBox2D();
 	BoxSelection.bIsValid = true;
 }
 

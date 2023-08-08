@@ -55,10 +55,10 @@ void AFICSubsystem::Tick(float DeltaSeconds) {
 			if (NextRequest->RenderFence.IsFenceComplete() && NextRequest->Readback.IsReady()) {
 				FRenderTarget* Target = NextRequest->RenderTarget->GetRenderTarget();
 				FIntPoint Size = NextRequest->RenderTarget->GetRenderTarget()->GetSizeXY();
-				int64 RawSize = Size.X * Size.Y * sizeof(FColor);
+				FIntPoint ReadSize;
 				ENQUEUE_RENDER_COMMAND(ReadbackFICCameraFootage)( [&](FRHICommandListImmediate& RHICmdList) {
-					void* data = NextRequest->Readback.Lock(RawSize);
-					if (data) NextRequest->Exporter->AddFrame(data, RawSize);
+					void* data = NextRequest->Readback.Lock(ReadSize.X, &ReadSize.Y);
+					if (data) NextRequest->Exporter->AddFrame(data, ReadSize, Size);
 				});
 				FlushRenderingCommands();
 				RenderRequestQueue.Pop();
@@ -186,14 +186,14 @@ void AFICSubsystem::DestoryRuntimeProcessorCharacter(AFICRuntimeProcessorCharact
 
 void AFICSubsystem::ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget) {
 	TSharedRef<FFICRenderRequest> RenderRequest = MakeShared<FFICRenderRequest>(RenderTarget, Exporter, FRHIGPUTextureReadback(TEXT("FICSubsystem Texture Readback")));
-		
+
 	ENQUEUE_RENDER_COMMAND(SceneDrawCompletion)([this, RenderTarget, RenderRequest](FRHICommandListImmediate& RHICmdList){
 		FTexture2DRHIRef Target = RenderTarget->GetRenderTarget()->GetRenderTargetTexture();
 		RenderRequest->Readback.EnqueueCopy(RHICmdList, Target);
 	});
 
 	RenderRequestQueue.Enqueue(RenderRequest);
-	RenderRequest->RenderFence.BeginFence();
+	RenderRequest->RenderFence.BeginFence(true);
 }
 
 AFICScene* AFICSubsystem::FindSceneByName(const FString& InSceneName) {

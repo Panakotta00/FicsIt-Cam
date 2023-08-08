@@ -43,6 +43,7 @@ private:
 	TSharedPtr<SViewport> GameViewport;
 	TSharedPtr<SVerticalBox> GameViewportContainer;
 	TSharedPtr<SOverlay> GameOverlay;
+	FSystemResolution PrevResolution;
 
 	// Interactive Tools
 	UPROPERTY()
@@ -86,8 +87,8 @@ public:
 	UPROPERTY(SaveGame)
 	FString LastEditorLayout;
 
-	UPROPERTY()
-	TMap<FName, FInputActionKeyMapping> KeyMappings;
+	//UPROPERTY()
+	//TMap<FName, FInputActionKeyMapping> KeyMappings;
 	
 	AFICEditorSubsystem();
 

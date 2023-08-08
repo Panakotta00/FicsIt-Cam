@@ -1,5 +1,6 @@
 #include "FicsItCam/Public/Data/Attributes/FICAttributeFloat.h"
 
+#include "Editor/Data/FICEditorAttributeBase.h"
 #include "FicsItCam/Public/FICUtils.h"
 
 TMap<FICFrame, TSharedRef<FFICKeyframe>> FFICFloatAttribute::GetKeyframes() {
