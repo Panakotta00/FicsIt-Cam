@@ -70,6 +70,8 @@ private:
 
 public:
 	UPROPERTY()
+	UFGInputMappingContext* InputMappingContext;
+	UPROPERTY()
 	UInteractiveToolsContext* ToolsContext;
 	DECLARE_MULTICAST_DELEGATE(FSelectionChanged)
 	FSelectionChanged OnSelectionChanged;
