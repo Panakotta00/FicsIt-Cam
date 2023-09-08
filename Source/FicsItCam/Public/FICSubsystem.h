@@ -39,6 +39,9 @@ struct FFICRenderTarget_Raw : public FFICRenderTarget {
 	virtual FRenderTarget* GetRenderTarget() override { return RenderTarget; }
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFICRuntimeProcessDelegate, FString, Key, UFICRuntimeProcess*, RuntimeProcess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFICSceneDelegate, FString, Key, AFICScene*, Scene);
+
 UCLASS()
 class AFICSubsystem : public AModSubsystem, public IFGSaveInterface {
 	GENERATED_BODY()
@@ -60,7 +63,16 @@ private:
 	TMap<TSubclassOf<UFICCommand>, TMap<FString, UFICCommand*>> Commands;
 	
 public:
-	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam", meta=(WorldContext = "WorldContextObject"))
+	UPROPERTY(BlueprintAssignable)
+	FFICRuntimeProcessDelegate OnRuntimeProcessCreated;
+	UPROPERTY(BlueprintAssignable)
+	FFICRuntimeProcessDelegate OnRuntimeProcessDeleted;
+	UPROPERTY(BlueprintAssignable)
+	FFICRuntimeProcessDelegate OnRuntimeProcessStarted;
+	UPROPERTY(BlueprintAssignable)
+	FFICRuntimeProcessDelegate OnRuntimeProcessStopped;
+	
+	UFUNCTION(BlueprintCallable, Category="FicsIt-Cam", meta=(WorldContext = "WorldContext"))
 	static AFICSubsystem* GetFICSubsystem(UObject* WorldContext);
 	
 	AFICSubsystem();
@@ -79,12 +91,19 @@ public:
 
 	const TMap<TSubclassOf<UFICCommand>, TMap<FString, UFICCommand*>>& GetCommands() { return Commands; }
 	
+	UFUNCTION(BlueprintCallable)
 	bool CreateRuntimeProcess(FString Key, UFICRuntimeProcess* InProcess, bool bStartAutomatically = false);
+	UFUNCTION(BlueprintCallable)
 	bool RemoveRuntimeProcess(UFICRuntimeProcess* Process);
+	UFUNCTION(BlueprintCallable)
 	bool StartRuntimeProcess(UFICRuntimeProcess* Process);
+	UFUNCTION(BlueprintCallable)
 	bool StopRuntimeProcess(UFICRuntimeProcess* Process);
+	UFUNCTION(BlueprintCallable)
 	const TMap<FString, UFICRuntimeProcess*>& GetRuntimeProcesses() { return RuntimeProcesses; }
+	UFUNCTION(BlueprintCallable)
 	const TSet<UFICRuntimeProcess*>& GetActiveRuntimeProcesses() { return ActiveRuntimeProcesses; }
+	UFUNCTION(BlueprintCallable)
 	TMap<FString, UFICRuntimeProcess*> GetActiveRuntimeProcessesMap() {
 		TMap<FString, UFICRuntimeProcess*> Map;
 		for (const TPair<FString, UFICRuntimeProcess*>& Process : RuntimeProcesses) {
@@ -92,6 +111,8 @@ public:
 		}
 		return Map;
 	}
+	UFUNCTION(BlueprintCallable)
+	bool IsRuntimeProcessActive(UFICRuntimeProcess* Process);
 
 	void CreateRuntimeProcessorCharacter(UFICRuntimeProcess* RuntimeProcess);
 	void DestoryRuntimeProcessorCharacter(AFICRuntimeProcessorCharacter* Character);
@@ -102,5 +123,10 @@ public:
 
 	AFICScene* FindSceneByName(const FString& InSceneName);
 	UFICRuntimeProcess* FindRuntimeProcess(const FString& InKey);
+
+	UFUNCTION(BlueprintCallable)
 	FString FindRuntimeProcessKey(UFICRuntimeProcess* InProcess);
+
+	UFUNCTION(BlueprintCallable)
+	void FilterAndSortRuntimeProcesses(const TArray<UFICRuntimeProcess*>& InRuntimeProcesses, TArray<UFICRuntimeProcess*>& OutActive, TArray<UFICRuntimeProcess*>& OutInactive);
 };

@@ -9,6 +9,8 @@
 
 AFICCaptureCamera::AFICCaptureCamera() {
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent")));
+
+	StreamingSource = CreateDefaultSubobject<UWorldPartitionStreamingSourceComponent>(TEXT("StreamingSource"));
 	
 	CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("CaptureComponent"));
 	CaptureComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
@@ -20,7 +22,8 @@ AFICCaptureCamera::AFICCaptureCamera() {
 	CaptureComponent->bCaptureEveryFrame = false;
 	CaptureComponent->bCaptureOnMovement = false;
 
-	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDR;
+	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+	//CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDR;
 	if (GEngine) CaptureComponent->ShowFlags = *GEngine->GameViewport->GetEngineShowFlags();
 	
 	// Kinda performance intense

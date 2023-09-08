@@ -117,6 +117,7 @@ bool AFICSubsystem::CreateRuntimeProcess(FString Key, UFICRuntimeProcess* InProc
 			return false;
 		}
 	}
+	OnRuntimeProcessCreated.Broadcast(Key, InProcess);
 	return true;
 }
 
@@ -127,8 +128,11 @@ bool AFICSubsystem::RemoveRuntimeProcess(UFICRuntimeProcess* Process) {
 
 	ActiveRuntimeProcesses.Remove(Process);
 	Process->Shutdown();
-	
-	RuntimeProcesses.Remove(FindRuntimeProcessKey(Process));
+
+	FString Key = FindRuntimeProcessKey(Process);
+	RuntimeProcesses.Remove(Key);
+
+	OnRuntimeProcessDeleted.Broadcast(Key, Process);
 	
 	return true;
 }
@@ -148,6 +152,9 @@ bool AFICSubsystem::StartRuntimeProcess(UFICRuntimeProcess* Process) {
 	
 	Process->Start(Character);
 
+	FString Key = FindRuntimeProcessKey(Process);
+	OnRuntimeProcessStarted.Broadcast(Key, Process);
+
 	return true;
 }
 
@@ -166,8 +173,15 @@ bool AFICSubsystem::StopRuntimeProcess(UFICRuntimeProcess* Process) {
 	ActiveRuntimeProcesses.Remove(Process);
 	
 	if (Character) DestoryRuntimeProcessorCharacter(Character);
+
+	FString Key = FindRuntimeProcessKey(Process);
+	OnRuntimeProcessStopped.Broadcast(Key, Process);
 	
 	return true;
+}
+
+bool AFICSubsystem::IsRuntimeProcessActive(UFICRuntimeProcess* Process) {
+	return ActiveRuntimeProcesses.Contains(Process);
 }
 
 void AFICSubsystem::CreateRuntimeProcessorCharacter(UFICRuntimeProcess* RuntimeProcess) {
@@ -217,4 +231,21 @@ FString AFICSubsystem::FindRuntimeProcessKey(UFICRuntimeProcess* InProcess) {
 		}
 	}
 	return TEXT("");
+}
+
+void AFICSubsystem::FilterAndSortRuntimeProcesses(const TArray<UFICRuntimeProcess*>& InRuntimeProcesses, TArray<UFICRuntimeProcess*>& OutActive, TArray<UFICRuntimeProcess*>& OutInactive) {
+	for (UFICRuntimeProcess* Process : InRuntimeProcesses) {
+		if (IsRuntimeProcessActive(Process)) {
+			OutActive.Add(Process);
+		} else {
+			OutInactive.Add(Process);
+		}
+	}
+	auto Predicate = [this](UFICRuntimeProcess* P1, UFICRuntimeProcess* P2) {
+		FString K1 = FindRuntimeProcessKey(P1);
+		FString K2 = FindRuntimeProcessKey(P2);
+		return K1 < K2;
+	};
+	Algo::Sort(OutActive, Predicate);
+	Algo::Sort(OutInactive, Predicate);
 }

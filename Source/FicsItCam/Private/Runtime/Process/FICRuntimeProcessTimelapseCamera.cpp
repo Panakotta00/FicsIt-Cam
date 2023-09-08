@@ -43,6 +43,28 @@ void UFICRuntimeProcessTimelapseCamera::Tick(AFICRuntimeProcessorCharacter* InCh
 }
 
 void UFICRuntimeProcessTimelapseCamera::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
+	if (PreviewTexture == nullptr) {
+		PreviewTexture = NewObject<UFICProceduralTexture>(this);
+		PreviewTexture->OnTextureUpdate.AddDynamic(this, &UFICRuntimeProcessTimelapseCamera::OnTextureUpdate);
+	}
+
+	TSharedRef<FSequenceExporterProceduralTexture> TextureExporter = MakeShared<FSequenceExporterProceduralTexture>(PreviewTexture);
+	AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(TextureExporter, MakeShared<FFICRenderTarget_Raw>(CaptureCamera->RenderTarget->GameThread_GetRenderTargetResource()));
+	
 	Exporter->Finish();
-	if (CaptureCamera) CaptureCamera->Destroy();
+	CaptureCamera = nullptr;
+}
+
+UTexture* UFICRuntimeProcessTimelapseCamera::GetPreviewTexture() {
+	if (CaptureCamera) {
+		return CaptureCamera->RenderTarget;
+	} else if (PreviewTexture) {
+		return PreviewTexture->GetTexture();
+	} else {
+		return nullptr;
+	}
+}
+
+void UFICRuntimeProcessTimelapseCamera::OnTextureUpdate() {
+	OnPreviewUpdate.Broadcast();
 }
