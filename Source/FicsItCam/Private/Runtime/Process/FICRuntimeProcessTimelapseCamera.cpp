@@ -40,6 +40,8 @@ void UFICRuntimeProcessTimelapseCamera::Tick(AFICRuntimeProcessorCharacter* InCh
 	AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(Exporter.ToSharedRef(), MakeShared<FFICRenderTarget_Raw>(CaptureCamera->RenderTarget->GameThread_GetRenderTargetResource()));
 
 	//if (Character) Character->SetFirstPersonMode();
+
+	OnPreviewUpdate.Broadcast();
 }
 
 void UFICRuntimeProcessTimelapseCamera::Stop(AFICRuntimeProcessorCharacter* InCharacter) {

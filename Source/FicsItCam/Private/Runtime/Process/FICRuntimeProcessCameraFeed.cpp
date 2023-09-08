@@ -88,6 +88,8 @@ void UFICRuntimeProcessCameraFeed::Start(AFICRuntimeProcessorCharacter* InCharac
 	Camera->CaptureComponent->bCaptureEveryFrame = true;
 
 	Camera->UpdateCaptureWithCameraData(Cast<UCameraComponent>(Cast<AFGCharacterPlayer>(GetWorld()->GetFirstPlayerController()->GetCharacter())->GetComponentByClass(UCameraComponent::StaticClass())));
+
+	OnPreviewUpdate.Broadcast();
 }
 
 void UFICRuntimeProcessCameraFeed::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {
@@ -100,6 +102,14 @@ void UFICRuntimeProcessCameraFeed::Tick(AFICRuntimeProcessorCharacter* InCharact
 }
 
 void UFICRuntimeProcessCameraFeed::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
+	if (PreviewTexture == nullptr) {
+		PreviewTexture = NewObject<UFICProceduralTexture>(this);
+		PreviewTexture->OnTextureUpdate.AddDynamic(this, &UFICRuntimeProcessCameraFeed::OnTextureUpdate);
+	}
+
+	TSharedRef<FSequenceExporterProceduralTexture> TextureExporter = MakeShared<FSequenceExporterProceduralTexture>(PreviewTexture);
+	AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(TextureExporter, MakeShared<FFICRenderTarget_Raw>(Camera->RenderTarget->GameThread_GetRenderTargetResource()));
+	
 	SaveWindowSettings();
 	if (Window) {
 		Window->DestroyWindowImmediately();
@@ -110,4 +120,18 @@ void UFICRuntimeProcessCameraFeed::Stop(AFICRuntimeProcessorCharacter* InCharact
 	Camera->Destroy();
 	Camera = nullptr;
 	Brush = FSlateImageBrush("CameraFeed", FVector2D(1,1));
+}
+
+UTexture* UFICRuntimeProcessCameraFeed::GetPreviewTexture() {
+	if (Camera) {
+		return Camera->RenderTarget;
+	} else if (PreviewTexture) {
+		return PreviewTexture->GetTexture();
+	} else {
+		return nullptr;
+	}
+}
+
+void UFICRuntimeProcessCameraFeed::OnTextureUpdate() {
+	OnPreviewUpdate.Broadcast();
 }

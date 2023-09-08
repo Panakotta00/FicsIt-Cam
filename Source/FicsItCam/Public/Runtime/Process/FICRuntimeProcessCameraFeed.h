@@ -13,11 +13,14 @@ UCLASS()
 class UFICRuntimeProcessCameraFeed : public UFICRuntimeProcess, public IFGSaveInterface {
 	GENERATED_BODY()
 public:
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	FFICCameraArgument CameraArgument;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	AFICCaptureCamera* Camera = nullptr;
+
+	UPROPERTY(SaveGame)
+	UFICProceduralTexture* PreviewTexture = nullptr;
 
 	FSlateImageBrush Brush = FSlateImageBrush("CameraFeed", FVector2D(1,1));
 	TSharedPtr<SWindow> Window;
@@ -34,6 +37,9 @@ public:
 	void LoadWindowSettings();
 	
 public:
+	UPROPERTY(BlueprintAssignable)
+	FFICTextureUpdateDelegate OnPreviewUpdate;
+	
 	// Begin IFGSaveInterface
 	virtual bool ShouldSave_Implementation() const override { return true; }
 	// End IFGSaveInterface
@@ -44,4 +50,10 @@ public:
 	virtual void Stop(AFICRuntimeProcessorCharacter* InCharacter) override;
 	virtual bool IsPersistent() override { return true; }
 	// End UFICRuntimeProcess
+
+	UFUNCTION(BlueprintCallable)
+	UTexture* GetPreviewTexture();
+
+	UFUNCTION()
+	void OnTextureUpdate();
 };
