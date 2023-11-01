@@ -23,6 +23,14 @@ AFICSubsystem::AFICSubsystem() {
 	SetActorTickEnabled(true);
 }
 
+void AFICSubsystem::FinishDestroy() {
+	Super::FinishDestroy();
+}
+
+void AFICSubsystem::AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector) {
+	AFICSubsystem* This = CastChecked<AFICSubsystem>(InThis);
+}
+
 void AFICSubsystem::BeginPlay() {
 	Super::BeginPlay();
 
@@ -210,11 +218,23 @@ void AFICSubsystem::ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, T
 	RenderRequest->RenderFence.BeginFence(true);
 }
 
+TSet<AFICScene*> AFICSubsystem::GetScenes() const {
+	return Scenes;
+}
+
 AFICScene* AFICSubsystem::FindSceneByName(const FString& InSceneName) {
 	for (TActorIterator<AFICScene> Scene(GetWorld()); Scene; ++Scene) {
 		if (Scene->SceneName == InSceneName) return *Scene;
 	}
 	return nullptr;
+}
+
+void AFICSubsystem::CreateScene(AFICScene* Scene) {
+	Scenes.Add(Scene);
+}
+
+void AFICSubsystem::DeleteScene(AFICScene* Scene) {
+	Scenes.Remove(Scene);
 }
 
 UFICRuntimeProcess* AFICSubsystem::FindRuntimeProcess(const FString& InKey) {

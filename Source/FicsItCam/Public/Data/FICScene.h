@@ -4,6 +4,7 @@
 #include "FGSaveInterface.h"
 #include "FICTypes.h"
 #include "Objects/FICCamera.h"
+#include "Util/FICProceduralTexture.h"
 #include "FICScene.generated.h"
 
 UCLASS()
@@ -13,40 +14,43 @@ private:
 	UPROPERTY(SaveGame)
 	TArray<UObject*> SceneObjects;
 
-public:
 	UPROPERTY(SaveGame)
+	UFICProceduralTexture* PreviewTexture;
+
+public:
+	UPROPERTY(SaveGame, BlueprintReadOnly)
 	FString SceneName = "Unnamed";
 	
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadOnly)
 	FFICFrameRange AnimationRange = FFICFrameRange(1, 600);
 	
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	int64 FPS = 60;
 	
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	int64 ResolutionWidth = 1920;
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	int64 ResolutionHeight = 1080;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	FVector2D SensorDimension = FVector2D(23.76, 13.365);
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	bool bUseCinematic = true;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	bool bBulletTime = false;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	bool bLooping = false;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadOnly)
 	FTransform LastCameraTransform;
-	UPROPERTY()
+	UPROPERTY(SaveGame, BlueprintReadOnly)
 	float LastCameraFOV = 120;
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadOnly)
 	UObject* LastSelectedSceneObject = nullptr;
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BLueprintReadOnly)
 	bool bViewportEverSaved = false;
 
 	// Begin IFGSaveInterface
@@ -71,4 +75,6 @@ public:
 	void MoveSceneObject(UObject* Object, int Delta);
 
 	UFICCamera* GetActiveCamera(FICFrameFloat Time);
+	
+	void UpdatePreview();
 };

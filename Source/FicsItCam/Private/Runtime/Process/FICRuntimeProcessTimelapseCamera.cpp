@@ -2,6 +2,7 @@
 
 #include "FGPlayerController.h"
 #include "FICSubsystem.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "Runtime/FICCaptureCamera.h"
 
 void UFICRuntimeProcessTimelapseCamera::Start(AFICRuntimeProcessorCharacter* InCharacter) {

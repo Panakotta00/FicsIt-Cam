@@ -54,6 +54,8 @@ private:
 	TSet<UFICRuntimeProcess*> PersistentActiveRuntimeProcesses;
 	UPROPERTY()
 	TSet<UFICRuntimeProcess*> ActiveRuntimeProcesses;
+	UPROPERTY()
+	TSet<AFICScene*> Scenes;
 	
 	UPROPERTY()
 	AFICRuntimeProcessorCharacter* RuntimeProcessorCharacter = nullptr;
@@ -76,6 +78,11 @@ public:
 	static AFICSubsystem* GetFICSubsystem(UObject* WorldContext);
 	
 	AFICSubsystem();
+
+	// Begin UObject
+	virtual void FinishDestroy() override;
+	static void AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector);
+	// End UObject
 	
 	// Begin AActor
 	virtual void BeginPlay() override;
@@ -121,7 +128,16 @@ public:
 	
 	void ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget);
 
+	UFUNCTION(BlueprintCallable)
+	TSet<AFICScene*> GetScenes() const;
+	UFUNCTION(BlueprintCallable)
 	AFICScene* FindSceneByName(const FString& InSceneName);
+	UFUNCTION(BlueprintCallable)
+	void CreateScene(AFICScene* Scene);
+	UFUNCTION(BlueprintCallable)
+	void DeleteScene(AFICScene* Scene);
+
+	UFUNCTION(BlueprintCallable)
 	UFICRuntimeProcess* FindRuntimeProcess(const FString& InKey);
 
 	UFUNCTION(BlueprintCallable)
