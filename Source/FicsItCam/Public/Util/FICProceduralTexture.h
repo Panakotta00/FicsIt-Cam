@@ -36,6 +36,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetData(const TArray<uint8>& InData, const FIntPoint& InSize);
+	void SetData(const TArrayView<uint8>& InData, const FIntPoint& InSize);
 };
 
 class FSequenceExporterProceduralTexture : public FSequenceExporter {

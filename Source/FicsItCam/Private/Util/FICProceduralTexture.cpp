@@ -1,5 +1,7 @@
 #include "Util/FICProceduralTexture.h"
 
+#include "ImageUtils.h"
+
 bool UFICProceduralTexture::ShouldSave_Implementation() const {
 	return true;
 }
@@ -39,6 +41,10 @@ void UFICProceduralTexture::ReloadData() {
 }
 
 void UFICProceduralTexture::SetData(const TArray<uint8>& InData, const FIntPoint& InSize) {
+	SetData((const TArrayView<uint8>&)InData, InSize);
+}
+
+void UFICProceduralTexture::SetData(const TArrayView<uint8>& InData, const FIntPoint& InSize) {
 	uint64 RawSize = Size.X * Size.Y * 4;
 	check(Data.Num() == RawSize);
 	
@@ -55,8 +61,12 @@ bool FSequenceExporterProceduralTexture::Init() {
 }
 
 void FSequenceExporterProceduralTexture::AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) {
-	TArray<uint8> Data((uint8*)ptr, ReadSize.X * ReadSize.Y * 4);
-	Texture->SetData(Data, ReadSize);
+	TArrayView<FColor> SrcData((FColor*)ptr, ReadSize.X * ReadSize.Y);
+	FIntPoint DstSize(640, 360);
+	TArray<FColor> DstData;
+	DstData.SetNumUninitialized(DstSize.X * DstSize.Y);
+	FImageUtils::ImageResize(ReadSize.X, ReadSize.Y, SrcData, DstSize.X, DstSize.Y, DstData, false);
+	Texture->SetData(TArrayView<uint8>((uint8*)DstData.GetData(), DstData.Num() * sizeof(FColor)), DstSize);
 }
 
 void FSequenceExporterProceduralTexture::Finish() {
