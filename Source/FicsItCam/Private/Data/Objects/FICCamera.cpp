@@ -4,6 +4,9 @@
 #include "Components/LineBatchComponent.h"
 #include "Editor/Data/FICEditorCameraActor.h"
 #include "Editor/FICEditorContext.h"
+#include "Editor/Data/FICEditorAttributeBase.h"
+#include "Widgets/Layout/SConstraintCanvas.h"
+#include "Widgets/Layout/SScaleBox.h"
 
 void UFICCamera::Tick(float DeltaTime) {
 	// Draw Path

@@ -152,7 +152,7 @@ float SFICRangeSelector::FrameToLocalPos(FICFrame Frame) const {
 
 FICFrame SFICRangeSelector::LocalPosToFrame(float LocalPos) const {
 	FFICFrameRange Range = FullRange.Get();
-	return FMath::RoundToFloat(FMath::Lerp((float)Range.Begin, (float)Range.End, FMath::GetRangePct(0.0, GetCachedGeometry().GetLocalSize().X, LocalPos)));
+	return FMath::RoundToFloat(FMath::Lerp((float)Range.Begin, (float)Range.End, FMath::GetRangePct(0.0f, GetCachedGeometry().GetLocalSize().X, LocalPos)));
 }
 
 bool SFICRangeSelector::IsLocalPosNearFrame(float LocalPos, FICFrame Frame) const {

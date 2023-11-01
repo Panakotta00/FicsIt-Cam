@@ -103,7 +103,7 @@ float SFICTimelineScrubber::FrameToLocalPos(FICFrame InFrame) const {
 
 FICFrame SFICTimelineScrubber::LocalPosToFrame(float LocalPos) const {
 	const FFICFrameRange Range = ActiveRange.Get();
-	return FMath::RoundToFloat(FMath::Lerp((float)Range.Begin, (float)Range.End, FMath::GetRangePct(0.0, GetCachedGeometry().GetLocalSize().X, LocalPos)));
+	return FMath::RoundToFloat(FMath::Lerp((float)Range.Begin, (float)Range.End, FMath::GetRangePct(0.0f, GetCachedGeometry().GetLocalSize().X, LocalPos)));
 }
 
 void SFICTimelineScrubber::SetActiveFrame(FICFrame InFrame) {

@@ -279,7 +279,7 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 
 	// Add Editor Input Context
 	Controller->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(InputMappingContext, -2);
-		
+	
 	InitInteractiveTools();
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EngineUtils.h"
 #include "Command/FICCommand.h"
 #include "FICCommandList.generated.h"
 
