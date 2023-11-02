@@ -4,6 +4,7 @@
 #include "Components/LineBatchComponent.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICSceneObjectCreation.h"
+#include "Kismet/GameplayStatics.h"
 
 SFICViewport::~SFICViewport() {
 	if (Context) Context->OnOverlayWidgetsChanged.Remove(OnViewportOverlaysChangedHandle);

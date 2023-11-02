@@ -55,6 +55,14 @@ void UFICRuntimeProcessCameraFeed::LoadWindowSettings() {
 	Window->Resize(WindowSize);
 }
 
+void UFICRuntimeProcessCameraFeed::PostInitProperties() {
+	Super::PostInitProperties();
+
+	if (PreviewTexture) {
+		PreviewTexture->OnTextureUpdate.AddDynamic(this, &UFICRuntimeProcessCameraFeed::OnTextureUpdate);
+	}
+}
+
 void UFICRuntimeProcessCameraFeed::Start(AFICRuntimeProcessorCharacter* InCharacter) {
 	Camera = GetWorld()->SpawnActor<AFICCaptureCamera>();
 	CameraArgument.InitalizeCaptureCamera(Camera);

@@ -1,7 +1,12 @@
 ﻿#include "FICSubsystem.h"
 
+#include "EngineUtils.h"
+#include "FGGameUserSettings.h"
+#include "FICUtils.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "RHIGPUReadback.h"
+#include "RHISurfaceDataConversion.h"
 #include "Command/FICCommand.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"
@@ -9,6 +14,7 @@
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 #include "Runtime/FICTimelapseCamera.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
+#include "Runtime/Process/FICRuntimeProcessPlayScene.h"
 #include "Util/SequenceExporter.h"
 
 AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
@@ -46,6 +52,11 @@ void AFICSubsystem::BeginPlay() {
 		Animation->Destroy();
 	}
 
+	// Add Scenes to Scene List
+	for (TActorIterator<AFICScene> Scene(GetWorld()); Scene; ++Scene) {
+		Scenes.Add(*Scene);
+	}
+
 	// Discover Commands
 	for (TObjectIterator<UClass> Class; Class; ++Class) {
 		if (!Class->IsChildOf<UFICCommand>() || *Class == UFICCommand::StaticClass()) continue;
@@ -60,15 +71,8 @@ void AFICSubsystem::Tick(float DeltaSeconds) {
 	if (!RenderRequestQueue.IsEmpty()) {
 		TSharedPtr<FFICRenderRequest> NextRequest = *RenderRequestQueue.Peek();
 		if (NextRequest) {
-			if (NextRequest->RenderFence.IsFenceComplete() && NextRequest->Readback.IsReady()) {
-				FRenderTarget* Target = NextRequest->RenderTarget->GetRenderTarget();
-				FIntPoint Size = NextRequest->RenderTarget->GetRenderTarget()->GetSizeXY();
-				FIntPoint ReadSize;
-				ENQUEUE_RENDER_COMMAND(ReadbackFICCameraFootage)( [&](FRHICommandListImmediate& RHICmdList) {
-					void* data = NextRequest->Readback.Lock(ReadSize.X, &ReadSize.Y);
-					if (data) NextRequest->Exporter->AddFrame(data, ReadSize, Size);
-				});
-				FlushRenderingCommands();
+ 			if (NextRequest->RenderFence.IsFenceComplete() && NextRequest->Readback.IsReady()) {
+				HandleRenderRequest(NextRequest);
 				RenderRequestQueue.Pop();
 			}
 		}
@@ -206,16 +210,43 @@ void AFICSubsystem::DestoryRuntimeProcessorCharacter(AFICRuntimeProcessorCharact
 	OriginalPlayerCharacter = nullptr;
 }
 
-void AFICSubsystem::ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget) {
+void AFICSubsystem::ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget, bool bInstant) {
 	TSharedRef<FFICRenderRequest> RenderRequest = MakeShared<FFICRenderRequest>(RenderTarget, Exporter, FRHIGPUTextureReadback(TEXT("FICSubsystem Texture Readback")));
 
 	ENQUEUE_RENDER_COMMAND(SceneDrawCompletion)([this, RenderTarget, RenderRequest](FRHICommandListImmediate& RHICmdList){
-		FTexture2DRHIRef Target = RenderTarget->GetRenderTarget()->GetRenderTargetTexture();
+		FTextureRHIRef Target = RenderTarget->GetRenderTarget();
 		RenderRequest->Readback.EnqueueCopy(RHICmdList, Target);
 	});
 
-	RenderRequestQueue.Enqueue(RenderRequest);
-	RenderRequest->RenderFence.BeginFence(true);
+	if (bInstant) {
+		FlushRenderingCommands();
+		RenderRequest->RenderFence.BeginFence(true);
+		RenderRequest->RenderFence.Wait(true);
+		HandleRenderRequest(RenderRequest);
+	} else {
+		RenderRequestQueue.Enqueue(RenderRequest);
+		RenderRequest->RenderFence.BeginFence(true);
+	}
+}
+
+void AFICSubsystem::HandleRenderRequest(TSharedPtr<FFICRenderRequest> InRequest) {
+	FTextureRHIRef Target = InRequest->RenderTarget->GetRenderTarget();
+	FIntPoint Size = Target->GetSizeXY();
+	FIntPoint ReadSize;
+	ENQUEUE_RENDER_COMMAND(ReadbackFICCameraFootage)( [&](FRHICommandListImmediate& RHICmdList) {
+		void* data = InRequest->Readback.Lock(ReadSize.X, &ReadSize.Y);
+		if (!data) return;
+		if (Target->GetFormat() == PF_A2B10G10R10) {
+			FColor* ptrLinearColor = (FColor*)FMemory::Malloc(ReadSize.X * ReadSize.Y * sizeof(FColor));
+			ConvertRawB10G10R10A2DataToFColor(ReadSize.X, ReadSize.Y, (uint8*)data, ReadSize.X * 4, ptrLinearColor);
+			//ConvertFLinearColorsToFColorSRGB(ptrLinearColor, (FColor*)data, ReadSize.X + ReadSize.Y);
+			InRequest->Exporter->AddFrame(PF_R8G8B8A8, ptrLinearColor, ReadSize, Size);
+			FMemory::Free(ptrLinearColor);
+		} else {
+			InRequest->Exporter->AddFrame(PF_R8G8B8A8, data, ReadSize, Size);
+	}
+	});
+	FlushRenderingCommands();
 }
 
 TSet<AFICScene*> AFICSubsystem::GetScenes() const {
@@ -229,12 +260,33 @@ AFICScene* AFICSubsystem::FindSceneByName(const FString& InSceneName) {
 	return nullptr;
 }
 
-void AFICSubsystem::CreateScene(AFICScene* Scene) {
+AFICScene* AFICSubsystem::CreateScene(const FString& Name) {
+	if (!UFICUtils::IsValidFICObjectName(Name)) return nullptr;
+	if (FindSceneByName(Name)) return nullptr;
+	
+	AFICScene* Scene = GetWorld()->SpawnActor<AFICScene>();
+		
+	FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
+	Scene->ResolutionWidth = Resolution.X + (Resolution.X % 2 != 0 ? 1 : 0);
+	Scene->ResolutionHeight = Resolution.Y + (Resolution.Y % 2 != 0 ? 1 : 0);
+	Scene->SceneName = Name;
+	UFICCamera* CDO = UFICCamera::StaticClass()->GetDefaultObject<UFICCamera>();
+	if (CDO) Scene->AddSceneObject(CDO->CreateNewObject(this, Scene));
+	
 	Scenes.Add(Scene);
+	OnSceneCreated.Broadcast(Scene);
+
+	return Scene;
 }
 
 void AFICSubsystem::DeleteScene(AFICScene* Scene) {
+	UFICRuntimeProcess* Process = FindRuntimeProcess(AFICScene::GetSceneProcessKey(Scene->SceneName));
+	if (Process) RemoveRuntimeProcess(Process);
+	
 	Scenes.Remove(Scene);
+	OnSceneDeleted.Broadcast(Scene);
+
+	Scene->Destroy();
 }
 
 UFICRuntimeProcess* AFICSubsystem::FindRuntimeProcess(const FString& InKey) {
@@ -267,5 +319,26 @@ void AFICSubsystem::FilterAndSortRuntimeProcesses(const TArray<UFICRuntimeProces
 		return K1 < K2;
 	};
 	Algo::Sort(OutActive, Predicate);
+	Algo::Sort(OutInactive, Predicate);
+}
+
+void AFICSubsystem::FilterAndSortScenes(const TArray<AFICScene*>& InScenes, TArray<AFICScene*>& OutActive, TArray<AFICScene*>& OutPaused, TArray<AFICScene*>& OutInactive) {
+	OutInactive = InScenes;
+	for (const TPair<FString, UFICRuntimeProcess*>& Process : GetRuntimeProcesses()) {
+		UFICRuntimeProcessPlayScene* PlaySceneProcess = Cast<UFICRuntimeProcessPlayScene>(Process.Value);
+		if (!PlaySceneProcess) continue;
+		AFICScene* Scene = PlaySceneProcess->Scene;
+		OutInactive.Remove(Scene);
+		if (IsRuntimeProcessActive(Process.Value)) {
+			OutActive.Add(Scene);
+		} else {
+			OutPaused.Add(Scene);
+		}
+	}
+	auto Predicate = [this](AFICScene* P1, AFICScene* P2) {
+		return P1->SceneName < P2->SceneName;
+	};
+	Algo::Sort(OutActive, Predicate);
+	Algo::Sort(OutPaused, Predicate);
 	Algo::Sort(OutInactive, Predicate);
 }

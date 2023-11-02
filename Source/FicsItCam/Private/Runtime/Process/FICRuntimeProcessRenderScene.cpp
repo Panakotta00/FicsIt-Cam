@@ -1,10 +1,12 @@
 #include "Runtime/Process/FICRuntimeProcessRenderScene.h"
 
 #include "AudioDevice.h"
+#include "CanvasTypes.h"
 #include "EngineModule.h"
 #include "FICSubsystem.h"
 #include "IImageWrapperModule.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Editor/FICEditorSubsystem.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "GTE/Mathematics/Logger.h"
 #include "Runtime/FICCaptureCamera.h"
@@ -75,4 +77,17 @@ void UFICRuntimeProcessRenderScene::Stop(AFICRuntimeProcessorCharacter* InCharac
 	auto* Settings = GetWorld()->GetWorldSettings();
 	Settings->MinUndilatedFrameTime = PrevMinUndilatedFrameTime;
 	Settings->MaxUndilatedFrameTime = PrevMaxUndilatedFrameTime;
+}
+
+UFICRuntimeProcessRenderScene* UFICRuntimeProcessRenderScene::StartRenderScene(AFICScene* InScene) {
+	AFICEditorSubsystem* EditSubSys = AFICEditorSubsystem::GetFICEditorSubsystem(InScene);
+	if (InScene->IsSceneAlreadyInUse()) return nullptr;
+	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(InScene);
+	UFICRuntimeProcessRenderScene* Process = NewObject<UFICRuntimeProcessRenderScene>(SubSys);
+	Process->Scene = InScene;
+	if (SubSys->CreateRuntimeProcess(AFICScene::GetSceneProcessKey(InScene->SceneName), Process, true)) {
+		return Process;
+	} else {
+		return nullptr;
+	}
 }

@@ -18,7 +18,7 @@ public:
 	}
 
 	virtual bool Init() = 0;
-	virtual void AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) = 0;
+	virtual void AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) = 0;
 	virtual void Finish() {
 		bFinished = true;
 	};
@@ -44,7 +44,7 @@ public:
 	~FSequenceMP4Exporter();
 	
 	virtual bool Init() override;
-	virtual void AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
+	virtual void AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
 	virtual void Finish() override;
 	
 	void ReadBuffer();
@@ -61,6 +61,6 @@ public:
 	FSequenceImageExporter(FString InPath, FIntPoint InImageSize);
 
 	virtual bool Init() override;
-	virtual void AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
+	virtual void AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
 	virtual void Finish() override;
 };

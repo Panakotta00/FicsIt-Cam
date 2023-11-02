@@ -137,7 +137,7 @@ void FSequenceMP4Exporter::Finish() {
 	}
 }
 
-void FSequenceMP4Exporter::AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) {
+void FSequenceMP4Exporter::AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) {
 	if (bFinished) return;
 
 	int64 FramePts = FrameNr++;
@@ -194,7 +194,7 @@ bool FSequenceImageExporter::Init() {
 	return true;
 }
 
-void FSequenceImageExporter::AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) {
+void FSequenceImageExporter::AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) {
 	FString FilePath = FPaths::Combine(Path, FString::Printf(TEXT("%s-%05llu.jpg"), *StartTime.ToString(), Increment++));
 
 	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));

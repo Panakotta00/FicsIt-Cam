@@ -5,6 +5,14 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Runtime/FICCaptureCamera.h"
 
+void UFICRuntimeProcessTimelapseCamera::PostInitProperties() {
+	Super::PostInitProperties();
+
+	if (PreviewTexture) {
+		PreviewTexture->OnTextureUpdate.AddDynamic(this, &UFICRuntimeProcessTimelapseCamera::OnTextureUpdate);
+	}
+}
+
 void UFICRuntimeProcessTimelapseCamera::Start(AFICRuntimeProcessorCharacter* InCharacter) {
 	CaptureCamera = GetWorld()->SpawnActor<AFICCaptureCamera>();
 	CameraArgument.InitalizeCaptureCamera(CaptureCamera);

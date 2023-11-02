@@ -18,6 +18,9 @@ private:
 	UFICProceduralTexture* PreviewTexture;
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FFICTextureUpdateDelegate OnPreviewUpdate;
+	
 	UPROPERTY(SaveGame, BlueprintReadOnly)
 	FString SceneName = "Unnamed";
 	
@@ -76,5 +79,20 @@ public:
 
 	UFICCamera* GetActiveCamera(FICFrameFloat Time);
 	
+	UFUNCTION(BlueprintCallable)
+	UTexture* GetPreviewTexture();
+
+	UFUNCTION()
+	void OnTextureUpdate();
+
+	UFUNCTION()
 	void UpdatePreview();
+
+	UFUNCTION(BlueprintCallable)
+	static FString GetSceneProcessKey(const FString& InSceneName) {
+		return FString::Printf(TEXT("Scene_%s"), *InSceneName);
+	}
+
+	UFUNCTION(BlueprintCallable)
+	bool IsSceneAlreadyInUse();
 };

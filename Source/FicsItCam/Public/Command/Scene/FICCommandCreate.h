@@ -25,14 +25,8 @@ public:
 			InSender->SendChatMessage(FString::Printf(TEXT("Scene '%s' already exists!"), *InArgs[0]));
 			return EExecutionStatus::BAD_ARGUMENTS;
 		}
-		AFICScene* Scene = InSender->GetWorld()->SpawnActor<AFICScene>();
-		
-		FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
-		Scene->ResolutionWidth = Resolution.X + (Resolution.X % 2 != 0 ? 1 : 0);
-		Scene->ResolutionHeight = Resolution.Y + (Resolution.Y % 2 != 0 ? 1 : 0);
-		Scene->SceneName = InArgs[0];
-		UFICCamera* CDO = UFICCamera::StaticClass()->GetDefaultObject<UFICCamera>();
-		if (CDO) Scene->AddSceneObject(CDO->CreateNewObject(AFICSubsystem::GetFICSubsystem(InSender), Scene));
+
+		AFICSubsystem::GetFICSubsystem(InSender)->CreateScene(InArgs[0]);
 		
 		InSender->SendChatMessage(FString::Printf(TEXT("Scene '%s' created."), *InArgs[0]));
 		return EExecutionStatus::COMPLETED;

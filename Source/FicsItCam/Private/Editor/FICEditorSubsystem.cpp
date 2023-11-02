@@ -292,6 +292,10 @@ void AFICEditorSubsystem::CloseEditor() {
 	// Don't do anything if no scene is opened in editor
 	if (!Context) return;
 
+	AFICScene* Scene = Context->GetScene();
+	
+	Scene->UpdatePreview();
+
 	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 	
 	// Copy Editor Settings
@@ -300,8 +304,6 @@ void AFICEditorSubsystem::CloseEditor() {
 	bCameraPreview = Context->GetCameraPreview();
 	bShowCameraPath = Context->bShowPath;
 	bForceResolution = Context->bForceResolution;
-	
-	AFICScene* Scene = Context->GetScene();
 
 	// Shutdown Interactive Tools
 	ShutdownInteractiveTools();

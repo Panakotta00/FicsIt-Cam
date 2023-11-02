@@ -75,7 +75,7 @@ public:
 	// End FRenderResource Interface
 
 	// Begin FFICRenderTarget
-	virtual FRenderTarget* GetRenderTarget() override { return this; }
+	virtual FTexture2DRHIRef GetRenderTarget() override { return this->GetRenderTargetTexture(); }
 	// End FFICRenderTarget
 	
 private:
@@ -104,4 +104,7 @@ public:
 	// End UFICRuntimeProcess
 
 	void Frame();
+
+	UFUNCTION(BlueprintCallable)
+	static UFICRuntimeProcessRenderScene* StartRenderScene(AFICScene* InScene);
 };

@@ -14,10 +14,10 @@ protected:
 	FFICActiveSceneObjectManager ActiveSceneObjectManager;
 	
 public:
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	AFICScene* Scene = nullptr;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	bool bBackground = false;
 	
 	// Begin UFICRuntimeProcess
@@ -30,4 +30,7 @@ public:
 	// End UFICRuntimeProcess
 	
 	FICFrameFloat GetProgress() { return Progress; }
+
+	UFUNCTION(BlueprintCallable)
+	static UFICRuntimeProcessPlayScene* StartPlayScene(AFICScene* InScene, bool bInBackground);
 };

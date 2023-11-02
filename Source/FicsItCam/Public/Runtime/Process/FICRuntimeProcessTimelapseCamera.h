@@ -29,6 +29,10 @@ public:
 
 	TSharedPtr<FSequenceExporter> Exporter;
 
+	// Begin UObject
+	virtual void PostInitProperties() override;
+	// End UObject
+
 	// Begin IFGSaveInterface
 	virtual bool ShouldSave_Implementation() const override { return true; }
 	// End IFGSaveInterface
