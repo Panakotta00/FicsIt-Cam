@@ -5,6 +5,7 @@
 #include "EngineModule.h"
 #include "FICSubsystem.h"
 #include "IImageWrapperModule.h"
+#include "Algo/Accumulate.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Editor/FICEditorSubsystem.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -70,7 +71,9 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 					int64 CurrentFrame = FrameProgress - Scene->AnimationRange.Begin;
 					int64 FrameCount = Scene->AnimationRange.Length();
 					float Percent = (float)CurrentFrame / (float)FrameCount;
-					return FText::FromString(FString::Printf(TEXT("%.1f%% [%lld/%lld]"), Percent*100, CurrentFrame, FrameCount));
+					float ETASec = (float)(FrameCount - CurrentFrame) * (Algo::Accumulate(ETAStatistics, 0.0f)/ETAStatistics.Num());
+					FString ETA = UFGBlueprintFunctionLibrary::SecondsToTimeString(ETASec);
+					return FText::FromString(FString::Printf(TEXT("%.1f%% [%lld/%lld] - ETA: %s"), Percent*100, CurrentFrame, FrameCount, *ETA));
 				})
 			]
 		]
@@ -79,6 +82,9 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 
 void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {
 	if(GetWorld()->IsLevelStreamingRequestPending(GetWorld()->GetFirstPlayerController())) return;
+
+	ETAStatistics.Insert(GetWorld()->DeltaRealTimeSeconds, 0);
+	while (ETAStatistics.Num() > 60) ETAStatistics.Pop();
 
 	Progress = (float)FrameProgress / (float)Scene->FPS;
 	Super::Tick(InCharacter, DeltaSeconds);

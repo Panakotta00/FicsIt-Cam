@@ -93,6 +93,8 @@ public:
 	FString Path;
 	TSharedPtr<SWidget> Overlay;
 
+	TArray<float> ETAStatistics;
+
 	FICFrame FrameProgress = 0;
 
 	float PrevMinUndilatedFrameTime = 0;
