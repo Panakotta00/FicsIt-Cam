@@ -14,6 +14,7 @@ class UFICEditorContext;
 class AFICAnimation;
 class AFICRuntimeProcessorCharacter;
 class UFICCommand;
+class UEnhancedInputComponent;
 
 struct FFICRenderTarget {
 	virtual ~FFICRenderTarget() {}
@@ -153,4 +154,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void FilterAndSortScenes(const TArray<AFICScene*>& InScenes, TArray<AFICScene*>& OutActive, TArray<AFICScene*>& OutPaused, TArray<AFICScene*>& OutInactive);
+
+	UFUNCTION(BlueprintCallable)
+	void OpenMenu();
 };

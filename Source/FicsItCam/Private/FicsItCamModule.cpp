@@ -1,16 +1,13 @@
 #include "FicsItCamModule.h"
 
-#include <libavutil/log.h>
-
 #include "FGGameMode.h"
 #include "FGItemRegrowSubsystem.h"
 #include "Editor/UI/FICEditorStyle.h"
-#include "Renderer/Private/SceneRendering.h"
-#include "Renderer/Private/ShadowRendering.h"
 #include "Styling/SlateStyleRegistry.h"
 
 DEFINE_LOG_CATEGORY(LogFicsItCam);
 
+UE_DEFINE_GAMEPLAY_TAG(Input_FIC_OpenMenu, "Input.FIC.OpenMenu");
 UE_DEFINE_GAMEPLAY_TAG(Input_FIC_Editor_Movement, "Input.FIC.Editor.Movement");
 UE_DEFINE_GAMEPLAY_TAG(Input_FIC_Editor_Rotation, "Input.FIC.Editor.Rotation");
 UE_DEFINE_GAMEPLAY_TAG(Input_FIC_Editor_FOV, "Input.FIC.Editor.FOV");

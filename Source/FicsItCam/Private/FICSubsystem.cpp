@@ -1,7 +1,10 @@
 ﻿#include "FICSubsystem.h"
 
 #include "EngineUtils.h"
+#include "EnhancedInputComponent.h"
 #include "FGGameUserSettings.h"
+#include "FGInputSettings.h"
+#include "FicsItCamModule.h"
 #include "FICUtils.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
@@ -40,6 +43,12 @@ void AFICSubsystem::AddReferencedObjects(UObject* InThis, FReferenceCollector& C
 void AFICSubsystem::BeginPlay() {
 	Super::BeginPlay();
 
+	EnableInput(GetWorld()->GetFirstPlayerController());
+	
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+	const UFGInputSettings* Settings = UFGInputSettings::Get();
+	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(Input_FIC_OpenMenu), ETriggerEvent::Triggered, this, &AFICSubsystem::OpenMenu);
+	
 	// Resume Persisted Runtime Processes
 	ActiveRuntimeProcesses.Empty();
 	for (UFICRuntimeProcess* Process : PersistentActiveRuntimeProcesses) {
@@ -341,4 +350,9 @@ void AFICSubsystem::FilterAndSortScenes(const TArray<AFICScene*>& InScenes, TArr
 	Algo::Sort(OutActive, Predicate);
 	Algo::Sort(OutPaused, Predicate);
 	Algo::Sort(OutInactive, Predicate);
+}
+
+void AFICSubsystem::OpenMenu() {
+	TSubclassOf<UFGInteractWidget> Widget = LoadObject<UClass>(nullptr, TEXT("/FicsItCam/UI/Widget_FIC_Menu.Widget_FIC_Menu_C"));
+	Cast<AFGHUD>(GetWorld()->GetFirstPlayerController()->GetHUD())->OpenInteractUI(Widget, nullptr);
 }

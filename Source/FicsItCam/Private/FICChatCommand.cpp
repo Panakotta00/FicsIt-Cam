@@ -26,15 +26,14 @@ EExecutionStatus AFICChatCommand::ExecuteCommand_Implementation(UCommandSender* 
 		return EExecutionStatus::INSUFFICIENT_PERMISSIONS;
 	}
 
-	if (Arguments.Num() == 0) {
-		GetWorldTimerManager().SetTimerForNextTick([this]() {
-			TSubclassOf<UFGInteractWidget> Widget = LoadObject<UClass>(nullptr, TEXT("/FicsItCam/UI/Widget_FIC_Menu.Widget_FIC_Menu_C"));
-			Cast<AFGHUD>(GetWorld()->GetFirstPlayerController()->GetHUD())->OpenInteractUI(Widget, nullptr);
-			return EExecutionStatus::COMPLETED;
-		});
-	}
-	
 	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(this);
+	
+	if (Arguments.Num() == 0) {
+		GetWorldTimerManager().SetTimerForNextTick([SubSys]() {
+			SubSys->OpenMenu();
+		});
+		return EExecutionStatus::COMPLETED;
+	}
 
 	TArray<FString> Args = Arguments;
 	TSubclassOf<UFICCommand> CMD = nullptr;
