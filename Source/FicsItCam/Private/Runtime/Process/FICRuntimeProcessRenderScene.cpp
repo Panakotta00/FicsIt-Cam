@@ -47,6 +47,34 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 	Exporter = MakeShared<FSequenceMP4Exporter>(FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight), Scene->FPS, Path);
 	//Exporter = MakeShared<FSequenceImageExporter>(Path, FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight));
 	Exporter->Init();
+
+	GEngine->GameViewport->AddViewportWidgetContent(
+		SAssignNew(Overlay, SVerticalBox)
+		+SVerticalBox::Slot()
+		.VAlign(VAlign_Bottom)
+		.HAlign(HAlign_Fill)[
+			SNew(SOverlay)
+			+SOverlay::Slot()
+			.VAlign(VAlign_Fill)
+			.HAlign(HAlign_Fill)[
+				SNew(SProgressBar)
+				.Percent_Lambda([this]() {
+					return (float)(FrameProgress - Scene->AnimationRange.Begin) / (float)Scene->AnimationRange.Length();
+				})
+			]
+			+SOverlay::Slot()
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Center)[
+				SNew(STextBlock)
+				.Text_Lambda([this]() {
+					int64 CurrentFrame = FrameProgress - Scene->AnimationRange.Begin;
+					int64 FrameCount = Scene->AnimationRange.Length();
+					float Percent = (float)CurrentFrame / (float)FrameCount;
+					return FText::FromString(FString::Printf(TEXT("%.1f%% [%lld/%lld]"), Percent*100, CurrentFrame, FrameCount));
+				})
+			]
+		]
+	);
 }
 
 void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {
@@ -71,6 +99,8 @@ void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharac
 
 void UFICRuntimeProcessRenderScene::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
 	Super::Stop(InCharacter);
+
+	if (Overlay) GEngine->GameViewport->RemoveViewportWidgetContent(Overlay.ToSharedRef());
 
 	Exporter->Finish();
 	

@@ -91,6 +91,7 @@ public:
 	TSharedPtr<FFICRendererViewport> DummyViewport = nullptr;
 	TSharedPtr<FSequenceExporter> Exporter;
 	FString Path;
+	TSharedPtr<SWidget> Overlay;
 
 	FICFrame FrameProgress = 0;
 
