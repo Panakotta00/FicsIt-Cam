@@ -2,6 +2,7 @@
 
 #include "FICUtils.h"
 #include "Editor/FICEditorContext.h"
+#include "Widgets/Layout/SScrollBox.h"
 
 void SFICEditorSettings::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
 	Context = InContext;

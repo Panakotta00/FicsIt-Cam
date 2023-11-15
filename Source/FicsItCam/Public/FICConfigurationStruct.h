@@ -10,14 +10,16 @@ struct FFICConfigurationStruct {
     GENERATED_BODY()
 public:
     UPROPERTY(BlueprintReadWrite)
-    float DPIScaling;
+    float DPIScaling{};
 
     /* Retrieves active configuration value and returns object of this struct containing it */
-    static FFICConfigurationStruct GetActiveConfig() {
+    static FFICConfigurationStruct GetActiveConfig(UObject* WorldContext) {
         FFICConfigurationStruct ConfigStruct{};
         FConfigId ConfigId{"FicsItCam", ""};
-        UConfigManager* ConfigManager = GEngine->GetEngineSubsystem<UConfigManager>();
-        ConfigManager->FillConfigurationStruct(ConfigId, FDynamicStructInfo{FFICConfigurationStruct::StaticStruct(), &ConfigStruct});
+        if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull)) {
+            UConfigManager* ConfigManager = World->GetGameInstance()->GetSubsystem<UConfigManager>();
+            ConfigManager->FillConfigurationStruct(ConfigId, FDynamicStructInfo{FFICConfigurationStruct::StaticStruct(), &ConfigStruct});
+        }
         return ConfigStruct;
     }
 };

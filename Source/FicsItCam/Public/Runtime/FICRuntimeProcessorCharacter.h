@@ -9,6 +9,7 @@
 
 class UFICRuntimeProcess;
 class UCineCameraComponent;
+class UInputAction;
 
 UCLASS()
 class AFICRuntimeProcessorCharacter : public ACharacter {
@@ -17,6 +18,9 @@ class AFICRuntimeProcessorCharacter : public ACharacter {
 private:
 	UPROPERTY()
 	UFICRuntimeProcess* RuntimeProcess = nullptr;
+
+	UPROPERTY()
+	UInputAction* InputAction_StopPlayback;
 
 	bool bIsRepossesing = false;
 

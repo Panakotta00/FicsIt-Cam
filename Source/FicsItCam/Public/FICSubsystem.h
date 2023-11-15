@@ -15,6 +15,7 @@ class AFICAnimation;
 class AFICRuntimeProcessorCharacter;
 class UFICCommand;
 class UEnhancedInputComponent;
+class UInputAction;
 
 struct FFICRenderTarget {
 	virtual ~FFICRenderTarget() {}
@@ -59,6 +60,9 @@ private:
 	TSet<UFICRuntimeProcess*> ActiveRuntimeProcesses;
 	UPROPERTY()
 	TSet<AFICScene*> Scenes;
+
+	UPROPERTY()
+	UInputAction* InputAction_OpenMenu;
 	
 	UPROPERTY()
 	AFICRuntimeProcessorCharacter* RuntimeProcessorCharacter = nullptr;

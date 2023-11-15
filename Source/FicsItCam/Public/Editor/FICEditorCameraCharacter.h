@@ -9,6 +9,7 @@ class UCineCameraComponent;
 class AFICEditorCameraActor;
 class UTransformProxy;
 class UFICEditorContext;
+class UInputAction;
 
 UCLASS()
 class AFICEditorCameraCharacter : public ACharacter {
@@ -37,6 +38,37 @@ private:
 	
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
+
+	UPROPERTY()
+	UInputAction* InputAction_Movement;
+	UPROPERTY()
+	UInputAction* InputAction_Rotation;
+	UPROPERTY()
+	UInputAction* InputAction_Redo;
+	UPROPERTY()
+	UInputAction* InputAction_Undo;
+	UPROPERTY()
+	UInputAction* InputAction_Frame;
+	UPROPERTY()
+	UInputAction* InputAction_NextKeyframe;
+	UPROPERTY()
+	UInputAction* InputAction_PrevKeyframe;
+	UPROPERTY()
+	UInputAction* InputAction_ToggleAllKeyframes;
+	UPROPERTY()
+	UInputAction* InputAction_ToggleAutoKeyframe;
+	UPROPERTY()
+	UInputAction* InputAction_ToggleCursor;
+	UPROPERTY()
+	UInputAction* InputAction_ToggleLockCamera;
+	UPROPERTY()
+	UInputAction* InputAction_ToggleShowPath;
+	UPROPERTY()
+	UInputAction* InputAction_Grab;
+	UPROPERTY()
+	UInputAction* InputAction_FOV;
+	UPROPERTY()
+	UInputAction* InputAction_Speed;
 
 public:
 	float MaxFlySpeed = 1000;

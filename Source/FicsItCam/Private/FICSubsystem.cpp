@@ -30,6 +30,8 @@ AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
 AFICSubsystem::AFICSubsystem() {
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorTickEnabled(true);
+
+	InputAction_OpenMenu = ConstructorHelpers::FObjectFinder<UInputAction>(L"/FicsItCam/Input/IA_FIC_OpenMenu.IA_FIC_OpenMenu").Object;
 }
 
 void AFICSubsystem::FinishDestroy() {
@@ -47,7 +49,7 @@ void AFICSubsystem::BeginPlay() {
 	
 	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
 	const UFGInputSettings* Settings = UFGInputSettings::Get();
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(Input_FIC_OpenMenu), ETriggerEvent::Triggered, this, &AFICSubsystem::OpenMenu);
+	EnhancedInputComponent->BindAction(InputAction_OpenMenu, ETriggerEvent::Triggered, this, &AFICSubsystem::OpenMenu);
 	
 	// Resume Persisted Runtime Processes
 	ActiveRuntimeProcesses.Empty();

@@ -6,10 +6,6 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFicsItCam, Verbose, All);
 
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_FIC_OpenMenu)
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_FIC_Editor_Movement)
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_FIC_Editor_Rotation)
-
 #define FIC_ModRef "FicsItCam"
 
 static FIntPoint FIC_LastViewSize;

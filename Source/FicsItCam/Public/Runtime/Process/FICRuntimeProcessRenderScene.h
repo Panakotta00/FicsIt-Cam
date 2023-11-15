@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CanvasTypes.h"
 #include "FICRuntimeProcessPlayScene.h"
 #include "FICSubsystem.h"
 #include "Util/SequenceExporter.h"

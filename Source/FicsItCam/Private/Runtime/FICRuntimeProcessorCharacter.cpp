@@ -26,6 +26,8 @@ AFICRuntimeProcessorCharacter::AFICRuntimeProcessorCharacter() {
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
+
+	InputAction_StopPlayback = ConstructorHelpers::FObjectFinder<UInputAction>(L"/FicsItCam/Input/IA_FIC_Playback_StopAnimation.IA_FIC_Playback_StopAnimation").Object;
 }
 
 void AFICRuntimeProcessorCharacter::OnConstruction(const FTransform& Transform) {
@@ -40,7 +42,7 @@ void AFICRuntimeProcessorCharacter::SetupPlayerInputComponent(UInputComponent* P
 	UFGEnhancedInputComponent* EnhancedInputComponent = Cast<UFGEnhancedInputComponent>(PlayerInputComponent);
 	const UFGInputSettings* Settings = UFGInputSettings::Get();
 	
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Playback.StopAnimation"))), ETriggerEvent::Triggered, this, &AFICRuntimeProcessorCharacter::StopProcess);
+	EnhancedInputComponent->BindAction(InputAction_StopPlayback, ETriggerEvent::Triggered, this, &AFICRuntimeProcessorCharacter::StopProcess);
 }
 
 void AFICRuntimeProcessorCharacter::PossessedBy(AController* NewController) {
@@ -71,7 +73,6 @@ void AFICRuntimeProcessorCharacter::UnPossessed() {
 		UFGInputMappingContext* InputMappingContext = LoadObject<UFGInputMappingContext>(nullptr, TEXT("/FicsItCam/Input/IC_FIC_Playback.IC_FIC_Playback"));
 		PlayerController->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->RemoveMappingContext(InputMappingContext);
 		PlayerController->GetHUD<AFGHUD>()->SetPumpiMode(false);
-		OldController->EnableInput(PlayerController);
 
 		// Force Remove Process
 		AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(this);
