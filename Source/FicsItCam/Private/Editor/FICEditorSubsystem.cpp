@@ -77,6 +77,9 @@ void AFICEditorSubsystem::OnLeftMouseUp() {
 
 AFICEditorSubsystem::AFICEditorSubsystem() {
 	PrimaryActorTick.bCanEverTick = true;
+
+	ConstructorHelpers::FObjectFinder<UFGInputMappingContext> Context(TEXT("/FicsItCam/Input/IC_FIC_Editor.IC_FIC_Editor"));
+	InputMappingContext = Context.Object;
 }
 
 void AFICEditorSubsystem::BeginPlay() {
@@ -275,9 +278,8 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 	EditorPlayerCharacter = Character;
 
 	// Add Editor Input Context
-	UFGInputMappingContext* InputMappingContext = LoadObject<UFGInputMappingContext>(nullptr, TEXT("/FicsItCam/Input/IC_FIC_Editor.IC_FIC_Editor"));
 	Controller->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->AddMappingContext(InputMappingContext, -2);
-		
+	
 	InitInteractiveTools();
 }
 
@@ -290,6 +292,10 @@ void AFICEditorSubsystem::CloseEditor() {
 	// Don't do anything if no scene is opened in editor
 	if (!Context) return;
 
+	AFICScene* Scene = Context->GetScene();
+	
+	Scene->UpdatePreview();
+
 	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 	
 	// Copy Editor Settings
@@ -298,14 +304,11 @@ void AFICEditorSubsystem::CloseEditor() {
 	bCameraPreview = Context->GetCameraPreview();
 	bShowCameraPath = Context->bShowPath;
 	bForceResolution = Context->bForceResolution;
-	
-	AFICScene* Scene = Context->GetScene();
 
 	// Shutdown Interactive Tools
 	ShutdownInteractiveTools();
 
 	// Remove Editor Input Context
-	UFGInputMappingContext* InputMappingContext = LoadObject<UFGInputMappingContext>(nullptr, TEXT("/FicsItCam/Input/IC_FIC_Editor.IC_FIC_Editor"));
 	Controller->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->RemoveMappingContext(InputMappingContext);
 
 	// Focus back to viewport

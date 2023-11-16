@@ -2,7 +2,16 @@
 
 #include "FGPlayerController.h"
 #include "FICSubsystem.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "Runtime/FICCaptureCamera.h"
+
+void UFICRuntimeProcessTimelapseCamera::PostInitProperties() {
+	Super::PostInitProperties();
+
+	if (PreviewTexture) {
+		PreviewTexture->OnTextureUpdate.AddDynamic(this, &UFICRuntimeProcessTimelapseCamera::OnTextureUpdate);
+	}
+}
 
 void UFICRuntimeProcessTimelapseCamera::Start(AFICRuntimeProcessorCharacter* InCharacter) {
 	CaptureCamera = GetWorld()->SpawnActor<AFICCaptureCamera>();
@@ -40,9 +49,33 @@ void UFICRuntimeProcessTimelapseCamera::Tick(AFICRuntimeProcessorCharacter* InCh
 	AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(Exporter.ToSharedRef(), MakeShared<FFICRenderTarget_Raw>(CaptureCamera->RenderTarget->GameThread_GetRenderTargetResource()));
 
 	//if (Character) Character->SetFirstPersonMode();
+
+	OnPreviewUpdate.Broadcast();
 }
 
 void UFICRuntimeProcessTimelapseCamera::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
+	if (PreviewTexture == nullptr) {
+		PreviewTexture = NewObject<UFICProceduralTexture>(this);
+		PreviewTexture->OnTextureUpdate.AddDynamic(this, &UFICRuntimeProcessTimelapseCamera::OnTextureUpdate);
+	}
+
+	TSharedRef<FSequenceExporterProceduralTexture> TextureExporter = MakeShared<FSequenceExporterProceduralTexture>(PreviewTexture);
+	AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(TextureExporter, MakeShared<FFICRenderTarget_Raw>(CaptureCamera->RenderTarget->GameThread_GetRenderTargetResource()));
+	
 	Exporter->Finish();
-	if (CaptureCamera) CaptureCamera->Destroy();
+	CaptureCamera = nullptr;
+}
+
+UTexture* UFICRuntimeProcessTimelapseCamera::GetPreviewTexture() {
+	if (CaptureCamera) {
+		return CaptureCamera->RenderTarget;
+	} else if (PreviewTexture) {
+		return PreviewTexture->GetTexture();
+	} else {
+		return nullptr;
+	}
+}
+
+void UFICRuntimeProcessTimelapseCamera::OnTextureUpdate() {
+	OnPreviewUpdate.Broadcast();
 }

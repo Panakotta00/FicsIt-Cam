@@ -7,32 +7,32 @@ class UFICRuntimeProcessPlayScene;
 class UFICCamera;
 class AFICScene;
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FFICCameraSettingsSnapshot {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	UFICCamera* Camera = nullptr;
 	
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	FVector Location;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	FRotator Rotation;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	float FOV;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	float Aperture;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	float FocusDistance;
 
 	bool IsValid() { return !!Camera; }
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FFICCameraReference {
 	GENERATED_BODY()
 private:

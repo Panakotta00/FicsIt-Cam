@@ -16,7 +16,7 @@
 
 AFICChatCommand::AFICChatCommand() {
 	bOnlyUsableByPlayer = true;
-	MinNumberOfArguments = 1;
+	MinNumberOfArguments = 0;
 	CommandName = "fic";
 }
 
@@ -25,7 +25,15 @@ EExecutionStatus AFICChatCommand::ExecuteCommand_Implementation(UCommandSender* 
 		Sender->SendChatMessage("Only Host is allowed to run this command.");
 		return EExecutionStatus::INSUFFICIENT_PERMISSIONS;
 	}
+
 	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(this);
+	
+	if (Arguments.Num() == 0) {
+		GetWorldTimerManager().SetTimerForNextTick([SubSys]() {
+			SubSys->OpenMenu();
+		});
+		return EExecutionStatus::COMPLETED;
+	}
 
 	TArray<FString> Args = Arguments;
 	TSubclassOf<UFICCommand> CMD = nullptr;

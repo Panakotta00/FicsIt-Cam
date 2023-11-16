@@ -2,25 +2,36 @@
 
 #include "FICRuntimeProcess.h"
 #include "Runtime/FICCameraArgument.h"
+#include "Util/FICProceduralTexture.h"
 #include "FICRuntimeProcessTimelapseCamera.generated.h"
 
 UCLASS()
 class UFICRuntimeProcessTimelapseCamera : public UFICRuntimeProcess, public IFGSaveInterface {
 	GENERATED_BODY()
 public:
-	UPROPERTY(SaveGame)
+	UPROPERTY(BlueprintAssignable)
+	FFICTextureUpdateDelegate OnPreviewUpdate;
+	
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	FFICCameraArgument CameraArgument;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	AFICCaptureCamera* CaptureCamera = nullptr;
 
-	UPROPERTY(SaveGame)
-	float SecondsPerFrame = 10.0f;
+	UPROPERTY(SaveGame, BlueprintReadWrite, meta=(ExposeOnSpawn=true))
+	float SecondsPerFrame = 1.0f;
 
-	UPROPERTY()
+	UPROPERTY(SaveGame, BlueprintReadWrite)
+	UFICProceduralTexture* PreviewTexture = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
 	float Time = 0.0f;
 
 	TSharedPtr<FSequenceExporter> Exporter;
+
+	// Begin UObject
+	virtual void PostInitProperties() override;
+	// End UObject
 
 	// Begin IFGSaveInterface
 	virtual bool ShouldSave_Implementation() const override { return true; }
@@ -31,4 +42,10 @@ public:
 	virtual void Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) override;
 	virtual void Stop(AFICRuntimeProcessorCharacter* InCharacter) override;
 	// End UFICRuntimeProcess
+
+	UFUNCTION(BlueprintCallable)
+	UTexture* GetPreviewTexture();
+
+	UFUNCTION()
+	void OnTextureUpdate();
 };

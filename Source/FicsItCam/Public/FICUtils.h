@@ -13,22 +13,22 @@ class UFICUtils : public UObject {
 	GENERATED_BODY()
 
 public:
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	static FRotator NormalizeRotator(FRotator Rot);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	static FString KeymappingToString(const FString& Keymapping);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	static float BezierInterpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVector2D P3, float t);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContext"))
 	static FFICCameraSettingsSnapshot CreateCameraSettingsSnapshotFromView(UObject* WorldContext);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	static bool IsValidFICObjectName(const FString& InName);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContext"))
 	static bool IsAction(UObject* WorldContext, const FKeyEvent& InKeyEvent, const FName& ActionName);
 
 	template<typename T>
@@ -37,10 +37,10 @@ public:
       return r >= 0 ? r : r + FMath::Abs(b);
     }
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	static FRotator AdditiveRotation(FRotator OldRotation, FRotator NewRotation);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	static FString AdjustSceneObjectName(AFICScene* Scene, FString Name);
 };
 

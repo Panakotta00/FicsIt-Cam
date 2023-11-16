@@ -1,5 +1,6 @@
 #include "Editor/Data/FICEditorCameraActor.h"
 
+#include "EngineUtils.h"
 #include "Components/LineBatchComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Editor/Data/FICEditorAttributeBool.h"

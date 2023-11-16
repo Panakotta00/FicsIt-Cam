@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CanvasTypes.h"
 #include "FICRuntimeProcessPlayScene.h"
 #include "FICSubsystem.h"
 #include "Util/SequenceExporter.h"
@@ -75,7 +76,7 @@ public:
 	// End FRenderResource Interface
 
 	// Begin FFICRenderTarget
-	virtual FRenderTarget* GetRenderTarget() override { return this; }
+	virtual FTexture2DRHIRef GetRenderTarget() override { return this->GetRenderTargetTexture(); }
 	// End FFICRenderTarget
 	
 private:
@@ -91,6 +92,9 @@ public:
 	TSharedPtr<FFICRendererViewport> DummyViewport = nullptr;
 	TSharedPtr<FSequenceExporter> Exporter;
 	FString Path;
+	TSharedPtr<SWidget> Overlay;
+
+	TArray<float> ETAStatistics;
 
 	FICFrame FrameProgress = 0;
 
@@ -104,4 +108,7 @@ public:
 	// End UFICRuntimeProcess
 
 	void Frame();
+
+	UFUNCTION(BlueprintCallable)
+	static UFICRuntimeProcessRenderScene* StartRenderScene(AFICScene* InScene);
 };

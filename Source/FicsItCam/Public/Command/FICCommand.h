@@ -28,7 +28,7 @@
 	}
 
 #define GetSceneKey(SceneKeyVar, SceneName) \
-	FString SceneKeyVar = FString::Printf(TEXT("Scene_%s"), SceneName);
+	FString SceneKeyVar = AFICScene::GetSceneProcessKey(SceneName);
 
 #define CheckSceneUsage(SubSys, EditSubSys, ProcessKey, SceneNameToCheck) \
 	if (SubSys->GetActiveRuntimeProcessesMap().Contains(ProcessKey) || (EditSubSys->GetActiveEditorContext() && EditSubSys->GetActiveEditorContext()->GetScene()->SceneName == SceneNameToCheck)) { \

@@ -70,12 +70,15 @@ private:
 
 public:
 	UPROPERTY()
+	UFGInputMappingContext* InputMappingContext;
+	UPROPERTY()
 	UInteractiveToolsContext* ToolsContext;
 	DECLARE_MULTICAST_DELEGATE(FSelectionChanged)
 	FSelectionChanged OnSelectionChanged;
 	void OnLeftMouseDown();
 	void OnLeftMouseUp();
-	
+
+	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContext"))
 	static AFICEditorSubsystem* GetFICEditorSubsystem(UObject* WorldContext) {
 		USubsystemActorManager* SubsystemActorManager = WorldContext->GetWorld()->GetSubsystem<USubsystemActorManager>();
 		check(SubsystemActorManager);
@@ -101,10 +104,14 @@ public:
 	virtual bool ShouldSave_Implementation() const override { return true; }
 	// End IFGSaveInterface
 
+	UFUNCTION(BlueprintCallable)
 	void OpenEditor(AFICScene* InScene);
+	UFUNCTION(BlueprintCallable)
 	void CloseEditor();
 
+	UFUNCTION(BlueprintCallable)
 	UFICEditorContext* GetActiveEditorContext() { return ActiveEditorContext; }
+	UFUNCTION(BlueprintCallable)
 	AFICEditorCameraCharacter* GetEditorPlayerCharacter() { return EditorPlayerCharacter; }
 	TSharedPtr<SFICEditor> GetEditorWidget() { return EditorWidget; }
 

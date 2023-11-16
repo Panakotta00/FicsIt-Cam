@@ -18,7 +18,7 @@ public:
 		TryGetSceneFromArg(Scene, 0)
 		AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(InSender);
 		AFICEditorSubsystem* EditSubSys = AFICEditorSubsystem::GetFICEditorSubsystem(InSender);
-		GetSceneKey(Key, Scene)
+		GetSceneKey(Key, Scene->SceneName)
 		CheckSceneUsage(SubSys, EditSubSys, Key, Scene->SceneName)
 		EditSubSys->OpenEditor(Scene);
 		return EExecutionStatus::COMPLETED;

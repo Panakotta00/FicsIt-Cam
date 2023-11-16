@@ -4,10 +4,7 @@
 #include "Modules/ModuleManager.h"
 #include "Patching/NativeHookManager.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(LogFicsItCam, Log, Log);
-
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_FIC_Editor_Movement)
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_FIC_Editor_Rotation)
+DECLARE_LOG_CATEGORY_EXTERN(LogFicsItCam, Verbose, All);
 
 #define FIC_ModRef "FicsItCam"
 

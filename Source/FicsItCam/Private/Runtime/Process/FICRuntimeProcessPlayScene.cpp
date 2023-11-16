@@ -83,3 +83,16 @@ void UFICRuntimeProcessPlayScene::Stop(AFICRuntimeProcessorCharacter* InCharacte
 }
 
 void UFICRuntimeProcessPlayScene::Shutdown() {}
+
+UFICRuntimeProcessPlayScene* UFICRuntimeProcessPlayScene::StartPlayScene(AFICScene* InScene, bool bInBackground) {
+	if (InScene->IsSceneAlreadyInUse()) return nullptr;
+	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(InScene);
+	UFICRuntimeProcessPlayScene* Process = NewObject<UFICRuntimeProcessPlayScene>(SubSys);
+	Process->Scene = InScene;
+	Process->bBackground = bInBackground;
+	if (SubSys->CreateRuntimeProcess(AFICScene::GetSceneProcessKey(InScene->SceneName), Process, true)) {
+		return Process;
+	} else {
+		return nullptr;
+	}
+}

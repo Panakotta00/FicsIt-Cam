@@ -31,14 +31,14 @@ struct FFICFrameRangeIterator {
 	}
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FFICFrameRange {
 	GENERATED_BODY()
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	int64 Begin;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, BlueprintReadWrite)
 	int64 End;
 
 	FFICFrameRange() : Begin(0), End(1) {}

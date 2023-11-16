@@ -4,7 +4,7 @@
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 #include "FICRuntimeProcess.generated.h"
 
-UCLASS()
+UCLASS(BlueprintType)
 class UFICRuntimeProcess : public UObject {
 	GENERATED_BODY()
 public:

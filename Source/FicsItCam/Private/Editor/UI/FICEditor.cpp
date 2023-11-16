@@ -52,7 +52,7 @@ void SFICEditor::Construct(const FArguments& InArgs, UFICEditorContext* InContex
 			->Split(FTabManager::NewStack()->AddTab("Viewport", ETabState::OpenedTab)->SetSizeCoefficient(0.8)->SetHideTabWell(true)))
 		->Split(FTabManager::NewStack()->AddTab("Timeline", ETabState::OpenedTab)->SetSizeCoefficient(0.3)->SetHideTabWell(true)));
 
-	FFICConfigurationStruct Config = FFICConfigurationStruct::GetActiveConfig();
+	FFICConfigurationStruct Config = FFICConfigurationStruct::GetActiveConfig(Context);
 	
 	ChildSlot[
 		SNew(SDPIScaler)

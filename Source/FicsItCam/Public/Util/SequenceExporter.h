@@ -9,12 +9,19 @@ extern "C" {
 #include "CoreMinimal.h"
 
 class FSequenceExporter {
+protected:
+	bool bFinished = false;
+	
 public:
-	virtual ~FSequenceExporter() = default;
+	virtual ~FSequenceExporter() {
+		if (!bFinished) Finish();
+	}
 
 	virtual bool Init() = 0;
-	virtual void AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) = 0;
-	virtual void Finish() = 0;
+	virtual void AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) = 0;
+	virtual void Finish() {
+		bFinished = true;
+	};
 };
 
 class FSequenceMP4Exporter : public FSequenceExporter {
@@ -31,14 +38,13 @@ private:
 	SwsContext* SwsContext = nullptr;
 	IFileHandle* File = nullptr;
 	int64 FrameNr = 0;
-	bool bFinished = false;
 	
 public:
 	FSequenceMP4Exporter(FIntPoint ImageSize, int FPS, FString InPath);
 	~FSequenceMP4Exporter();
 	
 	virtual bool Init() override;
-	virtual void AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
+	virtual void AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
 	virtual void Finish() override;
 	
 	void ReadBuffer();
@@ -55,6 +61,6 @@ public:
 	FSequenceImageExporter(FString InPath, FIntPoint InImageSize);
 
 	virtual bool Init() override;
-	virtual void AddFrame(void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
+	virtual void AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) override;
 	virtual void Finish() override;
 };

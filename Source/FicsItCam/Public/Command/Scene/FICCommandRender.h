@@ -19,7 +19,7 @@ public:
 		TryGetSceneFromArg(Scene, 0)
 		AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(InSender);
 		AFICEditorSubsystem* EditSubSys = AFICEditorSubsystem::GetFICEditorSubsystem(InSender);
-		GetSceneKey(Key, Scene)
+		GetSceneKey(Key, Scene->SceneName)
 		CheckSceneUsage(SubSys, EditSubSys, Key, Scene->SceneName)
 		UFICRuntimeProcessRenderScene* Process = NewObject<UFICRuntimeProcessRenderScene>(SubSys);
 		Process->Scene = Scene;

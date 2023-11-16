@@ -20,6 +20,8 @@
 #include "GameFramework/PlayerController.h"
 #include "Input/FGEnhancedInputComponent.h"
 
+#define InputActionConstructionHelper(Action) InputAction_ ## Action = ConstructorHelpers::FObjectFinder<UInputAction>(TEXT("/FicsItCam/Input/IA_FIC_Editor_" ## #Action ## ".IA_FIC_Editor_" ## #Action)).Object
+
 AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	PrimaryActorTick.bCanEverTick = true;
 	bSimGravityDisabled = true;
@@ -31,6 +33,22 @@ AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	bUseControllerRotationPitch = true;
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = true;
+	
+	InputActionConstructionHelper(Movement);
+	InputActionConstructionHelper(Rotation);
+	InputActionConstructionHelper(Redo);
+	InputActionConstructionHelper(Undo);
+	InputActionConstructionHelper(Frame);
+	InputActionConstructionHelper(NextKeyframe);
+	InputActionConstructionHelper(PrevKeyframe);
+	InputActionConstructionHelper(ToggleAllKeyframes);
+	InputActionConstructionHelper(ToggleAutoKeyframe);
+	InputActionConstructionHelper(ToggleCursor);
+	InputActionConstructionHelper(ToggleLockCamera);
+	InputActionConstructionHelper(ToggleShowPath);
+	InputActionConstructionHelper(Grab);
+	InputActionConstructionHelper(FOV);
+	InputActionConstructionHelper(Speed);
 }
 
 void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
@@ -142,21 +160,21 @@ void AFICEditorCameraCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 	UFGEnhancedInputComponent* EnhancedInputComponent = Cast<UFGEnhancedInputComponent>(PlayerInputComponent);
 	const UFGInputSettings* Settings = UFGInputSettings::Get();
 
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Movement"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Move);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Rotation"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Rotate);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Redo"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Redo);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Undo"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Undo);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Frame"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ChangeFrame);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.NextKeyframe"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::NextKeyframe);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.PrevKeyframe"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::PrevKeyframe);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleAllKeyframes"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleAllKeyframes);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleAutoKeyframe"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleAutoKeyframe);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleCursor"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleCursor);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleLockCamera"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleLockCamera);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.ToggleShowPath"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleShowPath);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Grab"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Grab);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.FOV"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ChangeFOV);
-	EnhancedInputComponent->BindAction(Settings->GetInputActionForTag(FGameplayTag::RequestGameplayTag(TEXT("Input.FIC.Editor.Speed"))), ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ChangeSpeed);
+	EnhancedInputComponent->BindAction(InputAction_Movement, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Move);
+	EnhancedInputComponent->BindAction(InputAction_Rotation, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Rotate);
+	EnhancedInputComponent->BindAction(InputAction_Redo, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Redo);
+	EnhancedInputComponent->BindAction(InputAction_Undo, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Undo);
+	EnhancedInputComponent->BindAction(InputAction_Frame, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ChangeFrame);
+	EnhancedInputComponent->BindAction(InputAction_NextKeyframe, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::NextKeyframe);
+	EnhancedInputComponent->BindAction(InputAction_PrevKeyframe, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::PrevKeyframe);
+	EnhancedInputComponent->BindAction(InputAction_ToggleAllKeyframes, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleAllKeyframes);
+	EnhancedInputComponent->BindAction(InputAction_ToggleAutoKeyframe, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleAutoKeyframe);
+	EnhancedInputComponent->BindAction(InputAction_ToggleCursor, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleCursor);
+	EnhancedInputComponent->BindAction(InputAction_ToggleLockCamera, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleLockCamera);
+	EnhancedInputComponent->BindAction(InputAction_ToggleShowPath, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ToggleShowPath);
+	EnhancedInputComponent->BindAction(InputAction_Grab, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::Grab);
+	EnhancedInputComponent->BindAction(InputAction_FOV, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ChangeFOV);
+	EnhancedInputComponent->BindAction(InputAction_Speed, ETriggerEvent::Triggered, this, &AFICEditorCameraCharacter::ChangeSpeed);
 	
 	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Pressed, this, &AFICEditorCameraCharacter::RightMousePress);
 	PlayerInputComponent->BindKey(EKeys::RightMouseButton, EInputEvent::IE_Released, this, &AFICEditorCameraCharacter::RightMouseRelease);
