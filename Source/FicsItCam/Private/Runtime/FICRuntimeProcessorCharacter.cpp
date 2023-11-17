@@ -73,6 +73,7 @@ void AFICRuntimeProcessorCharacter::UnPossessed() {
 		UFGInputMappingContext* InputMappingContext = LoadObject<UFGInputMappingContext>(nullptr, TEXT("/FicsItCam/Input/IC_FIC_Playback.IC_FIC_Playback"));
 		PlayerController->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>()->RemoveMappingContext(InputMappingContext);
 		PlayerController->GetHUD<AFGHUD>()->SetPumpiMode(false);
+		OldController->EnableInput(PlayerController);
 
 		// Force Remove Process
 		AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(this);
