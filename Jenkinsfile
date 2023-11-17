@@ -95,7 +95,7 @@ pipeline {
 		stage('Package FicsIt-Cam') {
 			steps {
 				retry(3) {
-					bat label: 'Alpakit!', script: '.\\ue4\\lb\\win\\Engine\\Build\\BatchFiles\\RunUAT.bat -ScriptsForProject="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" PackagePlugin -Project="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" -PluginName="%MOD_NAME%"'
+					bat label: 'Alpakit!', script: '.\\ue4\\lb\\win\\Engine\\Build\\BatchFiles\\RunUAT.bat -ScriptsForProject="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" PackagePlugin -project="%WORKSPACE%\\SatisfactoryModLoader\\FactoryGame.uproject" -clientconfig=Shipping -serverconfig=Shipping -utf8output -DLCName="%MOD_NAME%" -build -platform=Win64 -nocompileeditor'
 				}
 			}
 		}
@@ -108,8 +108,8 @@ pipeline {
 			}
 			
 			steps {
-				bat script: "rename .\\SatisfactoryModLoader\\Saved\\ArchivedPlugins\\WindowsNoEditor\\${MOD_NAME}.zip ${MOD_NAME}_${BRANCH_NAME}_${BUILD_NUMBER}.zip"
-				archiveArtifacts artifacts: "SatisfactoryModLoader\\Saved\\ArchivedPlugins\\WindowsNoEditor\\${MOD_NAME}_${BRANCH_NAME}_${BUILD_NUMBER}.zip", fingerprint: true, onlyIfSuccessful: true
+				bat script: "rename .\\SatisfactoryModLoader\\Saved\\ArchivedPlugins\\${MOD_NAME}\\${MOD_NAME}-Windows.zip ${MOD_NAME}_${BRANCH_NAME}_${BUILD_NUMBER}.zip"
+				archiveArtifacts artifacts: "SatisfactoryModLoader\\Saved\\ArchivedPlugins\\${MOD_NAME}\\${MOD_NAME}_${BRANCH_NAME}_${BUILD_NUMBER}.zip", fingerprint: true, onlyIfSuccessful: true
 			}
 		}
 	}
