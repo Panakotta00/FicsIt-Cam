@@ -45,6 +45,9 @@ jobs:
         with:
           path: Mods/FicsItCam
 
+      - name: Create UE directory
+        run: mkdir ue
+
       - name: Download, Extract and Setup UE
         working-directory: ue
         run: |
