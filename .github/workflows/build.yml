@@ -81,7 +81,7 @@ jobs:
         run: MSBuild.exe '${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.sln' /p:Configuration='Shipping' /p:Platform='Win64' /t:'Games\FactoryGame' -m
 
       - name: Package FicsItCam Mod
-        run: ${{ github.workspace }}\ue\Engine\Build\BatchFiles\RunUAT.bat -ScriptsForProject='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' PackagePlugin -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' -clientconfig=Shipping -serverconfig=Shipping -utf8output -DLCName='FicsItCam' -build -platform=Win64 -nocompileeditor
+        run: ${{ github.workspace }}\ue\Engine\Build\BatchFiles\RunUAT.bat -ScriptsForProject='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' PackagePlugin -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' -clientconfig=Shipping -serverconfig=Shipping -DLCName='FicsItCam' -build -platform=Win64 -nocompileeditor -installed
 
       - uses: actions/upload-artifact@v3
         with:
