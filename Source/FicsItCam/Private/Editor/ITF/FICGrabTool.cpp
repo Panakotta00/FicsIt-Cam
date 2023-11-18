@@ -3,6 +3,7 @@
 #include "BaseBehaviors/KeyAsModifierInputBehavior.h"
 #include "BaseBehaviors/MouseHoverBehavior.h"
 #include "BaseBehaviors/SingleClickBehavior.h"
+#include "Components/LineBatchComponent.h"
 #include "Data/Objects/FICSceneObject3D.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"

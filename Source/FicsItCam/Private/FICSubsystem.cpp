@@ -18,7 +18,6 @@
 #include "Runtime/FICTimelapseCamera.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
 #include "Runtime/Process/FICRuntimeProcessPlayScene.h"
-#include "Util/SequenceExporter.h"
 
 AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
 	UWorld* WorldObject = GEngine->GetWorldFromContextObjectChecked(WorldContext);
@@ -221,7 +220,7 @@ void AFICSubsystem::DestoryRuntimeProcessorCharacter(AFICRuntimeProcessorCharact
 	OriginalPlayerCharacter = nullptr;
 }
 
-void AFICSubsystem::ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget, bool bInstant) {
+void AFICSubsystem::ExportRenderTarget(TSharedRef<FFICSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget, bool bInstant) {
 	TSharedRef<FFICRenderRequest> RenderRequest = MakeShared<FFICRenderRequest>(RenderTarget, Exporter, FRHIGPUTextureReadback(TEXT("FICSubsystem Texture Readback")));
 
 	ENQUEUE_RENDER_COMMAND(SceneDrawCompletion)([this, RenderTarget, RenderRequest](FRHICommandListImmediate& RHICmdList){

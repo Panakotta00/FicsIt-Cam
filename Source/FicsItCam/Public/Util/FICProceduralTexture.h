@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "FGSaveInterface.h"
-#include "SequenceExporter.h"
+#include "..\Exporter\FICExporter.h"
 #include "FICProceduralTexture.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFICTextureUpdateDelegate);
@@ -39,7 +39,7 @@ public:
 	void SetData(const TArrayView<uint8>& InData, const FIntPoint& InSize);
 };
 
-class FSequenceExporterProceduralTexture : public FSequenceExporter {
+class FSequenceExporterProceduralTexture : public FFICSequenceExporter {
 private:
 	UFICProceduralTexture* Texture;
 

@@ -4,7 +4,6 @@
 #include "CanvasTypes.h"
 #include "FICRuntimeProcessPlayScene.h"
 #include "FICSubsystem.h"
-#include "Util/SequenceExporter.h"
 #include "FICRUntimeProcessRenderScene.generated.h"
 
 inline FName NAME_FICRendererViewport = TEXT("FICRendererViewport");
@@ -88,11 +87,14 @@ class UFICRuntimeProcessRenderScene : public UFICRuntimeProcessPlayScene {
 	GENERATED_BODY()
 public:
 	UPROPERTY()
+	FFICExportSettings ExportSettings;
+	UPROPERTY()
 	AFICCaptureCamera* CaptureCamera = nullptr;
+
 	TSharedPtr<FFICRendererViewport> DummyViewport = nullptr;
-	TSharedPtr<FSequenceExporter> Exporter;
-	FString Path;
 	TSharedPtr<SWidget> Overlay;
+
+	TSharedPtr<FFICSequenceExporter> Exporter;
 
 	TArray<float> ETAStatistics;
 
@@ -110,5 +112,5 @@ public:
 	void Frame();
 
 	UFUNCTION(BlueprintCallable)
-	static UFICRuntimeProcessRenderScene* StartRenderScene(AFICScene* InScene);
+	static UFICRuntimeProcessRenderScene* StartRenderScene(AFICScene* InScene, const FFICExportSettings& InExportSettings);
 };

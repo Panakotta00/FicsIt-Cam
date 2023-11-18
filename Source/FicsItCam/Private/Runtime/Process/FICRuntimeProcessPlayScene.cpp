@@ -18,7 +18,7 @@ void UFICRuntimeProcessPlayScene::Start(AFICRuntimeProcessorCharacter* InCharact
 			CineCamera->Filmback.SensorWidth = Scene->SensorDimension.X;
 			CineCamera->Filmback.SensorHeight = Scene->SensorDimension.Y;
 		} else {
-			InCharacter->Camera->SetAspectRatio(Scene->ResolutionHeight / Scene->ResolutionWidth);
+			InCharacter->Camera->SetAspectRatio(RenderSettings.Resolution.Y / RenderSettings.Resolution.X);
 		}
 	}
 
@@ -88,6 +88,7 @@ UFICRuntimeProcessPlayScene* UFICRuntimeProcessPlayScene::StartPlayScene(AFICSce
 	if (InScene->IsSceneAlreadyInUse()) return nullptr;
 	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(InScene);
 	UFICRuntimeProcessPlayScene* Process = NewObject<UFICRuntimeProcessPlayScene>(SubSys);
+	Process->RenderSettings.Resolution = FIntPoint(InScene->ResolutionWidth, InScene->ResolutionHeight);
 	Process->Scene = InScene;
 	Process->bBackground = bInBackground;
 	if (SubSys->CreateRuntimeProcess(AFICScene::GetSceneProcessKey(InScene->SceneName), Process, true)) {

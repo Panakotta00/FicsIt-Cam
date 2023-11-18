@@ -1,8 +1,9 @@
 ﻿#pragma once
 
+#include "FICKeyframeIcon.h"
 #include "Data/FICTypes.h"
+#include "FICSequencerRow.generated.h"
 
-struct FFICSequencerStyle;
 class SFICSequencer;
 class SFICSequencerRow;
 class IFICSequencerRowProvider;
@@ -10,6 +11,59 @@ class UFICEditorContext;
 class SFICSequencerRowAttribute;
 struct FFICAttribute;
 class FFICEditorAttributeBase;
+
+USTRUCT()
+struct FFICSequencerStyle : public FSlateWidgetStyle {
+	GENERATED_BODY()
+	
+	static const FFICSequencerStyle& GetDefault();
+	
+	static const FName TypeName;
+	virtual const FName GetTypeName() const override { return TypeName; };
+
+	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
+		OutBrushes.Add(&HighlightRangeBrush);
+		OutBrushes.Add(&SelectionBoxBrush);
+		OutBrushes.Add(&RowBackgroundOdd);
+		OutBrushes.Add(&RowBackgroundEven);
+		KeyframeIcon.GetResources(OutBrushes);
+	}
+
+	UPROPERTY(EditAnywhere)
+	FSlateBrush HighlightRangeBrush;
+	UPROPERTY(EditAnywhere)
+	FLinearColor ActiveFrameColor;
+	UPROPERTY(EditAnywhere)
+	FLinearColor GridColor;
+
+	UPROPERTY(EditAnywhere)
+	FSlateColor KeyframeSelectedColor;
+	UPROPERTY(EditAnywhere)
+	FSlateColor KeyframeUnselectedColor;
+	UPROPERTY(EditAnywhere)
+	FSlateBrush SelectionBoxBrush;
+	
+	UPROPERTY(EditAnywhere)
+	FSlateBrush RowBackgroundOdd;
+	UPROPERTY(EditAnywhere)
+	FSlateBrush RowBackgroundEven;
+
+	UPROPERTY(EditAnywhere)
+	FFICKeyframeIconStyle KeyframeIcon;
+};
+
+UCLASS(hidecategories = Object, MinimalAPI)
+class UFICFFICSequencerStyleContainer : public USlateWidgetStyleContainerBase {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
+	FFICSequencerStyle Style;
+
+	virtual const FSlateWidgetStyle* const GetStyle() const override {
+		return &Style;
+	}
+};
 
 /**
  * Combinds a SequencerRowProvider with a name and other metadata

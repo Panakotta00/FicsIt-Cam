@@ -14,6 +14,8 @@ protected:
 	FFICActiveSceneObjectManager ActiveSceneObjectManager;
 	
 public:
+	FFICRenderSettings RenderSettings;
+	
 	UPROPERTY(BlueprintReadOnly)
 	AFICScene* Scene = nullptr;
 

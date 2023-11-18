@@ -27,7 +27,7 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	float Time = 0.0f;
 
-	TSharedPtr<FSequenceExporter> Exporter;
+	TSharedPtr<FFICSequenceExporter> Exporter;
 
 	// Begin UObject
 	virtual void PostInitProperties() override;

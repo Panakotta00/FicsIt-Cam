@@ -2,9 +2,7 @@
 
 #include "Subsystem/ModSubsystem.h"
 #include "FGSaveInterface.h"
-#include "IImageWrapper.h"
 #include "RHIGPUReadback.h"
-#include "Util/SequenceExporter.h"
 #include "FICSubsystem.generated.h"
 
 class UFICRuntimeProcess;
@@ -28,10 +26,10 @@ struct FFICRenderRequest {
 	
 	FRHIGPUTextureReadback Readback;
 
-	TSharedRef<FSequenceExporter> Exporter;
+	TSharedRef<FFICSequenceExporter> Exporter;
 	TSharedRef<FFICRenderTarget> RenderTarget;
 
-	FFICRenderRequest(TSharedRef<FFICRenderTarget> RenderTarget, TSharedRef<FSequenceExporter> Exporter, FRHIGPUTextureReadback Readback) : RenderTarget(RenderTarget), Exporter(Exporter), Readback(Readback) {}
+	FFICRenderRequest(TSharedRef<FFICRenderTarget> RenderTarget, TSharedRef<FFICSequenceExporter> Exporter, FRHIGPUTextureReadback Readback) : RenderTarget(RenderTarget), Exporter(Exporter), Readback(Readback) {}
 };
 
 struct FFICRenderTarget_Raw : public FFICRenderTarget {
@@ -141,7 +139,7 @@ public:
 
 	AFICRuntimeProcessorCharacter* GetRuntimeProcessorCharacter() { return RuntimeProcessorCharacter; }
 	
-	void ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget, bool bInstant = false);
+	void ExportRenderTarget(TSharedRef<FFICSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget, bool bInstant = false);
 	void HandleRenderRequest(TSharedPtr<FFICRenderRequest> InRequest);
 
 	UFUNCTION(BlueprintCallable)

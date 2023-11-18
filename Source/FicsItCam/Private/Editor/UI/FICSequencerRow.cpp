@@ -5,6 +5,18 @@
 #include "Editor/UI/FICSequencer.h"
 #include "Editor/UI/FICUIUtil.h"
 
+const FName FFICSequencerStyle::TypeName = "Sequencer";
+
+const FFICSequencerStyle& FFICSequencerStyle::GetDefault() {
+	static FFICSequencerStyle* Default = nullptr;
+	if (!Default) {
+		Default = new FFICSequencerStyle();
+		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICSequencerStyle>("Sequencer");
+		Default->KeyframeIcon = FFICKeyframeIconStyle::GetDefault();
+	}
+	return *Default;
+}
+
 TArray<TSharedPtr<FFICSequencerRowMeta>> FFICSequencerRowMeta::GetChildren() {
 	if (!CachedChildren.IsSet()) {
 		CachedChildren = Provider->GetChildRows();

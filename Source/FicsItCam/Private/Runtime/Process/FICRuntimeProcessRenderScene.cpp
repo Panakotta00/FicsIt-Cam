@@ -9,6 +9,7 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Editor/FICEditorSubsystem.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Exporter/FICFfmpegExporter.h"
 #include "GTE/Mathematics/Logger.h"
 #include "Runtime/FICCaptureCamera.h"
 #include "Slate/SceneViewport.h"
@@ -32,20 +33,9 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 	FAudioThread::StopAudioThread();
 	
 	FViewportClient* ViewportClient = GetWorld()->GetGameViewport();
-	DummyViewport = MakeShared<FFICRendererViewport>(ViewportClient, Scene->ResolutionWidth, Scene->ResolutionHeight);
-
-	// Create Save Path
-	FString FSP;
-	// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
-	if (FSP.IsEmpty()) {
-		FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/") TEXT("FicsItCam/"), Scene->SceneName);
-	}
-	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
+	DummyViewport = MakeShared<FFICRendererViewport>(ViewportClient, ExportSettings.Resolution.X, ExportSettings.Resolution.Y);
 	
-	Path = FPaths::Combine(FSP, FDateTime::Now().ToString() + TEXT(".mp4"));
-	
-	Exporter = MakeShared<FSequenceMP4Exporter>(FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight), Scene->FPS, Path);
+	Exporter = UFICExporterDescriptor::CreateExporter(ExportSettings.Exporter, ExportSettings);
 	//Exporter = MakeShared<FSequenceImageExporter>(Path, FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight));
 	Exporter->Init();
 
@@ -115,12 +105,14 @@ void UFICRuntimeProcessRenderScene::Stop(AFICRuntimeProcessorCharacter* InCharac
 	Settings->MaxUndilatedFrameTime = PrevMaxUndilatedFrameTime;
 }
 
-UFICRuntimeProcessRenderScene* UFICRuntimeProcessRenderScene::StartRenderScene(AFICScene* InScene) {
+UFICRuntimeProcessRenderScene* UFICRuntimeProcessRenderScene::StartRenderScene(AFICScene* InScene, const FFICExportSettings& Settings) {
 	AFICEditorSubsystem* EditSubSys = AFICEditorSubsystem::GetFICEditorSubsystem(InScene);
 	if (InScene->IsSceneAlreadyInUse()) return nullptr;
 	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(InScene);
 	UFICRuntimeProcessRenderScene* Process = NewObject<UFICRuntimeProcessRenderScene>(SubSys);
 	Process->Scene = InScene;
+	Process->ExportSettings = Settings;
+	Process->RenderSettings = static_cast<FFICRenderSettings>(Settings);
 	if (SubSys->CreateRuntimeProcess(AFICScene::GetSceneProcessKey(InScene->SceneName), Process, true)) {
 		return Process;
 	} else {

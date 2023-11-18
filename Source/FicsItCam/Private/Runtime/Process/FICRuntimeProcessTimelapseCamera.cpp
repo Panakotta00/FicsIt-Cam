@@ -3,6 +3,7 @@
 #include "FGPlayerController.h"
 #include "FICSubsystem.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Exporter/FICImageSequenceExporter.h"
 #include "Runtime/FICCaptureCamera.h"
 
 void UFICRuntimeProcessTimelapseCamera::PostInitProperties() {
@@ -27,7 +28,7 @@ void UFICRuntimeProcessTimelapseCamera::Start(AFICRuntimeProcessorCharacter* InC
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
 
-	Exporter = MakeShared<FSequenceImageExporter>(FSP, FIntPoint(CaptureCamera->RenderTarget->SizeX, CaptureCamera->RenderTarget->SizeY));
+	Exporter = MakeShared<FFICImageSequenceExporter>(FSP, FIntPoint(CaptureCamera->RenderTarget->SizeX, CaptureCamera->RenderTarget->SizeY));
 	Exporter->Init();
 }
 

@@ -76,5 +76,5 @@ void FSequenceExporterProceduralTexture::AddFrame(EPixelFormat Format, void* ptr
 }
 
 void FSequenceExporterProceduralTexture::Finish() {
-	FSequenceExporter::Finish();
+	FFICSequenceExporter::Finish();
 }

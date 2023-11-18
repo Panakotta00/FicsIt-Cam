@@ -5,6 +5,7 @@
 #include "FGGameUserSettings.h"
 #include "BaseGizmos/GizmoViewContext.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Components/LineBatchComponent.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/ITF/FICGrabTool.h"
 #include "Editor/ITF/FICSelectionInteraction.h"

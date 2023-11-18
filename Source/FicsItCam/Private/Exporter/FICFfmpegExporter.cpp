@@ -1,14 +1,79 @@
-﻿#include "Util/SequenceExporter.h"
+#include "Exporter/FICFfmpegExporter.h"
 
 #include <string>
 
 #include "FicsItCamModule.h"
-#include "IImageWrapper.h"
-#include "IImageWrapperModule.h"
+#include "FICSubsystem.h"
+#include "Data/FICScene.h"
+#include "DesktopPlatform/Public/DesktopPlatformModule.h"
+#include "Runtime/Process/FICRuntimeProcess.h"
+#include "SlateFileDialogs/Public/ISlateFileDialogModule.h"
+#include "Util/FICWindowsUtils.h"
 
-FSequenceMP4Exporter::FSequenceMP4Exporter(FIntPoint InImageSize, int FPS, FString InPath) : ImageSize(InImageSize), FPS(FPS), Path(InPath) {}
+extern "C" {
+	#include "libavcodec/avcodec.h"
+	#include "libavformat/avformat.h"
+	#include "libswscale/swscale.h"
+}
 
-FSequenceMP4Exporter::~FSequenceMP4Exporter() {
+UFICFfmpegExporter::UFICFfmpegExporter() {
+	ExporterName = FText::FromString(TEXT("FFmpeg Exporter"));
+}
+
+TFICDynamicStruct<FFICExporterSpecificSettings> UFICFfmpegExporter::CreateSpecificSettings(UObject* Context) {
+	FFICFfmpegSettings Settings;
+	
+	FString Name;
+	if (AFICScene* Scene = Cast<AFICScene>(Context)) {
+		Name = Scene->SceneName;
+		Settings.ExportFPS = Scene->FPS;
+	} else if (UFICRuntimeProcess* Process = Cast<UFICRuntimeProcess>(Context)) {
+		Name = AFICSubsystem::GetFICSubsystem(Context)->FindRuntimeProcessKey(Process);
+	}
+	
+	FString FolderPath;
+	// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
+	if (FolderPath.IsEmpty()) {
+		FolderPath = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/FicsItCam/"));
+	}
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	if (!PlatformFile.DirectoryExists(*FolderPath)) PlatformFile.CreateDirectoryTree(*FolderPath);
+	FString FileName = FDateTime::Now().ToString() + TEXT(".mp4");
+	if (!Name.IsEmpty()) {
+		FileName = Name + TEXT("-") + FileName;
+	}
+	
+	Settings.Path = FPaths::Combine(FolderPath, FileName);
+	
+	return FFICDynamicStruct(Settings);
+}
+
+TSharedRef<FFICSequenceExporter> UFICFfmpegExporter::CreateExporter(const FFICExportSettings& InExportSettings) {
+	FFICFfmpegSettings& FfmpegSettings = InExportSettings.ExporterSpecificSettings.Get<FFICFfmpegSettings>();
+	return MakeShared<FFICFfmpegSequenceExporter>(InExportSettings.Resolution, FfmpegSettings.ExportFPS, FfmpegSettings.Path);
+}
+
+void UFICFfmpegExporter::SetSpecificFfmpegSettings(FFICExportSettings& ExportSettings, const FFICFfmpegSettings& SpecificSettings) {
+	check(ExportSettings.Exporter && ExportSettings.Exporter->IsChildOf<UFICFfmpegExporter>());
+	ExportSettings.ExporterSpecificSettings = FFICDynamicStruct(SpecificSettings);
+}
+
+FFICFfmpegSettings UFICFfmpegExporter::GetSpecificFfmpegSettings(const FFICExportSettings& ExportSettings) {
+	return ExportSettings.ExporterSpecificSettings.Get<FFICFfmpegSettings>();
+}
+
+FString UFICFfmpegExporter::OpenFileDialogFfmpeg(UWidget* ParentWidget, const FString& Path) {
+	TArray<FString> FileNames;
+	TSharedPtr<SWindow> Window = FSlateApplication::Get().FindWidgetWindow(ParentWidget->GetCachedWidget().ToSharedRef());
+	void* NativeWindow = Window->GetNativeWindow()->GetOSWindowHandle();
+	FFICWindowsUtils::SaveFileDialog(NativeWindow, TEXT("FFmpeg Export File"), Path, TEXT("MP4|*.mp4"), FileNames);
+	if (FileNames.Num() < 1) return Path;
+	return FileNames[0];
+}
+
+FFICFfmpegSequenceExporter::FFICFfmpegSequenceExporter(FIntPoint InImageSize, int FPS, FString InPath) : ImageSize(InImageSize), FPS(FPS), Path(InPath) {}
+
+FFICFfmpegSequenceExporter::~FFICFfmpegSequenceExporter() {
 	if (SwsContext) sws_freeContext(SwsContext);
 	if (FormatContext->pb) avio_closep(&FormatContext->pb);
 	if (Frame) av_frame_free(&Frame);
@@ -25,7 +90,7 @@ FString ffmpeg_err2str_func(int ret) {
 
 #define ffmpeg_err2str(ret) *ffmpeg_err2str_func(ret)
 
-bool FSequenceMP4Exporter::Init() {
+bool FFICFfmpegSequenceExporter::Init() {
 	FTCHARToUTF8 FilePath(*Path, Path.Len());
 	std::string FilePathStr = std::string(FilePath.Get(), FilePath.Length());
 	
@@ -128,8 +193,8 @@ bool FSequenceMP4Exporter::Init() {
 	return true;
 }
 
-void FSequenceMP4Exporter::Finish() {
-	FSequenceExporter::Finish();
+void FFICFfmpegSequenceExporter::Finish() {
+	FFICSequenceExporter::Finish();
 	
 	int ret = av_write_trailer(FormatContext);
 	if (ret < 0) {
@@ -137,7 +202,7 @@ void FSequenceMP4Exporter::Finish() {
 	}
 }
 
-void FSequenceMP4Exporter::AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) {
+void FFICFfmpegSequenceExporter::AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) {
 	if (bFinished) return;
 
 	int64 FramePts = FrameNr++;
@@ -168,7 +233,7 @@ void FSequenceMP4Exporter::AddFrame(EPixelFormat Format, void* ptr, FIntPoint Re
 	ReadBuffer();
 }
 
-void FSequenceMP4Exporter::ReadBuffer() {
+void FFICFfmpegSequenceExporter::ReadBuffer() {
 	int ret = 0;
 	while (ret >= 0) {
 		ret = avcodec_receive_packet(CodecContext, Packet);
@@ -185,46 +250,4 @@ void FSequenceMP4Exporter::ReadBuffer() {
 			return;
 		}
 	}
-}
-
-FSequenceImageExporter::FSequenceImageExporter(FString InPath, FIntPoint InImageSize) : Path(InPath), ImageSize(InImageSize) {}
-
-bool FSequenceImageExporter::Init() {
-	StartTime = FDateTime::Now();
-	return true;
-}
-
-void FSequenceImageExporter::AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size) {
-	FString FilePath = FPaths::Combine(Path, FString::Printf(TEXT("%s-%05llu.jpg"), *StartTime.ToString(), Increment++));
-
-	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
-	
-	/*TArray<uint8> Data;
-	Data.AddUninitialized(ReadSize.X * ReadSize.Y * 4);
-	for (int Y = 0; Y < ReadSize.Y; ++Y) {
-		for (int X = 0; X < ReadSize.X; ++X) {
-			uint32& pxl = *(((uint32*)ptr) + ReadSize.X * Y + X);
-			*(Data.GetData() + Y * ReadSize.X + X) = (uint16)((pxl >> 0) & 0x3FF);
-			*(Data.GetData() + Y * ReadSize.X + X + 1) = (uint16)((pxl >> 10) & 0x3FF);
-			*(Data.GetData() + Y * ReadSize.X + X + 2) = (uint16)((pxl >> 20) & 0x3FF);
-			*(Data.GetData() + Y * ReadSize.X + X + 3) = 0xFF;
-		}
-	}
-	
-	TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
-	ImageWrapper->SetRaw(Data.GetData(), ReadSize.X*ReadSize.Y*4, ReadSize.X, ReadSize.Y, ERGBFormat::RGBA, 8, ReadSize.X*4);
-	TArray64<uint8> CompressedData = ImageWrapper->GetCompressed(100);*/
-	
-
-
-	
-	TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
-	ImageWrapper->SetRaw(ptr, ReadSize.X*ReadSize.Y*4, Size.X, Size.Y, ERGBFormat::RGBA, 8, ReadSize.X*4);
-	TArray64<uint8> CompressedData = ImageWrapper->GetCompressed(100);
-
-	FFileHelper::SaveArrayToFile(CompressedData, *FilePath);
-}
-
-void FSequenceImageExporter::Finish() {
-	FSequenceExporter::Finish();
 }
