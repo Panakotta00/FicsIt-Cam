@@ -3,6 +3,7 @@
 #include "NativeGameplayTags.h"
 #include "Modules/ModuleManager.h"
 #include "Patching/NativeHookManager.h"
+#include "Util/FICSceneViewExtension.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFicsItCam, Verbose, All);
 
@@ -12,6 +13,8 @@ static FIntPoint FIC_LastViewSize;
 
 class FFicsItCamModule : public FDefaultGameModuleImpl {
 public:
+	TSharedPtr<FFICSceneViewExtension> SceneViewExtension;
+	
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 

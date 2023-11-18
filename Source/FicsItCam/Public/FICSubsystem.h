@@ -3,6 +3,8 @@
 #include "Subsystem/ModSubsystem.h"
 #include "FGSaveInterface.h"
 #include "RHIGPUReadback.h"
+#include "Rendering/FICRenderer.h"
+#include "Util/FICSceneViewExtension.h"
 #include "FICSubsystem.generated.h"
 
 class UFICRuntimeProcess;
@@ -49,6 +51,10 @@ class AFICSubsystem : public AModSubsystem, public IFGSaveInterface {
 	GENERATED_BODY()
 private:
 	TQueue<TSharedPtr<FFICRenderRequest>> RenderRequestQueue;
+
+	TSharedPtr<FSequenceImageExporter> SceneExporter;
+	UPROPERTY()
+	FFICRenderer SceneRenderer;
 
 	UPROPERTY(SaveGame)
 	TMap<FString, UFICRuntimeProcess*> RuntimeProcesses;

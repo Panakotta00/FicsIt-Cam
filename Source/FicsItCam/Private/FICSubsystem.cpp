@@ -11,13 +11,25 @@
 #include "RHIGPUReadback.h"
 #include "RHISurfaceDataConversion.h"
 #include "Command/FICCommand.h"
+#include "Components/WorldPartitionStreamingSourceComponent.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"
 #include "Engine/World.h"
+#include "Renderer/Private/ScenePrivate.h"
+#include "Rendering/FICRenderer.h"
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 #include "Runtime/FICTimelapseCamera.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
 #include "Runtime/Process/FICRuntimeProcessPlayScene.h"
+#include "Runtime/Process/FICRuntimeProcessRenderScene.h"
+#include "Slate/SceneViewport.h"
+#include "Util/FICSceneViewExtension.h"
+#include "LegacyScreenPercentageDriver.h"
+#include "RHISurfaceDataConversion.h"
+#include "SceneViewExtension.h"
+#include "SceneViewExtensionContext.h"
+#include "EngineModule.h"
+#include "EngineUtils.h"
 
 AFICSubsystem* AFICSubsystem::GetFICSubsystem(UObject* WorldContext) {
 	UWorld* WorldObject = GEngine->GetWorldFromContextObjectChecked(WorldContext);
@@ -73,7 +85,67 @@ void AFICSubsystem::BeginPlay() {
 		UFICCommand* CMD = Class->GetDefaultObject<UFICCommand>();
 		Commands.FindOrAdd(CMD->ParentCommand).Add(CMD->CommandName, CMD);
 	}
+
+	for (TActorIterator<AFICScene> Scene(GetWorld()); Scene; ++Scene) {
+		Scenes.Add(*Scene);
+	}
+
+	/*FSceneViewExtensionIsActiveFunctor SceneViewExtensionIsActive;
+	SceneViewExtensionIsActive.IsActiveFunction = [](const ISceneViewExtension* SceneViewExtension, const FSceneViewExtensionContext& Context) {
+		return true;
+	};
+	SceneViewExtension = FSceneViewExtensions::NewExtension<FFICSceneViewExtension>(GetWorld()->GetFirstLocalPlayerFromController());
+	SceneViewExtension->IsActiveThisFrameFunctions.Add(SceneViewExtensionIsActive);*/
+
+	TSharedRef<SViewport> ViewportWidget = SNew(SViewport).EnableGammaCorrection(false);
+	TSharedRef<SWindow> Window = SNew(SWindow)
+		.Title(FText::FromString(TEXT("Nice")))
+		.UseOSWindowBorder(true)
+		.ClientSize(FVector2D(500, 500))
+		.Content()[ViewportWidget];
+	FSlateApplication::Get().AddWindow(Window);
+	//FSlateApplication::Get().GetRenderer()->CreateViewport(Window);
+
+	FIntPoint Size = FIntPoint(1280, 1024);
+	FCommonViewportClient* Client = new FCommonViewportClient();
+	TSharedRef<FSceneViewport> Viewport = MakeShared<FSceneViewport>(Client, ViewportWidget);
+	//TSharedRef<FFICRendererViewport> Viewport = MakeShared<FFICRendererViewport>((FViewportClient*)Client, Size.X, Size.Y);
+
+	ViewportWidget->SetViewportInterface(Viewport);
+	//Viewport->SetViewportSize(100, 100);
+
+	SceneExporter = MakeShared<FSequenceImageExporter>(TEXT("C:/Users/Yannic/Desktop"), Viewport->GetSizeXY());
+	
+	AActor* Actor = GetWorld()->SpawnActor<AActor>(FVector(0, 0, 25000), FRotator());
+	UWorldPartitionStreamingSourceComponent* Source = Cast<UWorldPartitionStreamingSourceComponent>(Actor->AddComponentByClass(UWorldPartitionStreamingSourceComponent::StaticClass(), false, FTransform(), false));
+	Source->EnableStreamingSource();
+	Source->Priority = EStreamingSourcePriority::Highest;
+
+	FTimerHandle Handle;
+	GetWorld()->GetTimerManager().SetTimer(Handle, [this, Viewport]() {
+		FMinimalViewInfo ViewInfo;
+		//FVector PlayerLocation = GetWorld()->GetFirstPlayerController()->GetCharacter()->GetActorLocation();
+		//Location += FVector(0, 0, 500);
+		//FRotator Rotation = FVector(0, 0, -1).Rotation();
+		//FRotator Rotation = GetWorld()->GetFirstPlayerController()->GetCharacter()->GetActorRotation();
+		FVector Location = FVector(0, 0, 25000);
+		//FRotator Rotation = (PlayerLocation - Location).Rotation();
+		FRotator Rotation = FVector(0,0,-1).Rotation();
+		ViewInfo.Location = Location;
+		ViewInfo.Rotation = Rotation;
+		ViewInfo.FOV = 90.0f;
+
+		SceneRenderer.Render(&*Viewport, ViewInfo, GetWorld());
+		ENQUEUE_RENDER_COMMAND(ReadbackFICCameraFootage)( [&](FRHICommandListImmediate& RHICmdList) {
+			//RHICmdList.CopyTexture()
+		});
+		
+
+		ExportRenderTarget(SceneExporter.ToSharedRef(), MakeShared<FFICRenderTarget_Raw>(Viewport->GetViewport()));
+	}, 1.0f, true);
 }
+
+#include "RHISurfaceDataConversion.h"
 
 void AFICSubsystem::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
