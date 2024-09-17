@@ -28,10 +28,10 @@ struct FFICRenderRequest {
 	
 	FRHIGPUTextureReadback Readback;
 
-	TSharedRef<FSequenceExporter> Exporter;
 	TSharedRef<FFICRenderTarget> RenderTarget;
+	TSharedRef<FSequenceExporter> Exporter;
 
-	FFICRenderRequest(TSharedRef<FFICRenderTarget> RenderTarget, TSharedRef<FSequenceExporter> Exporter, FRHIGPUTextureReadback Readback) : RenderTarget(RenderTarget), Exporter(Exporter), Readback(Readback) {}
+	FFICRenderRequest(TSharedRef<FFICRenderTarget> RenderTarget, TSharedRef<FSequenceExporter> Exporter, FRHIGPUTextureReadback Readback) : Readback(Readback), RenderTarget(RenderTarget), Exporter(Exporter) {}
 };
 
 struct FFICRenderTarget_Raw : public FFICRenderTarget {

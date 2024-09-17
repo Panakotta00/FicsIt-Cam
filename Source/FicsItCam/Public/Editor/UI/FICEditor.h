@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include "SlateBasics.h"
-
 class UFICEditorContext;
 
 class SFICEditor : public SCompoundWidget {

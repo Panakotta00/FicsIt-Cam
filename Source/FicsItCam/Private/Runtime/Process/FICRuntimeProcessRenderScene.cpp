@@ -13,6 +13,7 @@
 #include "Runtime/FICCaptureCamera.h"
 #include "Slate/SceneViewport.h"
 #include "Widgets/SViewport.h"
+	#include "Widgets/Notifications/SProgressBar.h"
 
 void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InCharacter) {
 	Super::Start(InCharacter);
@@ -93,7 +94,7 @@ void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharac
 	FlushRenderingCommands();
 	
 	UGameViewportClient* ViewportClient = GetWorld()->GetGameViewport();
-	FCanvas Canvas(DummyViewport.Get(), NULL, ViewportClient->GetWorld(), ViewportClient->GetWorld()->FeatureLevel);
+	FCanvas Canvas(DummyViewport.Get(), NULL, ViewportClient->GetWorld(), ViewportClient->GetWorld()->GetFeatureLevel());
 	ViewportClient->Draw(DummyViewport.Get(), &Canvas);
 	Canvas.Flush_GameThread();
 

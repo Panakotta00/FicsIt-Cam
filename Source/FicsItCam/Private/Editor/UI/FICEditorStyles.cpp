@@ -1,5 +1,6 @@
 #include "Editor/UI/FICEditorStyle.h"
 #include "Slate/SlateGameResources.h"
+#include "Styling/SlateStyleRegistry.h"
 
 TSharedPtr<FSlateStyleSet> FFICEditorStyles::StyleInstance = NULL;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SlateBasics.h"
+#include "CoreMinimal.h"
 #include "FICEditorStyle.generated.h"
 
 class FFICEditorStyles {

@@ -19,6 +19,7 @@
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerController.h"
 #include "Input/FGEnhancedInputComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 #define InputActionConstructionHelper(Action) InputAction_ ## Action = ConstructorHelpers::FObjectFinder<UInputAction>(TEXT("/FicsItCam/Input/IA_FIC_Editor_" ## #Action ## ".IA_FIC_Editor_" ## #Action)).Object
 

@@ -4,10 +4,7 @@
 #include "EnhancedInputComponent.h"
 #include "FGGameUserSettings.h"
 #include "FGInputSettings.h"
-#include "FicsItCamModule.h"
 #include "FICUtils.h"
-#include "IImageWrapper.h"
-#include "IImageWrapperModule.h"
 #include "RHIGPUReadback.h"
 #include "RHISurfaceDataConversion.h"
 #include "Command/FICCommand.h"
@@ -15,7 +12,6 @@
 #include "Editor/FICEditorSubsystem.h"
 #include "Engine/World.h"
 #include "Runtime/FICRuntimeProcessorCharacter.h"
-#include "Runtime/FICTimelapseCamera.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
 #include "Runtime/Process/FICRuntimeProcessPlayScene.h"
 #include "Util/SequenceExporter.h"
@@ -107,7 +103,7 @@ void AFICSubsystem::PreSaveGame_Implementation(int32 saveVersion, int32 gameVers
 	PersistentActiveRuntimeProcesses = ActiveRuntimeProcesses;
 	for (const TPair<FString, UFICRuntimeProcess*>& Process : RuntimeProcesses) {
 		if (Process.Value->IsPersistent()) {
-			if (!Process.Value->PreSave()) {
+			if (!Process.Value->PreSaveProcess()) {
 				PersistentActiveRuntimeProcesses.Remove(Process.Value);
 			}
 		}
@@ -123,7 +119,7 @@ void AFICSubsystem::PostLoadGame_Implementation(int32 saveVersion, int32 gameVer
 	TMap<FString, UFICRuntimeProcess*> Processes = RuntimeProcesses;
 	for (const TPair<FString, UFICRuntimeProcess*>& Process : Processes) {
 		if (Process.Value) {
-			Process.Value->PostLoad();
+			Process.Value->PostLoadProcess();
 		} else {
 			RuntimeProcesses.Remove(Process.Key);
 		}

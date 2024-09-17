@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "FICEvents.h"
-#include "SlateBasics.h"
 #include "Data/FICTypes.h"
 
 class SFICRangeSelector : public SLeafWidget {

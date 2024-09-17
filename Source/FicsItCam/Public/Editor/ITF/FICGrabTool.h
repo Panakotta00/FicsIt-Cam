@@ -65,8 +65,8 @@ public:
 	virtual void Render(IToolsContextRenderAPI* RenderAPI) override;
 	virtual void OnTick(float DeltaTime) override;
 
-	bool HasAccept();
-	bool CanAccept();
+	virtual bool HasAccept() const override;
+	virtual bool CanAccept() const override;
 	// End UInteractiveTool
 
 	// Begin IInputBehaviourSource

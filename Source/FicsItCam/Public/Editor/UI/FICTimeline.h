@@ -1,11 +1,11 @@
 ﻿#pragma once
 
+#include "CoreMinimal.h"
 #include "FICGraphView.h"
 #include "FICRangeSelector.h"
 #include "FICSequencer.h"
 #include "FICSequencerTreeView.h"
 #include "FICTimelineScrubber.h"
-#include "SlateBasics.h"
 #include "FICTimeline.generated.h"
 
 class UFICEditorContext;
@@ -55,14 +55,8 @@ struct FFICEditorAttributeReference {
 };
 
 class SFICTimelinePanel : public SCompoundWidget {
-	static FSlateColorBrush DefaultBackgroundBrush;
-	static FCheckBoxStyle DefaultToggleButtonStyle;
-	static FSlateBoxBrush DefaultToggleButtonChecked;
-	static FSlateBoxBrush DefaultToggleButtonUnchecked;
-	
 	SLATE_BEGIN_ARGS(SFICTimelinePanel) :
-		_Style(&FFICTimelineStyle::GetDefault()),
-		_Background(&DefaultBackgroundBrush) {}
+		_Style(&FFICTimelineStyle::GetDefault()) {}
 		SLATE_STYLE_ARGUMENT(FFICTimelineStyle, Style)
 		SLATE_ATTRIBUTE(const FSlateBrush*, Background)
 	SLATE_END_ARGS()

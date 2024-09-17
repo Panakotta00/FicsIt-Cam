@@ -10,14 +10,12 @@ public class FicsItCam : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] {
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
             "Core", "CoreUObject",
             "Engine",
             "InputCore",
-            "ReplicationGraph",
             "UMG",
-            "AssetRegistry",
-            "GameplayTasks",
             "Slate", "SlateCore",
             "InteractiveToolsFramework",
             "CinematicCamera",
@@ -27,18 +25,14 @@ public class FicsItCam : ModuleRules
             "ImageWrapper",
             "Niagara",
             "EnhancedInput",
-            "GameplayTags"
 		});
 			
-		if (Target.Type == TargetRules.TargetType.Editor) {
-			PublicDependencyModuleNames.AddRange(new string[] {"OnlineBlueprintSupport", "AnimGraph"});
-		}
-        PublicDependencyModuleNames.AddRange(new string[] {"FactoryGame", "SML"});
+        PublicDependencyModuleNames.AddRange(new string[]
+        {
+	        "FactoryGame",
+	        "SML"
+        });
         
-        OptimizeCode = CodeOptimization.Never;
-        
-        PublicIncludePaths.Add("Public");
-
         var thirdPartyFolder = Path.Combine(ModuleDirectory, "../../ThirdParty");
         PublicIncludePaths.Add(Path.Combine(thirdPartyFolder, "include"));        
         

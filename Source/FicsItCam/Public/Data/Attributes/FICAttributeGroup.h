@@ -51,8 +51,8 @@ public:
 	virtual FICValue GetFloatValue(FICFrameFloat Time) override { return 0.0f; }
 	virtual bool HasKeyframe(FICFrame Time) const override;
 
-	virtual void Set(TSharedRef<FFICAttribute> InAttrib) override;
-	virtual TSharedRef<FFICAttribute> Get() override;
+	virtual void CopyFrom(TSharedRef<FFICAttribute> InAttrib) override;
+	virtual TSharedRef<FFICAttribute> CreateCopy() override;
 
 	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute() override;
 	

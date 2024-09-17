@@ -5,6 +5,7 @@
 #include "InteractiveToolsContext.h"
 #include "GameFramework/Character.h"
 #include "Materials/Material.h"
+#include "MaterialDomain.h"
 #include "SceneQueries/SceneSnappingManager.h"
 
 class FFICToolsContextQueries : public IToolsContextQueriesAPI {

@@ -3,6 +3,7 @@
 #include "EngineUtils.h"
 #include "Components/LineBatchComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/BoxComponent.h"
 #include "Editor/Data/FICEditorAttributeBool.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "BaseGizmos/CombinedTransformGizmo.h"

@@ -64,18 +64,18 @@ bool FFICGroupAttribute::HasKeyframe(FICFrame Time) const {
 	return false;
 }
 
-void FFICGroupAttribute::Set(TSharedRef<FFICAttribute> InAttrib) {
+void FFICGroupAttribute::CopyFrom(TSharedRef<FFICAttribute> InAttrib) {
 	TSharedRef<FFICGroupAttribute> Attrib = StaticCastSharedRef<FFICGroupAttribute>(InAttrib);
 	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
 		TSharedRef<FFICAttribute>* Attribute = Attrib->AttributeCache.Find(Attr.Key);
-		if (Attribute) Attr.Value->Set(*Attribute);
+		if (Attribute) Attr.Value->CopyFrom(*Attribute);
 	}
 }
 
-TSharedRef<FFICAttribute> FFICGroupAttribute::Get() {
+TSharedRef<FFICAttribute> FFICGroupAttribute::CreateCopy() {
 	TSharedRef<FFICGroupAttribute> Attrib = MakeShared<FFICGroupAttribute>();
 	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
-		Attrib->AttributeCache.Add(Attr.Key, Attr.Value->Get());
+		Attrib->AttributeCache.Add(Attr.Key, Attr.Value->CreateCopy());
 	}
 	return Attrib;
 }

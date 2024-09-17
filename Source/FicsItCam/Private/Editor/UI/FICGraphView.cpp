@@ -438,7 +438,7 @@ FReply SFICGraphView::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& In
 		TMap<FFICAttribute*, TSharedRef<FFICAttribute>> Snapshots;
 		for (const TPair<FFICAttribute*, FICFrame>& SelectedKeyframe : Selection) {
 			TSharedRef<FFICAttribute>* Snapshot = Snapshots.Find(SelectedKeyframe.Key);
-			if (!Snapshot) Snapshots.Add(SelectedKeyframe.Key, SelectedKeyframe.Key->Get());
+			if (!Snapshot) Snapshots.Add(SelectedKeyframe.Key, SelectedKeyframe.Key->CreateCopy());
 			SelectedKeyframe.Key->RemoveKeyframe(SelectedKeyframe.Value);
 		}
 		TSharedRef<FFICChange_Group> Group = MakeShared<FFICChange_Group>();

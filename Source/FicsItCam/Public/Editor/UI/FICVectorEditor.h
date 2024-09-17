@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include "SlateBasics.h"
 #include "Data/FICTypes.h"
 #include "Data/Attributes/FICAttributeFloat.h"
 #include "Editor/Data/FICEditorAttributeBase.h"

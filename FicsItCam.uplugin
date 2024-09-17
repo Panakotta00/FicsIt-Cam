@@ -2,13 +2,13 @@
 	"FileVersion": 3,
 	"Version": 0,
 	"VersionName": "0.3",
-	"SemVersion": "0.3.8",
+	"SemVersion": "0.3.9",
 	"AcceptsAnyRemoteVersion": true,
 	"FriendlyName": "FicsIt-Cam",
-	"Description": "This mod allows you to create beautiful camera animations in-game.",
+	"Description": "Camera-Animations, Timelapse-Cameras, additional Camera-Feeds & more! Everything a cinematographer needs.",
 	"Category": "Modding",
 	"CreatedBy": "Panakotta00, Deantendo",
-	"CreatedByURL": "https://panakotta00.massivebytes.net/",
+	"CreatedByURL": "https://panakotta00.dev/",
 	"DocsURL": "https://github.com/Panakotta00/FicsIt-Cam",
 	"MarketplaceURL": "",
 	"SupportURL": "https://patreon.com/panakotta00",
@@ -24,10 +24,11 @@
 		}
 	],
 	"Plugins": [
-        {
-            "Name": "SML",
-            "SemVersion": "^3.6.0",
-            "Enabled": true
-        }
-    ]
+		{
+			"Name": "SML",
+			"SemVersion": "^3.8.0-dev",
+			"Enabled": true
+		}
+	],
+	"GameVersion": ">=365306"
 }

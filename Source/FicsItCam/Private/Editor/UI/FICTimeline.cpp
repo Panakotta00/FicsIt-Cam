@@ -2,15 +2,10 @@
 
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICSequencerTreeView.h"
+#include "Editor/Data/FICEditorAttributeGroupDynamic.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
-
-FSlateColorBrush SFICTimelinePanel::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
-
-FCheckBoxStyle SFICTimelinePanel::DefaultToggleButtonStyle = FCoreStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonStyle");
-FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonChecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.25f, 0.25f, 0.25f));
-FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonUnchecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.72f, 0.72f, 0.72f));
 
 const FName FFICTimelineStyle::TypeName = TEXT("FFICTimelineStyle");
 
@@ -37,13 +32,6 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	Context = InContext;
 	Style = InArgs._Style;
 	BackgroundBrush = InArgs._Background;
-	
-	DefaultToggleButtonStyle.CheckedImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
-	DefaultToggleButtonStyle.CheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
-	DefaultToggleButtonStyle.CheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
-	DefaultToggleButtonStyle.UncheckedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
-	DefaultToggleButtonStyle.UncheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
-	DefaultToggleButtonStyle.UncheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
 	
 	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TDefaultNumericTypeInterface<int64>>();
 
@@ -177,7 +165,6 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	            .VAlign(VAlign_Center)[
 					SNew(SCheckBox)
 					.Type(ESlateCheckBoxType::ToggleButton)
-					.Style(&DefaultToggleButtonStyle)
 					.Padding(5)
 					.Content()[
 						SNew(STextBlock)
@@ -265,7 +252,6 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	            .HAlign(HAlign_Center)[
 		            SNew(SCheckBox)
 		            .Type(ESlateCheckBoxType::ToggleButton)
-					.Style(&DefaultToggleButtonStyle)
 					.Padding(5)
 					.Content()[
 						SNew(STextBlock)

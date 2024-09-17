@@ -71,7 +71,7 @@ void FFICGraphKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
 	FFICGraphDragDrop::OnDragged(DragDropEvent);
 	double start = FPlatformTime::Seconds();
 	for (TTuple<FFICAttribute*, TSharedRef<FFICAttribute>> Snapshot : OldAttributeState) {
-		Snapshot.Key->Set(Snapshot.Value);
+		Snapshot.Key->CopyFrom(Snapshot.Value);
 	}
 
 	TMap<FFICAttribute*, TArray<FICFrame>> Movements;
@@ -109,7 +109,7 @@ void FFICGraphKeyframeDragDrop::OnDrop(bool bDropWasHandled, const FPointerEvent
 }
 
 FFICGraphKeyframeHandleDragDrop::FFICGraphKeyframeHandleDragDrop(TSharedRef<SFICGraphViewKeyframeHandle> KeyframeHandle, FPointerEvent InitEvent) : FFICGraphDragDrop(SharedThis(KeyframeHandle->GetGraphKeyframe()->GetGraphView()), InitEvent), KeyframeHandle(KeyframeHandle) {
-	AttribBegin = KeyframeHandle->GetGraphKeyframe()->GetAttribute().Get();
+	AttribBegin = KeyframeHandle->GetGraphKeyframe()->GetAttribute().CreateCopy();
 }
 
 void FFICGraphKeyframeHandleDragDrop::OnDragged(const FDragDropEvent& DragDropEvent) {
@@ -207,7 +207,7 @@ FFICSequencerKeyframeDragDrop::FFICSequencerKeyframeDragDrop(TSharedRef<SFICSequ
 	for (const TPair<FFICAttribute*, FICFrame>& Keyframe : OldKeyframes) {
 		TSharedRef<FFICAttribute>* State = OldAttributeState.Find(Keyframe.Key);
 		if (State) continue;
-		OldAttributeState.Add(Keyframe.Key, Keyframe.Key->Get());
+		OldAttributeState.Add(Keyframe.Key, Keyframe.Key->CreateCopy());
 	}
 }
 
@@ -217,7 +217,7 @@ void FFICSequencerKeyframeDragDrop::OnDragged(const FDragDropEvent& DragDropEven
 	CumulativeTimeDiff = Sequencer->GetFramePerLocal() * CumulativeLocalDiff.X;
 
 	for (TTuple<FFICAttribute*, TSharedRef<FFICAttribute>> Snapshot : OldAttributeState) {
-		Snapshot.Key->Set(Snapshot.Value);
+		Snapshot.Key->CopyFrom(Snapshot.Value);
 	}
 
 	TMap<FFICAttribute*, TArray<FICFrame>> Movements;

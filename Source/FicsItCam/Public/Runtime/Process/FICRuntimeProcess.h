@@ -13,8 +13,8 @@ public:
 	virtual void Start(AFICRuntimeProcessorCharacter* InCharacter) {}
 	virtual void Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {}
 	virtual bool IsPersistent() { return false; }
-	virtual bool PreSave() { return false; }
-	virtual void PostLoad() {}
+	virtual bool PreSaveProcess() { return false; }
+	virtual void PostLoadProcess() {}
 	virtual void Stop(AFICRuntimeProcessorCharacter* InCharacter) {}
 	virtual void Shutdown() {}
 };

@@ -1,7 +1,5 @@
 ﻿#include "Editor/UI/FICKeyframeIcon.h"
 
-#include "SlateBasics.h"
-
 const FName FFICKeyframeIconStyle::TypeName = TEXT("FFICKeyframeIconStyle");
 
 const FFICKeyframeIconStyle& FFICKeyframeIconStyle::GetDefault() {

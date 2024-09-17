@@ -360,3 +360,5 @@ void SFICEditor::OnFocusChanging(const FWeakWidgetPath& PreviousFocusPath, const
 		}
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

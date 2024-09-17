@@ -10,6 +10,7 @@
 #include "Input/FGEnhancedInputComponent.h"
 #include "Input/FGInputMappingContext.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
+#include "Components/CapsuleComponent.h"
 
 void AFICRuntimeProcessorCharacter::StopProcess() {
 	AFICSubsystem::GetFICSubsystem(this)->RemoveRuntimeProcess(RuntimeProcess);

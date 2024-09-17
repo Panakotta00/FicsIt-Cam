@@ -9,6 +9,7 @@
 #include "Slate/SceneViewport.h"
 #include "Slate/SlateTextures.h"
 #include "Widgets/Images/SImage.h"
+#include "Widgets/SViewport.h"
 
 class FFICFeedView : public ISlateViewport
 {

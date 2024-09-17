@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include "SlateBasics.h"
 #include "Data/FICTypes.h"
 #include "FICEvents.h"
 
@@ -12,9 +11,9 @@ class SFICTimelineScrubber : public SLeafWidget {
 	
 	SLATE_BEGIN_ARGS(SFICTimelineScrubber) :
 		_BackgroundBrush(&DefaultBackgroundBrush),
-		_AnimationBrush(&DefaultAnimationBrush),
 	    _IncrementColor(DefaultIncrementColor),
-		_FrameColor(DefaultFrameColor) {
+		_FrameColor(DefaultFrameColor),
+		_AnimationBrush(&DefaultAnimationBrush) {
 			Clipping(EWidgetClipping::ClipToBoundsAlways);
 		}
 		SLATE_ATTRIBUTE(FFICFrameRange, FullRange)

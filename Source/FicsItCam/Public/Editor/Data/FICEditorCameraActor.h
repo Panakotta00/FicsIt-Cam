@@ -61,7 +61,7 @@ public:
 	UPROPERTY()
 	ULineBatchComponent* LineBatcher = nullptr;
 	UPROPERTY()
-	UBoxComponent* SelectionHitBox = nullptr;
+	class UBoxComponent* SelectionHitBox = nullptr;
 	UPROPERTY()
 	UFICEditorCameraPathComponent* CameraPathComponent = nullptr;
 
