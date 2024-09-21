@@ -6,9 +6,9 @@
 #include "Editor/UI/FICKeyframeControl.h"
 
 SFICVectorEditor::SFICVectorEditor() {
-	SpinBoxStyle = FCoreStyle::Get().GetWidgetStyle<FSpinBoxStyle>("NumericEntrySpinBox");
-	SpinBoxStyle.ActiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
-	SpinBoxStyle.InactiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+	//SpinBoxStyle = FCoreStyle::Get().GetWidgetStyle<FSpinBoxStyle>("NumericEntrySpinBox");
+	//SpinBoxStyle.ActiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+	//SpinBoxStyle.InactiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
 }
 
 void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> InXAttr, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> InYAttr, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> InZAttr) {
@@ -25,14 +25,15 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 		SNew(SOverlay)
 		+SOverlay::Slot()[
 			SNew(SImage)
-			.Image(&XBrush)
+			.Image(&Style->CoordinateBrush)
+			.ColorAndOpacity(&Style->XColor)
 		]
 		+SOverlay::Slot().Padding(5, 0, 0, 0)[
 			SNew(SNumericEntryBox<float>)
 			.Value_Lambda([this]() {
 				return XAttr->GetValue();
 			})
-			.SpinBoxStyle(&SpinBoxStyle)
+			.SpinBoxStyle(&Style->SpinBoxStyle)
 			.SupportDynamicSliderMaxValue(true)
 			.SupportDynamicSliderMinValue(true)
 			.SliderExponent(1)
@@ -65,15 +66,16 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	Holder->AddSlot()[
 	    SNew(SOverlay)
 	    +SOverlay::Slot()[
-	        SNew(SImage)
-	        .Image(&YBrush)
+	    	SNew(SImage)
+			.Image(&Style->CoordinateBrush)
+			.ColorAndOpacity(&Style->YColor)
 	    ]
 	    +SOverlay::Slot().Padding(5, 0, 0, 0)[
 	        SNew(SNumericEntryBox<float>)
 	        .Value_Lambda([this]() {
 		        return YAttr->GetValue();
 	        })
-	        .SpinBoxStyle(&SpinBoxStyle)
+	        .SpinBoxStyle(&Style->SpinBoxStyle)
 	        .SupportDynamicSliderMaxValue(true)
 			.SupportDynamicSliderMinValue(true)
 			.SliderExponent(1)
@@ -106,8 +108,9 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	Holder->AddSlot()[
 	    SNew(SOverlay)
 	    +SOverlay::Slot()[
-	        SNew(SImage)
-	        .Image(&ZBrush)
+	    	SNew(SImage)
+			.Image(&Style->CoordinateBrush)
+			.ColorAndOpacity(&Style->ZColor)
 	    ]
 	    +SOverlay::Slot().Padding(5, 0, 0, 0)[
 	        SNew(SNumericEntryBox<float>)
@@ -115,7 +118,7 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 		        return ZAttr->GetValue();
 	        })
 	        .AllowSpin(true)
-	        .SpinBoxStyle(&SpinBoxStyle)
+	        .SpinBoxStyle(&Style->SpinBoxStyle)
 	        .SupportDynamicSliderMaxValue(true)
 	        .SupportDynamicSliderMinValue(true)
 	        .SliderExponent(1)

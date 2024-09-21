@@ -1,24 +1,17 @@
 ﻿#pragma once
 
+#include "FICEditorStyle.h"
 #include "FICEvents.h"
+#include "SLeafWidget.h"
 #include "Data/FICTypes.h"
 
 class SFICRangeSelector : public SLeafWidget {
-	static FSlateColorBrush DefaultBackgroundBrush;
-	static FLinearColor DefaultRangeIncrementColor;
-	static FSlateColorBrush DefaultSelectBrush;
-	static FLinearColor DefaultSelectHandleColor;
-	static FLinearColor DefaultHighlightColor;
-	
 	SLATE_BEGIN_ARGS(SFICRangeSelector) :
-		_ActiveFrameEnabled(false),
-		_BackgroundBrush(&DefaultBackgroundBrush),
-		_RangeIncrementColor(DefaultRangeIncrementColor),
-		_SelectBrush(&DefaultSelectBrush),
-		_SelectHandleColor(DefaultSelectHandleColor),
-		_HighlightColor(DefaultHighlightColor) {
+		_Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICRangeSelectorStyle>("RangeSelector")),
+		_ActiveFrameEnabled(false) {
 			Clipping(EWidgetClipping::ClipToBoundsAlways);
 		}
+		SLATE_STYLE_ARGUMENT(FFICRangeSelectorStyle, Style)
 		SLATE_ATTRIBUTE(FFICFrameRange, FullRange)
 		SLATE_ATTRIBUTE(FFICFrameRange, ActiveRange)
 		SLATE_ATTRIBUTE(FICFrame, ActiveFrame)
@@ -26,18 +19,13 @@ class SFICRangeSelector : public SLeafWidget {
 	
 		SLATE_EVENT(FFICFrameRangeChanged, OnActiveRangeChanged)
 		SLATE_EVENT(FFICFrameChanged, OnActiveFrameChanged)
-
-		SLATE_ATTRIBUTE(const FSlateBrush*, BackgroundBrush)
-		SLATE_ATTRIBUTE(FLinearColor, RangeIncrementColor)
-		SLATE_ATTRIBUTE(const FSlateBrush*, SelectBrush)
-		SLATE_ATTRIBUTE(FLinearColor, SelectHandleColor)
-		SLATE_ATTRIBUTE(FLinearColor, HighlightColor)
 	SLATE_END_ARGS()
 
 public:
 	void Construct(const FArguments& InArgs);
 
 private:
+	const FFICRangeSelectorStyle* Style = nullptr;
 	TAttribute<FFICFrameRange> FullRange;
 	TAttribute<FFICFrameRange> ActiveRange;
 	TAttribute<FICFrame> ActiveFrame;
@@ -46,12 +34,6 @@ private:
 	FFICFrameRangeChanged OnActiveRangeChanged;
 	FFICFrameChanged OnActiveFrameChanged;
 	
-	TAttribute<const FSlateBrush*> BackgroundBrush;
-	TAttribute<FLinearColor> RangeIncrementColor;
-	TAttribute<const FSlateBrush*> SelectBrush;
-	TAttribute<FLinearColor> SelectHandleColor;
-	TAttribute<FLinearColor> HighlightColor;
-
 	FFICFrameRange PrevActiveRange;
 
 public:

@@ -5,18 +5,6 @@
 #include "Editor/UI/FICDragDrop.h"
 #include "Editor/UI/FICUIUtil.h"
 
-const FName FFICGraphViewStyle::TypeName = TEXT("FFICGraphViewStyle");
-
-const FFICGraphViewStyle& FFICGraphViewStyle::GetDefault() {
-	static FFICGraphViewStyle* Default = nullptr;
-	if (!Default) {
-		Default = new FFICGraphViewStyle();
-		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICGraphViewStyle>("GraphView");
-		Default->NumericKeyframeIcons = FFICNumericKeyframeIcons::GetDefault();
-	}
-	return *Default;
-}
-
 void SFICGraphViewKeyframeHandle::Construct(const FArguments& InArgs, SFICGraphViewKeyframe* InKeyframe) {
 	GraphKeyframe = InKeyframe;
 	

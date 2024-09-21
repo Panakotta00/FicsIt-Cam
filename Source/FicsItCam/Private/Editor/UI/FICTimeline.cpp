@@ -1,22 +1,13 @@
 ﻿#include "Editor/UI/FICTimeline.h"
 
+#include "SButton.h"
+#include "SGridPanel.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICSequencerTreeView.h"
 #include "Editor/Data/FICEditorAttributeGroupDynamic.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
-
-const FName FFICTimelineStyle::TypeName = TEXT("FFICTimelineStyle");
-
-const FFICTimelineStyle& FFICTimelineStyle::GetDefault() {
-	static FFICTimelineStyle* Default = nullptr;
-	if (!Default) {
-		Default = new FFICTimelineStyle();
-		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICTimelineStyle>("TimelineStyle");
-	}
-	return *Default;
-}
 
 TArray<TSharedPtr<FFICEditorAttributeReference>> FFICEditorAttributeReference::GetChildren() {
 	if (!bChildrenLoaded) {
@@ -31,14 +22,13 @@ TArray<TSharedPtr<FFICEditorAttributeReference>> FFICEditorAttributeReference::G
 void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
 	Context = InContext;
 	Style = InArgs._Style;
-	BackgroundBrush = InArgs._Background;
-	
+
 	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TDefaultNumericTypeInterface<int64>>();
 
 	ChildSlot[SNew(SOverlay)
 		+SOverlay::Slot()[
 			SNew(SImage)
-			.Image(BackgroundBrush)
+			.Image(Style->Background)
 		]
 		+SOverlay::Slot()
 		.Padding(0)
@@ -165,6 +155,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	            .VAlign(VAlign_Center)[
 					SNew(SCheckBox)
 					.Type(ESlateCheckBoxType::ToggleButton)
+		            .Style(&Style->ReversePlayButtonStyle)
 					.Padding(5)
 					.Content()[
 						SNew(STextBlock)
@@ -253,6 +244,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 		            SNew(SCheckBox)
 		            .Type(ESlateCheckBoxType::ToggleButton)
 					.Padding(5)
+		            .Style(&Style->ReversePlayButtonStyle)
 					.Content()[
 						SNew(STextBlock)
 						.Text(FText::FromString(">"))
@@ -262,7 +254,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown() && Context->GetAnimPlayer() != FIC_PLAY_PAUSED;
 						float Factor = Context->GetAnimPlayerFactor();
 						if (Context->GetAnimPlayer() == FIC_PLAY_FORWARDS) {
-							return FText::FromString(Ctrl ? FString::Printf(TEXT("Increate to %ix Play"), (int)Factor+1) : TEXT("Pause Play"));
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Increase to %ix Play"), (int)Factor+1) : TEXT("Pause Play"));
 						} else {
 							return FText::FromString(Ctrl ? FString::Printf(TEXT("Decrease to %ix Reverse Play"), (int)Factor+1) : TEXT("Play"));
 						}
@@ -373,10 +365,13 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 					]
 					+SVerticalBox::Slot().Padding(5).FillHeight(1).VAlign(VAlign_Fill).HAlign(HAlign_Fill)[
 						SAssignNew(AttributeTree, STreeView<TSharedPtr<FFICEditorAttributeReference>>)
+						.ScrollBarStyle(&Style->AttributeTreeScrollBarStyle)
+						.TreeViewStyle(&Style->AttributeTreeStyle)
 						.TreeItemsSource(&Attributes)
 						.SelectionMode(ESelectionMode::None)
 						.OnGenerateRow_Lambda([this](TSharedPtr<FFICEditorAttributeReference> Attribute, const TSharedRef<STableViewBase>& Base) {
 							return SNew(STableRow<TSharedPtr<FFICEditorAttributeReference>>, Base)
+							.Style(&Style->AttributeTreeRowStyle)
 							.Content()[
 								SNew(SCheckBox)
 								.Content()[
@@ -424,6 +419,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 				]
 				+SWidgetSwitcher::Slot()[
 					SAssignNew(SequencerTreeView, SFICSequencerTreeView, Context)
+					.Style(&Style->SequencerStyle)
 					.OnUpdate_Lambda([this]() {
 						if (Sequencer) Sequencer->UpdateRows();
 					})

@@ -1,6 +1,8 @@
 #include "Editor/Data/FICEditorCameraActor.h"
 
 #include "EngineUtils.h"
+ #include "FICSubsystem.h"
+#include "TextureResource.h"
 #include "Components/LineBatchComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/BoxComponent.h"

@@ -1,9 +1,12 @@
 #include "Runtime/FICCaptureCamera.h"
 
+#include "CineCameraComponent.h"
 #include "FGGameViewportClient.h"
 #include "FGSettings.h"
 #include "Blueprint/GameViewportSubsystem.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/WorldPartitionStreamingSourceComponent.h"
+#include "Engine/Engine.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Settings/FGUserSetting.h"
 
@@ -27,7 +30,6 @@ AFICCaptureCamera::AFICCaptureCamera() {
 	if (GEngine) CaptureComponent->ShowFlags = *GEngine->GameViewport->GetEngineShowFlags();
 	
 	// Kinda performance intense
-	CaptureComponent->DetailMode = DM_MAX;
 	CaptureComponent->LODDistanceFactor = 0.01;
 	CaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
 }

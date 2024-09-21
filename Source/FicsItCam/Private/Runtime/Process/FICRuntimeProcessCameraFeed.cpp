@@ -3,6 +3,8 @@
 #include "FGCharacterPlayer.h"
 #include "FGCineCameraComponent.h"
 #include "FICSubsystem.h"
+#include "SBox.h"
+#include "SlateApplication.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/FICCaptureCamera.h"
@@ -121,14 +123,17 @@ void UFICRuntimeProcessCameraFeed::Stop(AFICRuntimeProcessorCharacter* InCharact
 	
 	SaveWindowSettings();
 	if (Window) {
-		Window->DestroyWindowImmediately();
 		Window->SetContent(SNew(SBox));
+		Window->SetOnWindowClosed(FOnWindowClosed());
+		Window->RequestDestroyWindow();
 		Window.Reset();
+	}
+	if (View) {
+		View.Reset();
 	}
 	Camera->CaptureComponent->bCaptureEveryFrame = false;
 	Camera->Destroy();
 	Camera = nullptr;
-	Brush = FSlateImageBrush("CameraFeed", FVector2D(1,1));
 }
 
 UTexture* UFICRuntimeProcessCameraFeed::GetPreviewTexture() {

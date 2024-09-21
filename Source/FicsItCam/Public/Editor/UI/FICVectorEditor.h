@@ -9,7 +9,9 @@ class FFICEditorAttributeBase;
 
 class SFICVectorEditor : public SCompoundWidget {
 	SLATE_BEGIN_ARGS(SFICVectorEditor) :
+		_Style(&FFICVectorEditStyle::GetDefault()),
 		_ShowKeyframeControls(false) {}
+		SLATE_STYLE_ARGUMENT(FFICVectorEditStyle, Style)
 		SLATE_ARGUMENT(bool, ShowKeyframeControls)
 		SLATE_ATTRIBUTE(FICFrame, Frame)
 		SLATE_ATTRIBUTE(bool, AutoKeyframe)
@@ -22,6 +24,7 @@ public:
 
 private:
 	UFICEditorContext* Context = nullptr;
+	const FFICVectorEditStyle* Style = nullptr;
 	
 	TSharedPtr<TFICEditorAttribute<FFICFloatAttribute>> XAttr;
 	TSharedPtr<TFICEditorAttribute<FFICFloatAttribute>> YAttr;
@@ -29,10 +32,4 @@ private:
 
 	TAttribute<FICFrame> Frame;
 	TAttribute<bool> AutoKeyframe;
-	
-	FSlateColorBrush XBrush = FSlateColorBrush(FLinearColor::Red);
-	FSlateColorBrush YBrush = FSlateColorBrush(FLinearColor::Green);
-	FSlateColorBrush ZBrush = FSlateColorBrush(FLinearColor::Blue);
-
-	FSpinBoxStyle SpinBoxStyle;
 };

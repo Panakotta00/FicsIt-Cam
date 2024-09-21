@@ -10,63 +10,11 @@
 
 class SFICSequencerTreeView;
 class SFICSequencerRowAttribute;
-USTRUCT()
-struct FFICSequencerStyle : public FSlateWidgetStyle {
-	GENERATED_BODY()
-	
-	static const FFICSequencerStyle& GetDefault();
-	
-	static const FName TypeName;
-	virtual const FName GetTypeName() const override { return TypeName; };
-
-	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
-		OutBrushes.Add(&HighlightRangeBrush);
-		OutBrushes.Add(&SelectionBoxBrush);
-		OutBrushes.Add(&RowBackgroundOdd);
-		OutBrushes.Add(&RowBackgroundEven);
-		KeyframeIcon.GetResources(OutBrushes);
-	}
-
-	UPROPERTY(EditAnywhere)
-	FSlateBrush HighlightRangeBrush;
-	UPROPERTY(EditAnywhere)
-	FLinearColor ActiveFrameColor;
-	UPROPERTY(EditAnywhere)
-	FLinearColor GridColor;
-
-	UPROPERTY(EditAnywhere)
-	FSlateColor KeyframeSelectedColor;
-	UPROPERTY(EditAnywhere)
-	FSlateColor KeyframeUnselectedColor;
-	UPROPERTY(EditAnywhere)
-	FSlateBrush SelectionBoxBrush;
-	
-	UPROPERTY(EditAnywhere)
-	FSlateBrush RowBackgroundOdd;
-	UPROPERTY(EditAnywhere)
-	FSlateBrush RowBackgroundEven;
-
-	UPROPERTY(EditAnywhere)
-	FFICKeyframeIconStyle KeyframeIcon;
-};
-
-UCLASS(hidecategories = Object, MinimalAPI)
-class UFICFFICSequencerStyleContainer : public USlateWidgetStyleContainerBase {
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
-	FFICSequencerStyle Style;
-
-	virtual const FSlateWidgetStyle* const GetStyle() const override {
-		return &Style;
-	}
-};
 
 DECLARE_DELEGATE_TwoParams(FFICSequencerGenerateRow, TSharedPtr<ITableRow>, TSharedPtr<SFICSequencerRow>&)
 
 class SFICSequencer : public SPanel {
-	SLATE_BEGIN_ARGS(SFICSequencer) : _Style(&FFICSequencerStyle::GetDefault()) {}
+	SLATE_BEGIN_ARGS(SFICSequencer) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICSequencerStyle>("Sequencer")) {}
 	SLATE_STYLE_ARGUMENT(FFICSequencerStyle, Style)
 	
 	SLATE_ATTRIBUTE(FICFrame, Frame)

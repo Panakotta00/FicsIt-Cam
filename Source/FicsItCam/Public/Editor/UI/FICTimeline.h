@@ -10,39 +10,6 @@
 
 class UFICEditorContext;
 
-USTRUCT()
-struct FFICTimelineStyle : public FSlateWidgetStyle {
-	GENERATED_BODY()
-
-	static const FFICTimelineStyle& GetDefault();
-	
-	static const FName TypeName;
-	virtual const FName GetTypeName() const override { return TypeName; };
-
-	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
-		OutBrushes.Add(&GraphViewIcon);
-		OutBrushes.Add(&SequencerIcon);
-	}
-
-	UPROPERTY(EditAnywhere)
-	FSlateBrush GraphViewIcon;
-	UPROPERTY(EditAnywhere)
-	FSlateBrush SequencerIcon;
-};
-
-UCLASS(hidecategories = Object, MinimalAPI)
-class UFICTimelineStyleContainer : public USlateWidgetStyleContainerBase {
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
-	FFICTimelineStyle Style;
-
-	virtual const FSlateWidgetStyle* const GetStyle() const override {
-		return &Style;
-	}
-};
-
 struct FFICEditorAttributeReference {
 	FString Name;
 	TSharedRef<FFICEditorAttributeBase> Attribute;
@@ -56,9 +23,8 @@ struct FFICEditorAttributeReference {
 
 class SFICTimelinePanel : public SCompoundWidget {
 	SLATE_BEGIN_ARGS(SFICTimelinePanel) :
-		_Style(&FFICTimelineStyle::GetDefault()) {}
+		_Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICTimelineStyle>(TEXT("Timeline"))) {}
 		SLATE_STYLE_ARGUMENT(FFICTimelineStyle, Style)
-		SLATE_ATTRIBUTE(const FSlateBrush*, Background)
 	SLATE_END_ARGS()
 
 public:
@@ -67,7 +33,6 @@ public:
 private:
 	UFICEditorContext* Context = nullptr;
 	const FFICTimelineStyle* Style = nullptr;
-	TAttribute<const FSlateBrush*> BackgroundBrush;
 
 	int Mode = 1;
 

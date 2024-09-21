@@ -1,12 +1,7 @@
 ﻿#include "Editor/UI/FICRangeSelector.h"
 
-FSlateColorBrush SFICRangeSelector::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
-FLinearColor SFICRangeSelector::DefaultRangeIncrementColor = FLinearColor(FColor::FromHex("404040"));
-FSlateColorBrush SFICRangeSelector::DefaultSelectBrush = FSlateColorBrush(FColor::FromHex("80808088"));
-FLinearColor SFICRangeSelector::DefaultSelectHandleColor = FLinearColor(FColor::FromHex("A0A0A0"));
-FLinearColor SFICRangeSelector::DefaultHighlightColor = FLinearColor(FColor::FromHex("FF8500"));
-
 void SFICRangeSelector::Construct(const FArguments& InArgs) {
+	Style = InArgs._Style;
 	FullRange = InArgs._FullRange;
 	ActiveRange = InArgs._ActiveRange;
 	ActiveFrame = InArgs._ActiveFrame;
@@ -14,24 +9,18 @@ void SFICRangeSelector::Construct(const FArguments& InArgs) {
 
 	OnActiveRangeChanged = InArgs._OnActiveRangeChanged;
 	OnActiveFrameChanged = InArgs._OnActiveFrameChanged;
-
-	BackgroundBrush = InArgs._BackgroundBrush;
-	RangeIncrementColor = InArgs._RangeIncrementColor;
-	SelectBrush = InArgs._SelectBrush;
-	SelectHandleColor = InArgs._SelectHandleColor;
-	HighlightColor = InArgs._HighlightColor;
 }
 
 int32 SFICRangeSelector::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const {
 	// Draw Background
-	FSlateDrawElement::MakeBox(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), BackgroundBrush.Get(), ESlateDrawEffect::None, BackgroundBrush.Get()->TintColor.GetSpecifiedColor());
+	FSlateDrawElement::MakeBox(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), &Style->BackgroundBrush, ESlateDrawEffect::None, Style->BackgroundBrush.TintColor.GetSpecifiedColor());
 	
 	// Draw Range Increments
 	FFICFrameRange Range = FullRange.Get();
 	FICFrame Increment = 10;
 	while (Range.Length() / Increment > 30) Increment *= 10;
 	Range.Begin += Increment - (Range.Begin % Increment);
-	FLinearColor IncrementColor = RangeIncrementColor.Get();
+	FLinearColor IncrementColor = Style->RangeIncrementColor;
 	for (FICFrame i = Range.Begin; i <= Range.End; i += Increment) {
 		float IX = FrameToLocalPos(i);
 		FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(IX, 0), FVector2D(IX, AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None,  IncrementColor, true, 5);
@@ -41,16 +30,16 @@ int32 SFICRangeSelector::OnPaint(const FPaintArgs& Args, const FGeometry& Allott
 	// Draw Highlight
 	if (ActiveFrameEnabled.Get()) {
 		float HighlightX = FrameToLocalPos(GetActiveFrame());
-		FSlateDrawElement::MakeLines(OutDrawElements, LayerId+1, AllottedGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(HighlightX, 0), FVector2D(HighlightX, AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None,  HighlightColor.Get(), true, 5);
+		FSlateDrawElement::MakeLines(OutDrawElements, LayerId+1, AllottedGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(HighlightX, 0), FVector2D(HighlightX, AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None,  Style->HighlightColor, true, 5);
 	}
 	
 	// Draw Selection Box & Handles
 	FFICFrameRange Active = ActiveRange.Get();
 	float StartX = FrameToLocalPos(Active.Begin);
 	float EndX = FrameToLocalPos(Active.End);
-	FSlateDrawElement::MakeBox(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(FVector2D(StartX, 0), FVector2D(EndX - StartX, AllottedGeometry.GetLocalSize().Y)), SelectBrush.Get(), ESlateDrawEffect::None, SelectBrush.Get()->TintColor.GetSpecifiedColor());
-	FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartX, 0), FVector2D(StartX, AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None,  SelectHandleColor.Get(), true, 5);
-	FSlateDrawElement::MakeLines(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(EndX, 0), FVector2D(EndX, AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None,  SelectHandleColor.Get(), true, 5);
+	FSlateDrawElement::MakeBox(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(FVector2D(StartX, 0), FVector2D(EndX - StartX, AllottedGeometry.GetLocalSize().Y)), &Style->SelectBrush, ESlateDrawEffect::None, Style->SelectBrush.TintColor.GetSpecifiedColor());
+	FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartX, 0), FVector2D(StartX, AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None,  Style->SelectHandleColor, true, 5);
+	FSlateDrawElement::MakeLines(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(EndX, 0), FVector2D(EndX, AllottedGeometry.GetLocalSize().Y)}, ESlateDrawEffect::None,  Style->SelectHandleColor, true, 5);
 
 	return LayerId;
 }

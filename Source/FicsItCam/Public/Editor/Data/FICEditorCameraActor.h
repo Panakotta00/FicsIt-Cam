@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PrimitiveSceneProxy.h"
+#include "SlateImageBrush.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/ITF/FICSelectionInteraction.h"
 #include "FICEditorCameraActor.generated.h"

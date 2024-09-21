@@ -7,19 +7,7 @@
 #include "Engine/Texture2D.h"
 #include "Widgets/Images/SImage.h"
 
-const FName FFICKeyframeControlStyle::TypeName = TEXT("KeyframeControlStyle");
-
-const FFICKeyframeControlStyle& FFICKeyframeControlStyle::GetDefault() {
-	static FFICKeyframeControlStyle* Default = nullptr;
-	if (!Default) {
-		Default = new FFICKeyframeControlStyle();
-		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICKeyframeControlStyle>("KeyframeControl");
-		Default->NumericKeyframeIcons = FFICNumericKeyframeIcons::GetDefault();
-	}
-	return *Default;
-}
-
-void SFICKeyframeControl::Construct(FArguments InArgs, UFICEditorContext* InContext, TSharedRef<FFICEditorAttributeBase> InAttribute) {
+void SFICKeyframeControl::Construct(const FArguments& InArgs, UFICEditorContext* InContext, TSharedRef<FFICEditorAttributeBase> InAttribute) {
 	Attribute = InAttribute;
 	Style = InArgs._Style;
 	Frame = InArgs._Frame;

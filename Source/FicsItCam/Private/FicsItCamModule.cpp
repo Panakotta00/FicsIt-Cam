@@ -1,5 +1,6 @@
 #include "FicsItCamModule.h"
 
+#include "CoreDelegates.h"
 #include "FGGameMode.h"
 #include "FGItemRegrowSubsystem.h"
 #include "Editor/UI/FICEditorStyle.h"
@@ -44,6 +45,11 @@ void FFicsItCamModule::StartupModule() {
 
 void FFicsItCamModule::ShutdownModule() {
 	FFICEditorStyles::Shutdown();
+}
+
+void FFicsItCamModule::PostLoadCallback() {
+	FFICEditorStyles::Shutdown();
+	FFICEditorStyles::Initialize();
 }
 
 IMPLEMENT_GAME_MODULE(FFicsItCamModule, FicsItCam);

@@ -1,22 +1,28 @@
 ﻿#pragma once
+#include "FICEditorStyle.h"
+#include "HorizontalBox.h"
+#include "MultiBoxBuilder.h"
+#include "TabManager.h"
 
 class UFICEditorContext;
 
 class SFICEditor : public SCompoundWidget {
-	SLATE_BEGIN_ARGS(SFICEditor) {}
+	SLATE_BEGIN_ARGS(SFICEditor) :
+		_Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICEditorStyle>(TEXT("EditorStyle"))) {}
+		SLATE_STYLE_ARGUMENT(FFICEditorStyle, Style)
 	SLATE_END_ARGS()
 
 public:
 	void Construct(const FArguments& InArgs, UFICEditorContext* Context, TSharedPtr<SWidget> GameWidget, TSharedPtr<SViewport> Viewport);
 	
 private:
-	static FSlateColorBrush Background;
-	
 	UFICEditorContext* Context = nullptr;
 	TSharedPtr<SWidget> GameWidget;
 	TSharedPtr<SWidget> GameSpacer;
 	TSharedPtr<SViewport> GameViewport;
 	SHorizontalBox::FSlot* GameSlot = nullptr;
+
+	const FFICEditorStyle* Style = nullptr;
 
 	SVerticalBox::FSlot* EditorSlot = nullptr;
 	TSharedPtr<FTabManager> TabManager;

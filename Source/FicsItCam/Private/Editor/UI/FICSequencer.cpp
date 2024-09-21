@@ -5,18 +5,6 @@
 #include "Editor/UI/FICEditorStyle.h"
 #include "Editor/UI/FICSequencerTreeView.h"
 
-const FName FFICSequencerStyle::TypeName = "Sequencer";
-
-const FFICSequencerStyle& FFICSequencerStyle::GetDefault() {
-	static FFICSequencerStyle* Default = nullptr;
-	if (!Default) {
-		Default = new FFICSequencerStyle();
-		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICSequencerStyle>("Sequencer");
-		Default->KeyframeIcon = FFICKeyframeIconStyle::GetDefault();
-	}
-	return *Default;
-}
-
 void SFICSequencer::Construct(const FArguments& InArgs, UFICEditorContext* InContext, SFICSequencerTreeView* InTreeView) {
 	Context = InContext;
 	TreeView = InTreeView;

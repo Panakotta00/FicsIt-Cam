@@ -12,46 +12,6 @@ class UFICEditorContext;
 struct FFICAttribute;
 class SFICGraphView;
 
-USTRUCT()
-struct FFICGraphViewStyle : public FSlateWidgetStyle {
-	GENERATED_BODY()
-	
-	static const FFICGraphViewStyle& GetDefault();
-	
-	static const FName TypeName;
-	virtual const FName GetTypeName() const override { return TypeName; };
-
-	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
-		NumericKeyframeIcons.GetResources(OutBrushes);
-		OutBrushes.Add(&SelectionBoxBrush);
-		OutBrushes.Add(&HighlightRangeBrush);
-	}
-
-	UPROPERTY(EditAnywhere)
-	FFICNumericKeyframeIcons NumericKeyframeIcons;
-	UPROPERTY(EditAnywhere)
-	FSlateColor KeyframeSelectedColor;
-	UPROPERTY(EditAnywhere)
-	FSlateColor KeyframeUnselectedColor;
-	UPROPERTY(EditAnywhere)
-	FSlateBrush SelectionBoxBrush;
-	UPROPERTY(EditAnywhere)
-	FSlateBrush HighlightRangeBrush;
-};
-
-UCLASS(hidecategories = Object, MinimalAPI)
-class UFICGraphViewStyleContainer : public USlateWidgetStyleContainerBase {
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
-	FFICGraphViewStyle Style;
-
-	virtual const FSlateWidgetStyle* const GetStyle() const override {
-		return &Style;
-	}
-};
-
 class SFICGraphViewKeyframeHandle : public SCompoundWidget {
 	SLATE_BEGIN_ARGS(SFICGraphViewKeyframeHandle) : _Style(&FFICGraphViewStyle::GetDefault()), _IsOutHandle(false) {}
 	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)

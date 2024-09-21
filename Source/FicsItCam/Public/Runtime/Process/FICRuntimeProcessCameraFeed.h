@@ -22,7 +22,6 @@ public:
 	UPROPERTY(SaveGame)
 	UFICProceduralTexture* PreviewTexture = nullptr;
 
-	FSlateImageBrush Brush = FSlateImageBrush("CameraFeed", FVector2D(1,1));
 	TSharedPtr<SWindow> Window;
 	TSharedPtr<FFICFeedView> View;
 
