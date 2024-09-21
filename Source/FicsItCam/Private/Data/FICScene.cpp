@@ -3,6 +3,7 @@
 #include "FICSubsystem.h"
 #include "FICUtils.h"
 #include "Editor/FICEditorSubsystem.h"
+#include "Engine/GameViewportClient.h"
 #include "Slate/SceneViewport.h"
 
 void AFICScene::PostLoadGame_Implementation(int32 saveVersion, int32 gameVersion) {

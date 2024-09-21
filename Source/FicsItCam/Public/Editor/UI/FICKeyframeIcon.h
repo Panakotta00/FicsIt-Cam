@@ -3,7 +3,6 @@
 #include "FICKeyframeControl.h"
 #include "SCompoundWidget.h"
 #include "Data/Attributes/FICKeyframe.h"
-#include "FICKeyframeIcon.generated.h"
 
 class SFICKeyframeIcon : public SCompoundWidget {
 	SLATE_BEGIN_ARGS(SFICKeyframeIcon) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICKeyframeIconStyle>("KeyframeIcon")) {}

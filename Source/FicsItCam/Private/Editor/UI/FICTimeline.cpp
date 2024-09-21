@@ -28,7 +28,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	ChildSlot[SNew(SOverlay)
 		+SOverlay::Slot()[
 			SNew(SImage)
-			.Image(Style->Background)
+			.Image(&Style->Background)
 		]
 		+SOverlay::Slot()
 		.Padding(0)

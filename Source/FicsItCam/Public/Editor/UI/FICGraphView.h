@@ -6,7 +6,6 @@
 #include "SelectionManager.h"
 #include "Data/Attributes/FICKeyframe.h"
 #include "Editor/Data/FICEditorAttributeBase.h"
-#include "FICGraphView.generated.h"
 
 class UFICEditorContext;
 struct FFICAttribute;

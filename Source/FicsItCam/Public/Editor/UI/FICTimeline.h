@@ -6,7 +6,6 @@
 #include "FICSequencer.h"
 #include "FICSequencerTreeView.h"
 #include "FICTimelineScrubber.h"
-#include "FICTimeline.generated.h"
 
 class UFICEditorContext;
 

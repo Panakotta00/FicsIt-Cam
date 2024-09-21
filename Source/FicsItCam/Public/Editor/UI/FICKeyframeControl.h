@@ -2,8 +2,8 @@
 
 #include "FICEditorStyle.h"
 #include "SCompoundWidget.h"
+#include "SlateWidgetStyleAsset.h"
 #include "Data/FICTypes.h"
-#include "FICKeyframeControl.generated.h"
 
 class FFICEditorAttributeBase;
 class UFICEditorContext;

@@ -15,6 +15,7 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	XAttr = InXAttr;
 	YAttr = InYAttr;
 	ZAttr = InZAttr;
+	Style = InArgs._Style;
 	Frame = InArgs._Frame;
 	AutoKeyframe = InArgs._AutoKeyframe;
 	Context = InContext;
@@ -26,7 +27,7 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 		+SOverlay::Slot()[
 			SNew(SImage)
 			.Image(&Style->CoordinateBrush)
-			.ColorAndOpacity(&Style->XColor)
+			.ColorAndOpacity(Style->XColor)
 		]
 		+SOverlay::Slot().Padding(5, 0, 0, 0)[
 			SNew(SNumericEntryBox<float>)
@@ -68,7 +69,7 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	    +SOverlay::Slot()[
 	    	SNew(SImage)
 			.Image(&Style->CoordinateBrush)
-			.ColorAndOpacity(&Style->YColor)
+			.ColorAndOpacity(Style->YColor)
 	    ]
 	    +SOverlay::Slot().Padding(5, 0, 0, 0)[
 	        SNew(SNumericEntryBox<float>)
@@ -110,7 +111,7 @@ void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext
 	    +SOverlay::Slot()[
 	    	SNew(SImage)
 			.Image(&Style->CoordinateBrush)
-			.ColorAndOpacity(&Style->ZColor)
+			.ColorAndOpacity(Style->ZColor)
 	    ]
 	    +SOverlay::Slot().Padding(5, 0, 0, 0)[
 	        SNew(SNumericEntryBox<float>)

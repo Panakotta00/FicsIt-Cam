@@ -9,7 +9,7 @@ class FFICEditorAttributeBase;
 
 class SFICVectorEditor : public SCompoundWidget {
 	SLATE_BEGIN_ARGS(SFICVectorEditor) :
-		_Style(&FFICVectorEditStyle::GetDefault()),
+		_Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICVectorEditStyle>(TEXT("VectorEditor"))),
 		_ShowKeyframeControls(false) {}
 		SLATE_STYLE_ARGUMENT(FFICVectorEditStyle, Style)
 		SLATE_ARGUMENT(bool, ShowKeyframeControls)

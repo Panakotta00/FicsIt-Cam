@@ -1,12 +1,10 @@
 ﻿#pragma once
 
 #include "FICEditorStyle.h"
-#include "FICKeyframeIcon.h"
 #include "Data/FICTypes.h"
 #include "FICSequencerRow.h"
 #include "SelectionManager.h"
 #include "Editor/Data/FICEditorAttributeBase.h"
-#include "FICSequencer.generated.h"
 
 class SFICSequencerTreeView;
 class SFICSequencerRowAttribute;
