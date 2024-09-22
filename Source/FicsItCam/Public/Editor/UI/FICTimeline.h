@@ -22,7 +22,7 @@ struct FFICEditorAttributeReference {
 
 class SFICTimelinePanel : public SCompoundWidget {
 	SLATE_BEGIN_ARGS(SFICTimelinePanel) :
-		_Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICTimelineStyle>(TEXT("Timeline"))) {}
+		_Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICTimelineStyle>(TEXT("TimelineStyle"))) {}
 		SLATE_STYLE_ARGUMENT(FFICTimelineStyle, Style)
 	SLATE_END_ARGS()
 

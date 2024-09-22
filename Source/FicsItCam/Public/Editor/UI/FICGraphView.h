@@ -3,6 +3,7 @@
 #include "FICEditorStyle.h"
 #include "Data/FICTypes.h"
 #include "FICEvents.h"
+#include "SBox.h"
 #include "SelectionManager.h"
 #include "Data/Attributes/FICKeyframe.h"
 #include "Editor/Data/FICEditorAttributeBase.h"
@@ -12,7 +13,7 @@ struct FFICAttribute;
 class SFICGraphView;
 
 class SFICGraphViewKeyframeHandle : public SCompoundWidget {
-	SLATE_BEGIN_ARGS(SFICGraphViewKeyframeHandle) : _Style(&FFICGraphViewStyle::GetDefault()), _IsOutHandle(false) {}
+	SLATE_BEGIN_ARGS(SFICGraphViewKeyframeHandle) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICGraphViewStyle>("GraphView")), _IsOutHandle(false) {}
 	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)
 	SLATE_ARGUMENT(bool, IsOutHandle)
 	SLATE_END_ARGS()
@@ -37,7 +38,7 @@ public:
 };
 
 class SFICGraphViewKeyframe : public SPanel {
-	SLATE_BEGIN_ARGS(SFICGraphViewKeyframe) : _Style(&FFICGraphViewStyle::GetDefault()) {}
+	SLATE_BEGIN_ARGS(SFICGraphViewKeyframe) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICGraphViewStyle>("GraphView")) {}
 	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)
 	SLATE_END_ARGS()
 
@@ -76,7 +77,7 @@ public:
 };
 
 class SFICGraphView : public SPanel {
-	SLATE_BEGIN_ARGS(SFICGraphView) : _Style(&FFICGraphViewStyle::GetDefault()) {}
+	SLATE_BEGIN_ARGS(SFICGraphView) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICGraphViewStyle>("GraphView")) {}
 	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)
 	SLATE_ATTRIBUTE(FICFrame, Frame)
 	SLATE_ATTRIBUTE(FFICFrameRange, FrameRange)

@@ -6,7 +6,6 @@ void SFICSequencerTreeViewRow::Construct(const FArguments& InArgs,  const TShare
 	Meta = InMeta;
 
 	Style = InArgs._Style;
-	if (!Style) Style = &FFICSequencerStyle::GetDefault();
 	
 	STableRow<TSharedPtr<FFICSequencerRowMeta>>::FArguments SuperArgs;
 	SuperArgs.Content()[
@@ -36,7 +35,6 @@ void SFICSequencerTreeView::Construct(const FArguments& InArgs, UFICEditorContex
 	Context = InContext;
 
 	Style = InArgs._Style;
-	if (!Style) Style = &FFICSequencerStyle::GetDefault();
 
 	OnUpdate = InArgs._OnUpdate;
 

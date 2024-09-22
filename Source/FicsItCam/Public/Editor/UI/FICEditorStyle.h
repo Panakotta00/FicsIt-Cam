@@ -79,6 +79,19 @@ struct FFICKeyframeIconStyle : public FSlateWidgetStyle {
 	FFICNumericKeyframeIcons Icons;
 };
 
+UCLASS(hidecategories = Object, MinimalAPI)
+class UFICKeyframeIconStyleContainer : public USlateWidgetStyleContainerBase {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
+	FFICKeyframeIconStyle Style;
+
+	virtual const FSlateWidgetStyle* const GetStyle() const override {
+		return &Style;
+	}
+};
+
 USTRUCT()
 struct FFICKeyframeControlStyle : public FSlateWidgetStyle {
 	GENERATED_BODY()
@@ -102,6 +115,19 @@ struct FFICKeyframeControlStyle : public FSlateWidgetStyle {
 	FSlateColor ChangedColor;
 	UPROPERTY(EditAnywhere)
 	FSlateColor AnimatedColor;
+};
+
+UCLASS(hidecategories = Object, MinimalAPI)
+class UFICKeyframeControlStyleContainer : public USlateWidgetStyleContainerBase {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
+	FFICKeyframeControlStyle Style;
+
+	virtual const FSlateWidgetStyle* const GetStyle() const override {
+		return &Style;
+	}
 };
 
 USTRUCT()
@@ -144,6 +170,19 @@ struct FFICSequencerStyle : public FSlateWidgetStyle {
 	FFICKeyframeIconStyle KeyframeIcon;
 };
 
+UCLASS(hidecategories = Object, MinimalAPI)
+class UFICFFICSequencerStyleContainer : public USlateWidgetStyleContainerBase {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
+	FFICSequencerStyle Style;
+
+	virtual const FSlateWidgetStyle* const GetStyle() const override {
+		return &Style;
+	}
+};
+
 USTRUCT()
 struct FFICGraphViewStyle : public FSlateWidgetStyle {
 	GENERATED_BODY()
@@ -169,6 +208,18 @@ struct FFICGraphViewStyle : public FSlateWidgetStyle {
 	FSlateBrush SelectionBoxBrush;
 	UPROPERTY(EditAnywhere)
 	FSlateBrush HighlightRangeBrush;
+};
+
+UCLASS(MinimalAPI)
+class UFICGraphViewStyleContainer : public USlateWidgetStyleContainerBase {
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere)
+	FFICGraphViewStyle Style;
+
+	virtual const FSlateWidgetStyle* const GetStyle() const override {
+		return &Style;
+	}
 };
 
 USTRUCT()
@@ -215,8 +266,10 @@ struct FFICVectorEditStyle : public FSlateWidgetStyle {
 		OutBrushes.Add(&CoordinateBrush);
 	}
 
+	FFICVectorEditStyle();
+
 	UPROPERTY(EditAnywhere)
-	FSlateBrush CoordinateBrush;
+	FSlateBrush CoordinateBrush = static_cast<FSlateBrush>(FSlateColorBrush(FLinearColor::White));
 
 	UPROPERTY(EditAnywhere)
 	FLinearColor XColor = FLinearColor::Red;
@@ -245,15 +298,13 @@ struct FFICTimelineStyle : public FSlateWidgetStyle {
 		ReversePlayButtonStyle.GetResources(OutBrushes);
 		AttributeTreeScrollBarStyle.GetResources(OutBrushes);
 		AttributeTreeStyle.GetResources(OutBrushes);
-		SequencerStyle.GetResources(OutBrushes);
-		VectorEditStyle.GetResources(OutBrushes);
 		OutBrushes.Add(&Background);
 		OutBrushes.Add(&GraphViewIcon);
 		OutBrushes.Add(&SequencerIcon);
 	}
 
 	UPROPERTY(EditAnywhere)
-	FSlateBrush Background;
+	FSlateBrush Background = static_cast<FSlateBrush>(FSlateNoResource());
 
 	UPROPERTY(EditAnywhere)
 	FSlateBrush GraphViewIcon;
@@ -275,12 +326,19 @@ struct FFICTimelineStyle : public FSlateWidgetStyle {
 
 	UPROPERTY(EditAnywhere)
 	FTableRowStyle AttributeTreeRowStyle;
+};
 
-	UPROPERTY(EditAnywhere)
-	FFICSequencerStyle SequencerStyle;
+UCLASS(hidecategories = Object, MinimalAPI)
+class UFICTimelineStyleContainer : public USlateWidgetStyleContainerBase {
+	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
-	FFICVectorEditStyle VectorEditStyle;
+public:
+	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
+	FFICTimelineStyle Style;
+
+	virtual const FSlateWidgetStyle* const GetStyle() const override {
+		return &Style;
+	}
 };
 
 USTRUCT()
@@ -293,15 +351,11 @@ struct FFICEditorStyle : public FSlateWidgetStyle {
 	virtual const FName GetTypeName() const override { return TypeName; };
 
 	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
-		TimelineStyle.GetResources(OutBrushes);
 		OutBrushes.Add(&Background);
 	}
 
 	UPROPERTY(EditAnywhere)
 	FSlateBrush Background = static_cast<FSlateBrush>(FSlateColorBrush(FColor::FromHex("030303")));
-
-	UPROPERTY(EditAnywhere)
-	FFICTimelineStyle TimelineStyle;
 };
 
 UCLASS()

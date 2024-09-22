@@ -5,12 +5,6 @@
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Editor/UI/FICKeyframeControl.h"
 
-SFICVectorEditor::SFICVectorEditor() {
-	//SpinBoxStyle = FCoreStyle::Get().GetWidgetStyle<FSpinBoxStyle>("NumericEntrySpinBox");
-	//SpinBoxStyle.ActiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
-	//SpinBoxStyle.InactiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
-}
-
 void SFICVectorEditor::Construct(FArguments InArgs, UFICEditorContext* InContext, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> InXAttr, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> InYAttr, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> InZAttr) {
 	XAttr = InXAttr;
 	YAttr = InYAttr;

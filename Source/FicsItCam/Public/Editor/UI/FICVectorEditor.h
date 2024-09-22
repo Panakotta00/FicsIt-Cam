@@ -18,8 +18,6 @@ class SFICVectorEditor : public SCompoundWidget {
 	SLATE_END_ARGS()
 	
 public:
-	SFICVectorEditor();
-	
 	void Construct(FArguments InArgs, UFICEditorContext* Context, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> XAttr, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> YAttr, TSharedRef<TFICEditorAttribute<FFICFloatAttribute>> ZAttr);
 
 private:

@@ -1,3 +1,4 @@
+#include "CoreStyle.h"
 #include "Editor/UI/FICEditorStyle.h"
 #include "Slate/SlateGameResources.h"
 #include "Styling/SlateStyleRegistry.h"
@@ -78,6 +79,12 @@ const FName FFICVectorEditStyle::TypeName = TEXT("FFICVectorEditStyle");
 const FFICVectorEditStyle& FFICVectorEditStyle::GetDefault() {
 	static FFICVectorEditStyle Style;
 	return Style;
+}
+
+FFICVectorEditStyle::FFICVectorEditStyle() {
+	SpinBoxStyle = FCoreStyle::Get().GetWidgetStyle<FSpinBoxStyle>("NumericEntrySpinBox");
+	SpinBoxStyle.ActiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+	SpinBoxStyle.InactiveFillBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
 }
 
 const FName FFICTimelineStyle::TypeName = TEXT("FFICTimelineStyle");

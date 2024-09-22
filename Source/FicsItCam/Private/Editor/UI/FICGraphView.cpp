@@ -1,5 +1,6 @@
 #include "Editor/UI/FICGraphView.h"
 
+#include "SBox.h"
 #include "Editor/FICChangeList.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICDragDrop.h"

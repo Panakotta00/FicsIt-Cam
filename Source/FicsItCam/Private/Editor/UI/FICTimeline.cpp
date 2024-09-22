@@ -365,13 +365,13 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 					]
 					+SVerticalBox::Slot().Padding(5).FillHeight(1).VAlign(VAlign_Fill).HAlign(HAlign_Fill)[
 						SAssignNew(AttributeTree, STreeView<TSharedPtr<FFICEditorAttributeReference>>)
-						.ScrollBarStyle(&Style->AttributeTreeScrollBarStyle)
-						.TreeViewStyle(&Style->AttributeTreeStyle)
+						//.ScrollBarStyle(&Style->AttributeTreeScrollBarStyle)
+						//.TreeViewStyle(&Style->AttributeTreeStyle)
 						.TreeItemsSource(&Attributes)
 						.SelectionMode(ESelectionMode::None)
 						.OnGenerateRow_Lambda([this](TSharedPtr<FFICEditorAttributeReference> Attribute, const TSharedRef<STableViewBase>& Base) {
 							return SNew(STableRow<TSharedPtr<FFICEditorAttributeReference>>, Base)
-							.Style(&Style->AttributeTreeRowStyle)
+							//.Style(&Style->AttributeTreeRowStyle)
 							.Content()[
 								SNew(SCheckBox)
 								.Content()[
@@ -419,7 +419,6 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 				]
 				+SWidgetSwitcher::Slot()[
 					SAssignNew(SequencerTreeView, SFICSequencerTreeView, Context)
-					.Style(&Style->SequencerStyle)
 					.OnUpdate_Lambda([this]() {
 						if (Sequencer) Sequencer->UpdateRows();
 					})
