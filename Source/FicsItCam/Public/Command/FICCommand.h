@@ -1,6 +1,6 @@
 #pragma once
 
-#include "command/ChatCommandInstance.h"
+#include "Command/ChatCommandInstance.h"
 #include "Command/CommandSender.h"
 #include "FICSubsystem.h"
 #include "Editor/FICEditorSubsystem.h"

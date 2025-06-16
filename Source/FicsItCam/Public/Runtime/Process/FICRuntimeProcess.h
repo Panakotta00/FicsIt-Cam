@@ -1,6 +1,6 @@
 #pragma once
 
-#include "command/ChatCommandInstance.h"
+#include "Command/ChatCommandInstance.h"
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 #include "FICRuntimeProcess.generated.h"
 

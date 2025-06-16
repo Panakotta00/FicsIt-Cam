@@ -3,9 +3,12 @@
 #include <string>
 
 #include "FicsItCamModule.h"
+#include "FileHelper.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "Paths.h"
 
+#if PLATFORM_WINDOWS
 FSequenceMP4Exporter::FSequenceMP4Exporter(FIntPoint InImageSize, int FPS, FString InPath) : ImageSize(InImageSize), FPS(FPS), Path(InPath) {}
 
 FSequenceMP4Exporter::~FSequenceMP4Exporter() {
@@ -186,6 +189,7 @@ void FSequenceMP4Exporter::ReadBuffer() {
 		}
 	}
 }
+#endif
 
 FSequenceImageExporter::FSequenceImageExporter(FString InPath, FIntPoint InImageSize) : Path(InPath), ImageSize(InImageSize) {}
 

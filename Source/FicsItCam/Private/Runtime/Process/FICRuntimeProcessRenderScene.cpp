@@ -43,9 +43,12 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
 	
 	Path = FPaths::Combine(FSP, FDateTime::Now().ToString() + TEXT(".mp4"));
-	
+
+#if PLATFORM_WINDOWS
 	Exporter = MakeShared<FSequenceMP4Exporter>(FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight), Scene->FPS, Path);
-	//Exporter = MakeShared<FSequenceImageExporter>(Path, FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight));
+#else
+	Exporter = MakeShared<FSequenceImageExporter>(Path, FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight));
+#endif
 	Exporter->Init();
 
 	GEngine->GameViewport->AddViewportWidgetContent(

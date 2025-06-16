@@ -1,12 +1,15 @@
 ﻿#pragma once
 
+#if PLATFORM_WINDOWS
 extern "C" {
 	#include "libavcodec/avcodec.h"
 	#include "libavformat/avformat.h"
 	#include "libswscale/swscale.h"
 }
+#endif
 
 #include "CoreMinimal.h"
+#include "PixelFormat.h"
 
 class FSequenceExporter {
 protected:
@@ -24,6 +27,7 @@ public:
 	};
 };
 
+#if PLATFORM_WINDOWS
 class FSequenceMP4Exporter : public FSequenceExporter {
 private:
 	FIntPoint ImageSize;
@@ -49,6 +53,7 @@ public:
 	
 	void ReadBuffer();
 };
+#endif
 
 class FSequenceImageExporter : public FSequenceExporter {
 private:

@@ -85,7 +85,7 @@ void SFICEditor::RegisterTabs() {
 			.Content()[
 				SNew(SFICViewport, Context, GameWidget.ToSharedRef())
 				//GameWidget.ToSharedRef()
-			].OnCanCloseTab(false)
+			].OnCanCloseTab_Lambda([]() { return false; })
 			.Label(FText::FromString("Viewport"));
 		TabManager->SetMainTab(ViewportTab);
 		return ViewportTab;
@@ -168,7 +168,7 @@ FMenuBarBuilder SFICEditor::CreateMenuBar() {
 		AFICEditorSubsystem* SubSys = AFICEditorSubsystem::GetFICEditorSubsystem(Context);
 		if (SubSys->EditorLayouts.Num() > 0) {
 			MenuBuilder.AddSeparator();
-			for (const TPair<FString, FString> Layout : SubSys->EditorLayouts) {
+			for (const TPair<FString, FString>& Layout : SubSys->EditorLayouts) {
 				MenuBuilder.AddMenuEntry(FText::FromString(Layout.Key), TAttribute<FText>(), FSlateIcon(), FExecuteAction::CreateLambda([this, Layout]() {
 					LoadLayout(FTabManager::FLayout::NewFromString(Layout.Value));
 				}));
@@ -208,7 +208,7 @@ FMenuBarBuilder SFICEditor::CreateMenuBar() {
 			}), FSlateIcon());
 			if (SubSys->EditorLayouts.Num() > 0) {
 				MenuBuilder.AddSeparator();
-				for (const TPair<FString, FString> Layout : SubSys->EditorLayouts) {
+				for (const TPair<FString, FString>& Layout : SubSys->EditorLayouts) {
 					MenuBuilder.AddMenuEntry(FText::FromString(LOCTEXT("RemoveLayout", "Remove ").ToString() + Layout.Key), TAttribute<FText>(), FSlateIcon(), FExecuteAction::CreateLambda([this, Layout, SubSys]() {
 						SubSys->EditorLayouts.Remove(Layout.Key);
 					}));

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "command/ChatCommandLibrary.h"
+#include "Command/ChatCommandLibrary.h"
 #include "FICChatCommand.generated.h"
 
 UCLASS()

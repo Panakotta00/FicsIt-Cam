@@ -27,7 +27,7 @@ AFICSubsystem::AFICSubsystem() {
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorTickEnabled(true);
 
-	InputAction_OpenMenu = ConstructorHelpers::FObjectFinder<UInputAction>(L"/FicsItCam/Input/IA_FIC_OpenMenu.IA_FIC_OpenMenu").Object;
+	InputAction_OpenMenu = ConstructorHelpers::FObjectFinder<UInputAction>(TEXT("/FicsItCam/Input/IA_FIC_OpenMenu.IA_FIC_OpenMenu")).Object;
 }
 
 void AFICSubsystem::FinishDestroy() {
@@ -304,7 +304,7 @@ UFICRuntimeProcess* AFICSubsystem::FindRuntimeProcess(const FString& InKey) {
 }
 
 FString AFICSubsystem::FindRuntimeProcessKey(UFICRuntimeProcess* InProcess) {
-	for (const TPair<FString, UFICRuntimeProcess*> RuntimeProcess : RuntimeProcesses) {
+	for (const TPair<FString, UFICRuntimeProcess*>& RuntimeProcess : RuntimeProcesses) {
 		if (RuntimeProcess.Value == InProcess) {
 			return RuntimeProcess.Key;
 		}

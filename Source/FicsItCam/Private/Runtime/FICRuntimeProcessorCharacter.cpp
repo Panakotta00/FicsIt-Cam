@@ -1,6 +1,7 @@
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 
 #include "CineCameraComponent.h"
+#include "ConstructorHelpers.h"
 #include "EnhancedInputSubsystems.h"
 #include "FGInputSettings.h"
 #include "Engine/World.h"
@@ -11,6 +12,7 @@
 #include "Input/FGInputMappingContext.h"
 #include "Runtime/Process/FICRuntimeProcess.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 void AFICRuntimeProcessorCharacter::StopProcess() {
 	AFICSubsystem::GetFICSubsystem(this)->RemoveRuntimeProcess(RuntimeProcess);
@@ -28,7 +30,7 @@ AFICRuntimeProcessorCharacter::AFICRuntimeProcessorCharacter() {
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	InputAction_StopPlayback = ConstructorHelpers::FObjectFinder<UInputAction>(L"/FicsItCam/Input/IA_FIC_Playback_StopAnimation.IA_FIC_Playback_StopAnimation").Object;
+	InputAction_StopPlayback = ConstructorHelpers::FObjectFinder<UInputAction>(TEXT("/FicsItCam/Input/IA_FIC_Playback_StopAnimation.IA_FIC_Playback_StopAnimation")).Object;
 }
 
 void AFICRuntimeProcessorCharacter::OnConstruction(const FTransform& Transform) {

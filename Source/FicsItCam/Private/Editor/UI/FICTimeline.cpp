@@ -575,7 +575,7 @@ void SFICTimelinePanel::UpdateEditorAttributeSelection() {
 		TSharedRef<FFICEditorAttributeBase> Attribute = Context->GetEditorAttributes()[Selection];
 		bool bFound = false;
 		TMap<FString, TSharedRef<FFICEditorAttributeBase>> Children = Attribute->GetChildAttributes();
-		for (const TPair<FString, TSharedRef<FFICEditorAttributeBase>> Child : Children) {
+		for (const TPair<FString, TSharedRef<FFICEditorAttributeBase>>& Child : Children) {
 			if (Child.Value->GetAttributeType() == FFICAttributePosition::TypeName) {
 				SetAttributeGraph(Child.Value, true);
 				bFound = true;
