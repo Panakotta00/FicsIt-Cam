@@ -21,7 +21,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-selfhost
     steps:
       - name: Pre Cleanup
         run: Remove-Item ${{ github.workspace }}\* -Recurse -Force -Confirm:$false -ErrorAction Ignore
