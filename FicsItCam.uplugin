@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 0,
 	"VersionName": "1.0",
-	"SemVersion": "1.0",
+	"SemVersion": "1.0.0",
 	"AcceptsAnyRemoteVersion": true,
 	"FriendlyName": "FicsIt-Cam",
 	"Description": "Camera-Animations, Timelapse-Cameras, additional Camera-Feeds & more! Everything a cinematographer needs.",
