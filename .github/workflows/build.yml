@@ -70,7 +70,7 @@ jobs:
 
 
       - name: Package FicsItCam Mod
-        run: ${{ github.workspace }}\ue\Engine\Build\BatchFiles\RunUAT.bat -ScriptsForProject='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' PackagePlugin -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' -DLCName='FicsItCam' -build -server -clientconfig=Shipping -serverconfig=Shipping -platform=Win64 -serverplatform=Win64+Linux -nocompileeditor -installed -merge -utf8output
+        run: ${{ github.workspace }}\ue\Engine\Build\BatchFiles\RunUAT.bat -ScriptsForProject='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' PackagePlugin -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' -DLCName='FicsItCam' -build -server -clientconfig=Shipping -serverconfig=Shipping -platform=Win64 -nocompileeditor -installed -merge -utf8output
 
       - name: Upload FicsItCam-Merged
         id: upload-win64-merged
