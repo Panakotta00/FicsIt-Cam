@@ -1,8 +1,9 @@
 {
 	"FileVersion": 3,
-	"Version": 0,
+	"Version": 1,
 	"VersionName": "1.0",
 	"SemVersion": "1.0.0",
+	"GameVersion": ">=415558",
 	"AcceptsAnyRemoteVersion": true,
 	"FriendlyName": "FicsIt-Cam",
 	"Description": "Camera-Animations, Timelapse-Cameras, additional Camera-Feeds & more! Everything a cinematographer needs.",
@@ -26,9 +27,8 @@
 	"Plugins": [
 		{
 			"Name": "SML",
-			"SemVersion": "^3.8.0-dev",
+			"SemVersion": "^3.11.1",
 			"Enabled": true
 		}
-	],
-	"GameVersion": ">=365306"
+	]
 }
