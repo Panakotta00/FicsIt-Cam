@@ -32,6 +32,8 @@ void UFICRuntimeProcessTimelapseCamera::Start(AFICRuntimeProcessorCharacter* InC
 
 	Exporter = MakeShared<FSequenceImageExporter>(FSP, FIntPoint(CaptureCamera->RenderTarget->SizeX, CaptureCamera->RenderTarget->SizeY));
 	Exporter->Init();
+
+	CaptureCamera->UpdateCaptureWithCameraData(Cast<UCameraComponent>(Cast<AFGCharacterPlayer>(GetWorld()->GetFirstPlayerController()->GetCharacter())->GetComponentByClass(UCameraComponent::StaticClass())));
 }
 
 void UFICRuntimeProcessTimelapseCamera::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {

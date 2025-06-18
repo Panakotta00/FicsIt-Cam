@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FICRenderer.h"
 #include "FICRuntimeProcess.h"
 #include "Runtime/FICCameraArgument.h"
 #include "Brushes/SlateImageBrush.h"
@@ -31,6 +32,11 @@ public:
 	FVector2D WindowSize;
 	UPROPERTY(SaveGame)
 	bool bEverSaved = false;
+
+	UPROPERTY()
+	FFICRenderer Renderer;
+
+	TSharedPtr<FSequenceExporter> Exporter;
 
 	void SaveWindowSettings();
 	void LoadWindowSettings();

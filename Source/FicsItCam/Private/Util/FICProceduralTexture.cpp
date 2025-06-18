@@ -75,6 +75,7 @@ void FSequenceExporterProceduralTexture::AddFrame(EPixelFormat Format, void* ptr
 	DstData.SetNumUninitialized(DstSize.X * DstSize.Y);
 	FImageUtils::ImageResize(Size.X, Size.Y, SrcData, DstSize.X, DstSize.Y, DstData, false);
 	Texture->SetData(TArrayView<uint8>((uint8*)DstData.GetData(), DstData.Num() * sizeof(FColor)), DstSize);
+	Texture->GetTexture()->SRGB = true;
 }
 
 void FSequenceExporterProceduralTexture::Finish() {
