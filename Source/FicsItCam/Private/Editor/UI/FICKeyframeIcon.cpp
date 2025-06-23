@@ -1,18 +1,7 @@
 ﻿#include "Editor/UI/FICKeyframeIcon.h"
 
-#include "SlateBasics.h"
-
-const FName FFICKeyframeIconStyle::TypeName = TEXT("FFICKeyframeIconStyle");
-
-const FFICKeyframeIconStyle& FFICKeyframeIconStyle::GetDefault() {
-	static FFICKeyframeIconStyle* Default = nullptr;
-	if (!Default) {
-		Default = new FFICKeyframeIconStyle();
-		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICKeyframeIconStyle>("KeyframeIcon");
-		Default->Icons = FFICNumericKeyframeIcons::GetDefault();
-	}
-	return *Default;
-}
+#include "SBox.h"
+#include "SImage.h"
 
 void SFICKeyframeIcon::Construct(const FArguments& InArgs) {
 	Style = InArgs._Style;

@@ -8,7 +8,7 @@ class FFICChangeList;
 typedef TPair<FFICAttribute*, TSharedRef<FFICAttribute>> FChangeStackEntry;
 
 #define BEGIN_ATTRIB_CHANGE(Attribute) \
-	FFICChange::ChangeStack.Push(FChangeStackEntry(&Attribute, Attribute.Get()));
+	FFICChange::ChangeStack.Push(FChangeStackEntry(&Attribute, Attribute.CreateCopy()));
 
 #define END_ATTRIB_CHANGE(ChangeList) { \
 	FChangeStackEntry StackEntry = FFICChange::ChangeStack.Pop(); \
@@ -67,14 +67,14 @@ struct FFICChange_Attribute : public FFICChange {
 	TSharedRef<FFICAttribute> ToAttribute;
 	FFICChangeSource ChangeSource;
 
-	FFICChange_Attribute(FFICAttribute* InAttribute, TSharedRef<FFICAttribute> InFromAttribute, FFICChangeSource ChangeSource = FFICChangeSource()) : Attribute(InAttribute), FromAttribute(InFromAttribute), ToAttribute(Attribute->Get()), ChangeSource(ChangeSource) {}
+	FFICChange_Attribute(FFICAttribute* InAttribute, TSharedRef<FFICAttribute> InFromAttribute, FFICChangeSource ChangeSource = FFICChangeSource()) : Attribute(InAttribute), FromAttribute(InFromAttribute), ToAttribute(Attribute->CreateCopy()), ChangeSource(ChangeSource) {}
 
 	virtual void RedoChange() override {
-		Attribute->Set(ToAttribute);
+		Attribute->CopyFrom(ToAttribute);
 	}
 
 	virtual void UndoChange() override {
-		Attribute->Set(FromAttribute);
+		Attribute->CopyFrom(FromAttribute);
 	}
 
 	virtual FName ChangeType() override {

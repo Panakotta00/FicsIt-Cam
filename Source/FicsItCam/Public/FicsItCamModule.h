@@ -14,6 +14,7 @@ class FFicsItCamModule : public FDefaultGameModuleImpl {
 public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+	virtual void PostLoadCallback() override;
 
 	virtual bool IsGameModule() const override { return true; }
 

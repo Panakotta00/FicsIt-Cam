@@ -9,15 +9,14 @@ public class FicsItCam : ModuleRules
     public FicsItCam(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+	    CppStandard = CppStandardVersion.Cpp20;
 
-		PublicDependencyModuleNames.AddRange(new string[] {
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
             "Core", "CoreUObject",
             "Engine",
             "InputCore",
-            "ReplicationGraph",
             "UMG",
-            "AssetRegistry",
-            "GameplayTasks",
             "Slate", "SlateCore",
             "InteractiveToolsFramework",
             "CinematicCamera",
@@ -27,38 +26,40 @@ public class FicsItCam : ModuleRules
             "ImageWrapper",
             "Niagara",
             "EnhancedInput",
-            "GameplayTags"
 		});
 			
-		if (Target.Type == TargetRules.TargetType.Editor) {
-			PublicDependencyModuleNames.AddRange(new string[] {"OnlineBlueprintSupport", "AnimGraph"});
-		}
-        PublicDependencyModuleNames.AddRange(new string[] {"FactoryGame", "SML"});
-        
-        OptimizeCode = CodeOptimization.Never;
-        
-        PublicIncludePaths.Add("Public");
+        PublicDependencyModuleNames.AddRange(new string[]
+        {
+	        "FactoryGame",
+	        "SML"
+        });
 
-        var thirdPartyFolder = Path.Combine(ModuleDirectory, "../../ThirdParty");
-        PublicIncludePaths.Add(Path.Combine(thirdPartyFolder, "include"));        
-        
-        var platformName = Target.Platform.ToString();
-        var libraryFolder = Path.Combine(thirdPartyFolder, platformName);
-        
-        PublicDelayLoadDLLs.Add("avcodec-60.dll");
-        PublicDelayLoadDLLs.Add("avformat-60.dll");
-        PublicDelayLoadDLLs.Add("swscale-7.dll");
-        PublicDelayLoadDLLs.Add("swresample-4.dll");
-        PublicDelayLoadDLLs.Add("avutil-58.dll");
-        RuntimeDependencies.Add("$(BinaryOutputDir)\\avcodec-60.dll", Path.Combine(libraryFolder, "avcodec-60.dll"));
-        RuntimeDependencies.Add("$(BinaryOutputDir)\\avformat-60.dll", Path.Combine(libraryFolder, "avformat-60.dll"));
-        RuntimeDependencies.Add("$(BinaryOutputDir)\\swscale-7.dll", Path.Combine(libraryFolder, "swscale-7.dll"));
-        RuntimeDependencies.Add("$(BinaryOutputDir)\\swresample-4.dll", Path.Combine(libraryFolder, "swresample-4.dll"));
-        RuntimeDependencies.Add("$(BinaryOutputDir)\\avutil-58.dll", Path.Combine(libraryFolder, "avutil-58.dll"));
-        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "avcodec.lib"));
-        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "avformat.lib"));
-        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "swscale.lib"));
-        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "swresample.lib"));
-        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "avutil.lib"));
+        if (Target.Platform == UnrealTargetPlatform.Win64)
+        {
+	        var thirdPartyFolder = Path.Combine(ModuleDirectory, "../../ThirdParty");
+	        PublicIncludePaths.Add(Path.Combine(thirdPartyFolder, "include"));
+
+	        var platformName = Target.Platform.ToString();
+	        var libraryFolder = Path.Combine(thirdPartyFolder, platformName);
+
+	        PublicDelayLoadDLLs.Add("avcodec-60.dll");
+	        PublicDelayLoadDLLs.Add("avformat-60.dll");
+	        PublicDelayLoadDLLs.Add("swscale-7.dll");
+	        PublicDelayLoadDLLs.Add("swresample-4.dll");
+	        PublicDelayLoadDLLs.Add("avutil-58.dll");
+	        RuntimeDependencies.Add("$(BinaryOutputDir)\\avcodec-60.dll",
+		        Path.Combine(libraryFolder, "avcodec-60.dll"));
+	        RuntimeDependencies.Add("$(BinaryOutputDir)\\avformat-60.dll",
+		        Path.Combine(libraryFolder, "avformat-60.dll"));
+	        RuntimeDependencies.Add("$(BinaryOutputDir)\\swscale-7.dll", Path.Combine(libraryFolder, "swscale-7.dll"));
+	        RuntimeDependencies.Add("$(BinaryOutputDir)\\swresample-4.dll",
+		        Path.Combine(libraryFolder, "swresample-4.dll"));
+	        RuntimeDependencies.Add("$(BinaryOutputDir)\\avutil-58.dll", Path.Combine(libraryFolder, "avutil-58.dll"));
+	        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "avcodec.lib"));
+	        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "avformat.lib"));
+	        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "swscale.lib"));
+	        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "swresample.lib"));
+	        PublicAdditionalLibraries.Add(Path.Combine(libraryFolder, "avutil.lib"));
+        }
     }
 }

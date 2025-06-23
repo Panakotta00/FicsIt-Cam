@@ -4,6 +4,7 @@
 #include "Editor/FICEditorCameraCharacter.h"
 
 #include "CineCameraComponent.h"
+#include "ConstructorHelpers.h"
 #include "FGGameUserSettings.h"
 #include "FGPlayerController.h"
 #include "FICUtils.h"
@@ -14,13 +15,15 @@
 #include "Editor/FICEditorSubsystem.h"
 #include "Editor/Data/FICEditorAttributeBase.h"
 #include "Editor/Data/FICEditorAttributeGroupDynamic.h"
+#include "Engine/GameViewportClient.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerController.h"
 #include "Input/FGEnhancedInputComponent.h"
+#include "Kismet/GameplayStatics.h"
 
-#define InputActionConstructionHelper(Action) InputAction_ ## Action = ConstructorHelpers::FObjectFinder<UInputAction>(TEXT("/FicsItCam/Input/IA_FIC_Editor_" ## #Action ## ".IA_FIC_Editor_" ## #Action)).Object
+#define InputActionConstructionHelper(Action) InputAction_ ## Action = ConstructorHelpers::FObjectFinder<UInputAction>(TEXT("/FicsItCam/Input/IA_FIC_Editor_" #Action ".IA_FIC_Editor_" #Action)).Object
 
 AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	PrimaryActorTick.bCanEverTick = true;

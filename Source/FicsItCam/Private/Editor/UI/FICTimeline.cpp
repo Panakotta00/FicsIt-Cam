@@ -1,27 +1,13 @@
 ﻿#include "Editor/UI/FICTimeline.h"
 
+#include "SButton.h"
+#include "SGridPanel.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICSequencerTreeView.h"
+#include "Editor/Data/FICEditorAttributeGroupDynamic.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
-
-FSlateColorBrush SFICTimelinePanel::DefaultBackgroundBrush = FSlateColorBrush(FColor::FromHex("030303"));
-
-FCheckBoxStyle SFICTimelinePanel::DefaultToggleButtonStyle = FCoreStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonStyle");
-FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonChecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.25f, 0.25f, 0.25f));
-FSlateBoxBrush SFICTimelinePanel::DefaultToggleButtonUnchecked = FSlateBoxBrush(((FSlateStyleSet&)FCoreStyle::Get()).RootToContentDir("Common/RoundedSelection_16x",  TEXT(".png")), 4.0f/16.0f, FLinearColor(0.72f, 0.72f, 0.72f));
-
-const FName FFICTimelineStyle::TypeName = TEXT("FFICTimelineStyle");
-
-const FFICTimelineStyle& FFICTimelineStyle::GetDefault() {
-	static FFICTimelineStyle* Default = nullptr;
-	if (!Default) {
-		Default = new FFICTimelineStyle();
-		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICTimelineStyle>("TimelineStyle");
-	}
-	return *Default;
-}
 
 TArray<TSharedPtr<FFICEditorAttributeReference>> FFICEditorAttributeReference::GetChildren() {
 	if (!bChildrenLoaded) {
@@ -36,21 +22,13 @@ TArray<TSharedPtr<FFICEditorAttributeReference>> FFICEditorAttributeReference::G
 void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* InContext) {
 	Context = InContext;
 	Style = InArgs._Style;
-	BackgroundBrush = InArgs._Background;
-	
-	DefaultToggleButtonStyle.CheckedImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
-	DefaultToggleButtonStyle.CheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
-	DefaultToggleButtonStyle.CheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonChecked);
-	DefaultToggleButtonStyle.UncheckedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
-	DefaultToggleButtonStyle.UncheckedHoveredImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
-	DefaultToggleButtonStyle.UncheckedPressedImage = static_cast<FSlateBrush>(DefaultToggleButtonUnchecked);
-	
+
 	TSharedPtr<INumericTypeInterface<int64>> Interface = MakeShared<TDefaultNumericTypeInterface<int64>>();
 
 	ChildSlot[SNew(SOverlay)
 		+SOverlay::Slot()[
 			SNew(SImage)
-			.Image(BackgroundBrush)
+			.Image(&Style->Background)
 		]
 		+SOverlay::Slot()
 		.Padding(0)
@@ -177,7 +155,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	            .VAlign(VAlign_Center)[
 					SNew(SCheckBox)
 					.Type(ESlateCheckBoxType::ToggleButton)
-					.Style(&DefaultToggleButtonStyle)
+		            .Style(&Style->ReversePlayButtonStyle)
 					.Padding(5)
 					.Content()[
 						SNew(STextBlock)
@@ -265,8 +243,8 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 	            .HAlign(HAlign_Center)[
 		            SNew(SCheckBox)
 		            .Type(ESlateCheckBoxType::ToggleButton)
-					.Style(&DefaultToggleButtonStyle)
 					.Padding(5)
+		            .Style(&Style->ReversePlayButtonStyle)
 					.Content()[
 						SNew(STextBlock)
 						.Text(FText::FromString(">"))
@@ -276,7 +254,7 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 						bool Ctrl = FSlateApplication::Get().GetModifierKeys().IsControlDown() && Context->GetAnimPlayer() != FIC_PLAY_PAUSED;
 						float Factor = Context->GetAnimPlayerFactor();
 						if (Context->GetAnimPlayer() == FIC_PLAY_FORWARDS) {
-							return FText::FromString(Ctrl ? FString::Printf(TEXT("Increate to %ix Play"), (int)Factor+1) : TEXT("Pause Play"));
+							return FText::FromString(Ctrl ? FString::Printf(TEXT("Increase to %ix Play"), (int)Factor+1) : TEXT("Pause Play"));
 						} else {
 							return FText::FromString(Ctrl ? FString::Printf(TEXT("Decrease to %ix Reverse Play"), (int)Factor+1) : TEXT("Play"));
 						}
@@ -387,10 +365,13 @@ void SFICTimelinePanel::Construct(const FArguments& InArgs, UFICEditorContext* I
 					]
 					+SVerticalBox::Slot().Padding(5).FillHeight(1).VAlign(VAlign_Fill).HAlign(HAlign_Fill)[
 						SAssignNew(AttributeTree, STreeView<TSharedPtr<FFICEditorAttributeReference>>)
+						//.ScrollBarStyle(&Style->AttributeTreeScrollBarStyle)
+						//.TreeViewStyle(&Style->AttributeTreeStyle)
 						.TreeItemsSource(&Attributes)
 						.SelectionMode(ESelectionMode::None)
 						.OnGenerateRow_Lambda([this](TSharedPtr<FFICEditorAttributeReference> Attribute, const TSharedRef<STableViewBase>& Base) {
 							return SNew(STableRow<TSharedPtr<FFICEditorAttributeReference>>, Base)
+							//.Style(&Style->AttributeTreeRowStyle)
 							.Content()[
 								SNew(SCheckBox)
 								.Content()[
@@ -594,7 +575,7 @@ void SFICTimelinePanel::UpdateEditorAttributeSelection() {
 		TSharedRef<FFICEditorAttributeBase> Attribute = Context->GetEditorAttributes()[Selection];
 		bool bFound = false;
 		TMap<FString, TSharedRef<FFICEditorAttributeBase>> Children = Attribute->GetChildAttributes();
-		for (const TPair<FString, TSharedRef<FFICEditorAttributeBase>> Child : Children) {
+		for (const TPair<FString, TSharedRef<FFICEditorAttributeBase>>& Child : Children) {
 			if (Child.Value->GetAttributeType() == FFICAttributePosition::TypeName) {
 				SetAttributeGraph(Child.Value, true);
 				bFound = true;

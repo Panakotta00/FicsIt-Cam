@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "FGSaveInterface.h"
 #include "FICTypes.h"
+#include "GameFramework/Actor.h"
 #include "Objects/FICCamera.h"
 #include "Util/FICProceduralTexture.h"
 #include "FICScene.generated.h"

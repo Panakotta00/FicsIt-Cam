@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SCompoundWidget.h"
+
 class UFICEditorContext;
 
 class SFICEditorSettings : public SCompoundWidget {

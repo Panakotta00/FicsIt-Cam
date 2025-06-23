@@ -8,7 +8,7 @@ FMenuBuilder FICCreateKeyframeTypeChangeMenu(UFICEditorContext* Context, TFuncti
 		TSet<TTuple<FFICAttribute*, long long>> Keyframes = GetKeyframes();
 		for (const TPair<FFICAttribute*, FICFrame>& KF : Keyframes) {
 			TSharedRef<FFICAttribute>* Snapshot = Snapshots.Find(KF.Key);
-			if (!Snapshot) Snapshots.Add(KF.Key, KF.Key->Get());
+			if (!Snapshot) Snapshots.Add(KF.Key, KF.Key->CreateCopy());
 			TMap<FICFrame, TSharedRef<FFICKeyframe>> KFS = KF.Key->GetKeyframes();
 			TSharedRef<FFICKeyframe>* NKF = KFS.Find(KF.Value);
 			if (NKF) (*NKF)->SetType(Type);

@@ -3,18 +3,9 @@ name: CI
 on:
   push:
     branches:
-      - master
       - dev
     paths:
       - "FicsItCam.uplugin"
-      - "Content/**"
-      - "Source/**"
-      - "ThirdParty/**"
-  pull_request:
-    branches:
-      - "master"
-      - "development"
-    paths:
       - "Content/**"
       - "Source/**"
       - "ThirdParty/**"
@@ -30,20 +21,20 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-selfhost
     steps:
-      - name: Cleanup
-        run: Remove-Item ${{ github.workspace }}\SatisfactoryModLoader -Recurse -Force -Confirm:$false -ErrorAction Ignore
+      - name: Pre Cleanup
+        run: Remove-Item ${{ github.workspace }}\* -Recurse -Force -Confirm:$false -ErrorAction Ignore
 
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
         with:
           repository: satisfactorymodding/SatisfactoryModLoader
-          ref: refs/heads/dev
+          ref: d1b4dc0b85236e8a68b934f8dacdafa65fa8af2f
           path: SatisfactoryModLoader
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
-          path: Mods/FicsItCam
+          path: SatisfactoryModLoader/Mods/FicsItCam
 
       - name: Create UE directory
         run: mkdir ue
@@ -51,39 +42,58 @@ jobs:
       - name: Download, Extract and Setup UE
         working-directory: ue
         run: |
-          gh release download --repo satisfactorymodding/UnrealEngine -p "UnrealEngine-CSS-Editor-Win64.7z.*"
+          gh release download --repo satisfactorymodding/UnrealEngine -p "UnrealEngine-CSS-Editor-Win64.7z.*" 5.3.2-css-68
           7z x UnrealEngine-CSS-Editor-Win64.7z.001
           rm UnrealEngine-CSS-Editor-Win64.7z*
           .\\SetupScripts\\Register.bat
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Add Wwise
         run: |
-          gh release download --repo mircearoata/wwise-cli -p "wwise-cli.exe"
-          ./wwise-cli.exe download     --sdk-version "2022.1.5.8242"          --filter Packages=SDK --filter DeploymentPlatforms=Windows_vc140 --filter DeploymentPlatforms=Windows_vc150 --filter DeploymentPlatforms=Windows_vc160 --filter DeploymentPlatforms=Windows_vc170 --filter DeploymentPlatforms=Linux --filter DeploymentPlatforms=
-          ./wwise-cli.exe integrate-ue --integration-version "2022.1.5.2714"  --project "${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject"
+           7z x -aoa C:\\CI\\Wwise.7z -o'${{ github.workspace }}\SatisfactoryModLoader\Plugins\'
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           WWISE_EMAIL: ${{ secrets.WWISE_EMAIL }}
           WWISE_PASSWORD: ${{ secrets.WWISE_PASSWORD }}
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
-
-      - name: Generate VS project files
-        run: ${{ github.workspace }}\ue\Engine\Build\BatchFiles\Build.bat -projectfiles -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' -game -rocket -progres
+        uses: microsoft/setup-msbuild@v2
 
       - name: Build for Development Editor
-        run: MSBuild.exe '${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.sln' /p:Configuration='Development Editor' /p:Platform='Win64' /t:'Games\FactoryGame' -m
+        run: ${{ github.workspace }}\\ue\\Engine\\Build\\BatchFiles\\Build.bat FactoryEditor Win64 Development -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject'
 
-      - name: Build for Shipping/Client
-        run: MSBuild.exe '${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.sln' /p:Configuration='Shipping' /p:Platform='Win64' /t:'Games\FactoryGame' -m
+      - name: Build for Shipping/Client EGS
+        run: ${{ github.workspace }}\\ue\\Engine\\Build\\BatchFiles\\Build.bat FactoryGameEGS Win64 Shipping -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject'
+      - name: Build for Shipping/Client Steam
+        run: ${{ github.workspace }}\\ue\\Engine\\Build\\BatchFiles\\Build.bat FactoryGameSteam Win64 Shipping -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject'
+
 
       - name: Package FicsItCam Mod
-        run: ${{ github.workspace }}\ue\Engine\Build\BatchFiles\RunUAT.bat -ScriptsForProject='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' PackagePlugin -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' -clientconfig=Shipping -serverconfig=Shipping -DLCName='FicsItCam' -build -platform=Win64 -nocompileeditor -installed
+        run: ${{ github.workspace }}\ue\Engine\Build\BatchFiles\RunUAT.bat -ScriptsForProject='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' PackagePlugin -project='${{ github.workspace }}\SatisfactoryModLoader\FactoryGame.uproject' -DLCName='FicsItCam' -build -server -clientconfig=Shipping -serverconfig=Shipping -platform=Win64 -nocompileeditor -installed -merge -utf8output
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload FicsItCam-Merged
+        id: upload-win64-merged
+        uses: actions/upload-artifact@v4
+        with:
+          name: FicsItCam-Merged
+          path: ${{github.workspace}}\SatisfactoryModLoader\Saved\ArchivedPlugins\FicsItCam\FicsItCam.zip
+      - name: Upload FicsItCam
+        id: upload-win64
+        uses: actions/upload-artifact@v4
         with:
           name: FicsItCam
-          path: ${{ github.workspace }}\SatisfactoryModLoader\Saved\ArchivedPlugins\FicsItCam\FicsItCam-Windows.zip
+          path: ${{github.workspace}}\SatisfactoryModLoader\Saved\ArchivedPlugins\FicsItCam\FicsItCam-*.zip
+
+      - name: Discord Webhook Action
+        uses: Panakotta00/discord-build-status-with-artifact@v0.0.4
+        if: always()
+        with:
+          status: ${{ job.status }}
+          webhook-url: ${{ secrets.WEBHOOK_URL }}
+          artifact-url: "${{ steps.upload-win64.outputs.artifact-url }}"
+          artifact-name: 'FicsItCam.zip'
+          
+      - name: Post Cleanup
+        if: ${{ !failure() }}
+        run: Remove-Item ${{ github.workspace }}\* -Recurse -Force -Confirm:$false -ErrorAction Ignore

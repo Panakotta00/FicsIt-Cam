@@ -79,11 +79,11 @@ void UFICGrabTool::Render(IToolsContextRenderAPI* RenderAPI) {
 
 void UFICGrabTool::OnTick(float DeltaTime) {}
 
-bool UFICGrabTool::HasAccept() {
+bool UFICGrabTool::HasAccept() const {
 	return true;
 }
 
-bool UFICGrabTool::CanAccept() {
+bool UFICGrabTool::CanAccept() const {
 	return true;
 }
 

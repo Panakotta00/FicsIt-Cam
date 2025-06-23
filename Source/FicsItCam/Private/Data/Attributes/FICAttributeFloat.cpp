@@ -113,7 +113,7 @@ bool FFICFloatAttribute::HasKeyframe(FICFrame Time) const {
 	return Keyframes.Contains(Time);
 }
 
-void FFICFloatAttribute::Set(TSharedRef<FFICAttribute> InAttrib) {
+void FFICFloatAttribute::CopyFrom(TSharedRef<FFICAttribute> InAttrib) {
 	FOnUpdate OnUpdateBuf = OnUpdate;
 	if (InAttrib->GetAttributeType() == GetAttributeType()) {
 		*this = *StaticCastSharedRef<FFICFloatAttribute>(InAttrib);
@@ -122,7 +122,7 @@ void FFICFloatAttribute::Set(TSharedRef<FFICAttribute> InAttrib) {
 	OnUpdateBroadcast();
 }
 
-TSharedRef<FFICAttribute> FFICFloatAttribute::Get() {
+TSharedRef<FFICAttribute> FFICFloatAttribute::CreateCopy() {
 	return MakeShared<FFICFloatAttribute>(*this);
 }
 

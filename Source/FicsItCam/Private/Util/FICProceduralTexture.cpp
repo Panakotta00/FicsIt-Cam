@@ -1,6 +1,8 @@
 #include "Util/FICProceduralTexture.h"
 
 #include "ImageUtils.h"
+#include "TextureResource.h"
+#include "Engine/Texture2D.h"
 
 bool UFICProceduralTexture::ShouldSave_Implementation() const {
 	return true;
@@ -30,8 +32,8 @@ void UFICProceduralTexture::ReloadData() {
 	Texture->GetPlatformData()->SizeY = Size.Y;
 	
 	FTexture2DMipMap& PrimaryMipMap = Texture->GetPlatformData()->Mips[0];
-	PrimaryMipMap.BulkData.Realloc(Data.Num());
-	void* TextureDataPtr = PrimaryMipMap.BulkData.Lock(LOCK_READ_WRITE);
+	PrimaryMipMap.BulkData.Lock(LOCK_READ_WRITE);
+	void* TextureDataPtr = PrimaryMipMap.BulkData.Realloc(Data.Num());
 	FMemory::Memcpy(TextureDataPtr, Data.GetData(), Data.Num());
 	PrimaryMipMap.BulkData.Unlock();
 
@@ -73,6 +75,7 @@ void FSequenceExporterProceduralTexture::AddFrame(EPixelFormat Format, void* ptr
 	DstData.SetNumUninitialized(DstSize.X * DstSize.Y);
 	FImageUtils::ImageResize(Size.X, Size.Y, SrcData, DstSize.X, DstSize.Y, DstData, false);
 	Texture->SetData(TArrayView<uint8>((uint8*)DstData.GetData(), DstData.Num() * sizeof(FColor)), DstSize);
+	Texture->GetTexture()->SRGB = true;
 }
 
 void FSequenceExporterProceduralTexture::Finish() {

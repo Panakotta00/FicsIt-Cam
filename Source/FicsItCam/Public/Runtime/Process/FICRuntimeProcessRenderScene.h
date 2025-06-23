@@ -4,19 +4,20 @@
 #include "CanvasTypes.h"
 #include "FICRuntimeProcessPlayScene.h"
 #include "FICSubsystem.h"
+#include "Viewport.h"
 #include "Util/SequenceExporter.h"
-#include "FICRUntimeProcessRenderScene.generated.h"
+#include "FICRuntimeProcessRenderScene.generated.h"
 
 inline FName NAME_FICRendererViewport = TEXT("FICRendererViewport");
 
 class FFICRendererViewport : public FViewport, public FFICRenderTarget {
 public:
-	FFICRendererViewport(FViewportClient* InViewportClient, int SizeX, int SizeY) : FViewport(InViewportClient), DebugCanvas(NULL) {
+	FFICRendererViewport(FViewportClient* InViewportClient, int SizeX, int SizeY) : FViewport(InViewportClient), DebugCanvas(nullptr) {
 		this->SizeX = SizeX;
 		this->SizeY = SizeY;
 		ViewportType = NAME_FICRendererViewport;
-		UWorld* CurWorld = (InViewportClient != NULL ? InViewportClient->GetWorld() : NULL);
-		DebugCanvas = new FCanvas(this, NULL, CurWorld, (CurWorld != NULL ? CurWorld->FeatureLevel.GetValue() : GMaxRHIFeatureLevel));
+		UWorld* CurWorld = (InViewportClient != nullptr ? InViewportClient->GetWorld() : nullptr);
+		DebugCanvas = new FCanvas(this, nullptr, CurWorld, (CurWorld != nullptr ? CurWorld->GetFeatureLevel() : GMaxRHIFeatureLevel));
 		
 		DebugCanvas->SetAllowedModes(0);
 
@@ -27,9 +28,9 @@ public:
 		BeginReleaseResource(this);
 		FlushRenderingCommands();
 		
-		if (DebugCanvas != NULL) {
+		if (DebugCanvas != nullptr) {
 			delete DebugCanvas;
-			DebugCanvas = NULL;
+			DebugCanvas = nullptr;
 		}
 	}
 	
@@ -61,17 +62,17 @@ public:
 	// End FViewport
 
 	// Begin FRenderResource
-	virtual void InitDynamicRHI() override {
-		FTexture2DRHIRef ShaderResourceTextureRHI;
+	virtual void InitRHI(FRHICommandListBase& RHICmdList) override {
+		const FRHITextureCreateDesc Desc =
+			FRHITextureCreateDesc::Create2D(TEXT("BufferedRT"))
+			.SetExtent(SizeX, SizeY)
+			.SetFormat(PF_R8G8B8A8)
+			.SetFlags(ETextureCreateFlags::RenderTargetable | ETextureCreateFlags::ShaderResource)
+			.SetInitialState(ERHIAccess::SRVMask);
 
-		FRHIResourceCreateInfo CreateInfo(TEXT("FIC Renderer Surface"));
-		RHICreateTargetableShaderResource2D( SizeX, SizeY, PF_R8G8B8A8, 1, TexCreate_Shared | TexCreate_Dynamic | TexCreate_DisableSRVCreation, TexCreate_RenderTargetable, false, CreateInfo, RenderTargetTextureRHI, ShaderResourceTextureRHI );
+		RenderTargetTextureRHI = RHICreateTexture(Desc);
 	}
 
-	virtual void InitRHI() override{}
-	virtual void ReleaseRHI() override{}
-	virtual void InitResource() override{ FViewport::InitResource(); }
-	virtual void ReleaseResource() override { FViewport::ReleaseResource(); }
 	virtual FString GetFriendlyName() const override { return FString(TEXT("FFICRendererViewport"));}
 	// End FRenderResource Interface
 
@@ -80,7 +81,7 @@ public:
 	// End FFICRenderTarget
 	
 private:
-	FCanvas* DebugCanvas;
+	FCanvas* DebugCanvas = nullptr;
 };
 
 UCLASS()

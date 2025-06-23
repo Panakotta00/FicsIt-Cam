@@ -1,5 +1,8 @@
 #pragma once
 
+#include "SCompoundWidget.h"
+#include "SOverlay.h"
+
 class UFICEditorContext;
 
 class SFICViewport : public SCompoundWidget {

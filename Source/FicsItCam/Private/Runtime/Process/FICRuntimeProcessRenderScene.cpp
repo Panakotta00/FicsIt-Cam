@@ -5,14 +5,13 @@
 #include "EngineModule.h"
 #include "FICSubsystem.h"
 #include "IImageWrapperModule.h"
+#include "PlatformFileManager.h"
 #include "Algo/Accumulate.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Editor/FICEditorSubsystem.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "GTE/Mathematics/Logger.h"
-#include "Runtime/FICCaptureCamera.h"
-#include "Slate/SceneViewport.h"
+#include "GameFramework/WorldSettings.h"
 #include "Widgets/SViewport.h"
+	#include "Widgets/Notifications/SProgressBar.h"
 
 void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InCharacter) {
 	Super::Start(InCharacter);
@@ -44,9 +43,12 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
 	
 	Path = FPaths::Combine(FSP, FDateTime::Now().ToString() + TEXT(".mp4"));
-	
+
+#if PLATFORM_WINDOWS
 	Exporter = MakeShared<FSequenceMP4Exporter>(FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight), Scene->FPS, Path);
-	//Exporter = MakeShared<FSequenceImageExporter>(Path, FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight));
+#else
+	Exporter = MakeShared<FSequenceImageExporter>(Path, FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight));
+#endif
 	Exporter->Init();
 
 	GEngine->GameViewport->AddViewportWidgetContent(
@@ -93,7 +95,7 @@ void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharac
 	FlushRenderingCommands();
 	
 	UGameViewportClient* ViewportClient = GetWorld()->GetGameViewport();
-	FCanvas Canvas(DummyViewport.Get(), NULL, ViewportClient->GetWorld(), ViewportClient->GetWorld()->FeatureLevel);
+	FCanvas Canvas(DummyViewport.Get(), NULL, ViewportClient->GetWorld(), ViewportClient->GetWorld()->GetFeatureLevel());
 	ViewportClient->Draw(DummyViewport.Get(), &Canvas);
 	Canvas.Flush_GameThread();
 

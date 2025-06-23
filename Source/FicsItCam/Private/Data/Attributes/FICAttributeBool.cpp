@@ -49,7 +49,7 @@ bool FFICAttributeBool::HasKeyframe(FICFrame Time) const {
 	return Keyframes.Contains(Time);
 }
 
-void FFICAttributeBool::Set(TSharedRef<FFICAttribute> InAttrib) {
+void FFICAttributeBool::CopyFrom(TSharedRef<FFICAttribute> InAttrib) {
 	FOnUpdate OnUpdateBuf = OnUpdate;
 	if (InAttrib->GetAttributeType() == GetAttributeType()) {
 		*this = *StaticCastSharedRef<FFICAttributeBool>(InAttrib);
@@ -58,7 +58,7 @@ void FFICAttributeBool::Set(TSharedRef<FFICAttribute> InAttrib) {
 	OnUpdateBroadcast();
 }
 
-TSharedRef<FFICAttribute> FFICAttributeBool::Get() {
+TSharedRef<FFICAttribute> FFICAttributeBool::CreateCopy() {
 	return MakeShared<FFICAttributeBool>(*this);
 }
 

@@ -1,21 +1,10 @@
 #include "Editor/UI/FICGraphView.h"
 
+#include "SBox.h"
 #include "Editor/FICChangeList.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICDragDrop.h"
 #include "Editor/UI/FICUIUtil.h"
-
-const FName FFICGraphViewStyle::TypeName = TEXT("FFICGraphViewStyle");
-
-const FFICGraphViewStyle& FFICGraphViewStyle::GetDefault() {
-	static FFICGraphViewStyle* Default = nullptr;
-	if (!Default) {
-		Default = new FFICGraphViewStyle();
-		*Default = FFICEditorStyles::Get().GetWidgetStyle<FFICGraphViewStyle>("GraphView");
-		Default->NumericKeyframeIcons = FFICNumericKeyframeIcons::GetDefault();
-	}
-	return *Default;
-}
 
 void SFICGraphViewKeyframeHandle::Construct(const FArguments& InArgs, SFICGraphViewKeyframe* InKeyframe) {
 	GraphKeyframe = InKeyframe;
@@ -438,7 +427,7 @@ FReply SFICGraphView::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& In
 		TMap<FFICAttribute*, TSharedRef<FFICAttribute>> Snapshots;
 		for (const TPair<FFICAttribute*, FICFrame>& SelectedKeyframe : Selection) {
 			TSharedRef<FFICAttribute>* Snapshot = Snapshots.Find(SelectedKeyframe.Key);
-			if (!Snapshot) Snapshots.Add(SelectedKeyframe.Key, SelectedKeyframe.Key->Get());
+			if (!Snapshot) Snapshots.Add(SelectedKeyframe.Key, SelectedKeyframe.Key->CreateCopy());
 			SelectedKeyframe.Key->RemoveKeyframe(SelectedKeyframe.Value);
 		}
 		TSharedRef<FFICChange_Group> Group = MakeShared<FFICChange_Group>();

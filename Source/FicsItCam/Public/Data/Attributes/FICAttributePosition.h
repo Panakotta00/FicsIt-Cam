@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CoreMinimal.h"
 #include "FICAttribute.h"
 #include "FICAttributeFloat.h"
 #include "FICAttributeGroup.h"

@@ -68,7 +68,7 @@ public:
 		for (const TPair<FFICAttribute*, FICFrame>& Keyframe : OldKeyframes) {
 			TSharedRef<FFICAttribute>* State = OldAttributeState.Find(Keyframe.Key);
 			if (State) continue;
-			OldAttributeState.Add(Keyframe.Key, Keyframe.Key->Get());
+			OldAttributeState.Add(Keyframe.Key, Keyframe.Key->CreateCopy());
 		}
 	}
 	

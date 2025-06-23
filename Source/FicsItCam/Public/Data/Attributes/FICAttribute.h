@@ -43,8 +43,8 @@ public:
 	virtual FICValue GetFloatValue(FICFrameFloat Time) { checkf(false, TEXT("Not Implemented!")); return 0.0f; }
 	virtual bool HasKeyframe(FICFrame Time) const { checkf(false, TEXT("Not Implemented!")); return false; }
 	
-	virtual void Set(TSharedRef<FFICAttribute> InAttrib) { checkf(false, TEXT("Not Implemented!")); }
-	virtual TSharedRef<FFICAttribute> Get() { checkf(false, TEXT("Not Implemented!")); return MakeShareable<FFICAttribute>(nullptr); }
+	virtual void CopyFrom(TSharedRef<FFICAttribute> InAttrib) { checkf(false, TEXT("Not Implemented!")); }
+	virtual TSharedRef<FFICAttribute> CreateCopy() { checkf(false, TEXT("Not Implemented!")); return MakeShareable<FFICAttribute>(nullptr); }
 
 	virtual TSharedRef<FFICEditorAttributeBase> CreateEditorAttribute();
 

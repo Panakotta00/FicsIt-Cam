@@ -107,7 +107,7 @@ void UFICEditorContext::LoadSceneObject(UObject* SceneObject) {
 		if (bAutoKeyframe && !bInAutoKeyframeSet && AutoKeyframeChangeRef) {
 			bInAutoKeyframeSet = true;
 			bBlockValueUpdate = true;
-			FFICChange::ChangeStack.Push(FChangeStackEntry(&Attribute->GetAttribute(), Attribute->GetAttribute().Get()));
+			FFICChange::ChangeStack.Push(FChangeStackEntry(&Attribute->GetAttribute(), Attribute->GetAttribute().CreateCopy()));
 
 			Attribute->SetKeyframe(GetCurrentFrame());
 

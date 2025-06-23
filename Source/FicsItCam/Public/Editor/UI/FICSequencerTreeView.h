@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "FICEditorStyle.h"
 #include "FICSequencerRow.h"
 #include "Components/ScrollBox.h"
 #include "Editor/FICEditorContext.h"
@@ -8,7 +9,7 @@
 DECLARE_DELEGATE(FFICSequencerUpdate)
 
 class SFICSequencerTreeViewRow : public STableRow<TSharedPtr<FFICSequencerRowMeta>> {
-	SLATE_BEGIN_ARGS(SFICSequencerTreeViewRow) : _Style(nullptr) {}
+	SLATE_BEGIN_ARGS(SFICSequencerTreeViewRow) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICSequencerStyle>("Sequencer")) {}
 	SLATE_STYLE_ARGUMENT(FFICSequencerStyle, Style)
 	SLATE_END_ARGS()
 
@@ -51,7 +52,7 @@ protected:
 };
 
 class SFICSequencerTreeView : public STreeView<TSharedPtr<FFICSequencerRowMeta>> {
-	SLATE_BEGIN_ARGS(SFICSequencerTreeView) : _Style(nullptr) {}
+	SLATE_BEGIN_ARGS(SFICSequencerTreeView) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICSequencerStyle>("Sequencer")) {}
 	SLATE_STYLE_ARGUMENT(FFICSequencerStyle, Style)
 	SLATE_EVENT(FOnTableViewScrolled, OnScrolled)
 	SLATE_EVENT(FFICSequencerUpdate, OnUpdate)

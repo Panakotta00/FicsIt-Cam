@@ -3,57 +3,17 @@
 #include "FICEditorStyle.h"
 #include "Data/FICTypes.h"
 #include "FICEvents.h"
+#include "SBox.h"
 #include "SelectionManager.h"
 #include "Data/Attributes/FICKeyframe.h"
 #include "Editor/Data/FICEditorAttributeBase.h"
-#include "FICGraphView.generated.h"
 
 class UFICEditorContext;
 struct FFICAttribute;
 class SFICGraphView;
 
-USTRUCT()
-struct FFICGraphViewStyle : public FSlateWidgetStyle {
-	GENERATED_BODY()
-	
-	static const FFICGraphViewStyle& GetDefault();
-	
-	static const FName TypeName;
-	virtual const FName GetTypeName() const override { return TypeName; };
-
-	virtual void GetResources(TArray<const FSlateBrush*>& OutBrushes) const override {
-		NumericKeyframeIcons.GetResources(OutBrushes);
-		OutBrushes.Add(&SelectionBoxBrush);
-		OutBrushes.Add(&HighlightRangeBrush);
-	}
-
-	UPROPERTY(EditAnywhere)
-	FFICNumericKeyframeIcons NumericKeyframeIcons;
-	UPROPERTY(EditAnywhere)
-	FSlateColor KeyframeSelectedColor;
-	UPROPERTY(EditAnywhere)
-	FSlateColor KeyframeUnselectedColor;
-	UPROPERTY(EditAnywhere)
-	FSlateBrush SelectionBoxBrush;
-	UPROPERTY(EditAnywhere)
-	FSlateBrush HighlightRangeBrush;
-};
-
-UCLASS(hidecategories = Object, MinimalAPI)
-class UFICGraphViewStyleContainer : public USlateWidgetStyleContainerBase {
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, meta = (ShowOnlyInnerProperties))
-	FFICGraphViewStyle Style;
-
-	virtual const FSlateWidgetStyle* const GetStyle() const override {
-		return &Style;
-	}
-};
-
 class SFICGraphViewKeyframeHandle : public SCompoundWidget {
-	SLATE_BEGIN_ARGS(SFICGraphViewKeyframeHandle) : _Style(&FFICGraphViewStyle::GetDefault()), _IsOutHandle(false) {}
+	SLATE_BEGIN_ARGS(SFICGraphViewKeyframeHandle) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICGraphViewStyle>("GraphView")), _IsOutHandle(false) {}
 	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)
 	SLATE_ARGUMENT(bool, IsOutHandle)
 	SLATE_END_ARGS()
@@ -78,7 +38,7 @@ public:
 };
 
 class SFICGraphViewKeyframe : public SPanel {
-	SLATE_BEGIN_ARGS(SFICGraphViewKeyframe) : _Style(&FFICGraphViewStyle::GetDefault()) {}
+	SLATE_BEGIN_ARGS(SFICGraphViewKeyframe) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICGraphViewStyle>("GraphView")) {}
 	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)
 	SLATE_END_ARGS()
 
@@ -117,7 +77,7 @@ public:
 };
 
 class SFICGraphView : public SPanel {
-	SLATE_BEGIN_ARGS(SFICGraphView) : _Style(&FFICGraphViewStyle::GetDefault()) {}
+	SLATE_BEGIN_ARGS(SFICGraphView) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICGraphViewStyle>("GraphView")) {}
 	SLATE_STYLE_ARGUMENT(FFICGraphViewStyle, Style)
 	SLATE_ATTRIBUTE(FICFrame, Frame)
 	SLATE_ATTRIBUTE(FFICFrameRange, FrameRange)

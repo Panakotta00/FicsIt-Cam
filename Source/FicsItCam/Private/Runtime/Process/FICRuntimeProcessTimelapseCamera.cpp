@@ -2,6 +2,9 @@
 
 #include "FGPlayerController.h"
 #include "FICSubsystem.h"
+#include "PlatformFileManager.h"
+#include "SceneViewport.h"
+#include "TextureResource.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Runtime/FICCaptureCamera.h"
 
@@ -29,6 +32,8 @@ void UFICRuntimeProcessTimelapseCamera::Start(AFICRuntimeProcessorCharacter* InC
 
 	Exporter = MakeShared<FSequenceImageExporter>(FSP, FIntPoint(CaptureCamera->RenderTarget->SizeX, CaptureCamera->RenderTarget->SizeY));
 	Exporter->Init();
+
+	CaptureCamera->UpdateCaptureWithCameraData(Cast<UCameraComponent>(Cast<AFGCharacterPlayer>(GetWorld()->GetFirstPlayerController()->GetCharacter())->GetComponentByClass(UCameraComponent::StaticClass())));
 }
 
 void UFICRuntimeProcessTimelapseCamera::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {
@@ -45,8 +50,9 @@ void UFICRuntimeProcessTimelapseCamera::Tick(AFICRuntimeProcessorCharacter* InCh
 	CaptureCamera->UpdateCaptureWithCameraData();
 	
 	CaptureCamera->CaptureComponent->CaptureScene();
-	
-	AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(Exporter.ToSharedRef(), MakeShared<FFICRenderTarget_Raw>(CaptureCamera->RenderTarget->GameThread_GetRenderTargetResource()));
+
+	class FTextureRenderTargetResource* resource = CaptureCamera->RenderTarget->GameThread_GetRenderTargetResource();
+	AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(Exporter.ToSharedRef(), MakeShared<FFICRenderTarget_Raw>(resource));
 
 	//if (Character) Character->SetFirstPersonMode();
 

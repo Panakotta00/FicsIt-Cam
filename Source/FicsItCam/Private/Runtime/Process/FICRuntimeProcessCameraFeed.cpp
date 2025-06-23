@@ -3,12 +3,15 @@
 #include "FGCharacterPlayer.h"
 #include "FGCineCameraComponent.h"
 #include "FICSubsystem.h"
+#include "SBox.h"
+#include "SlateApplication.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/FICCaptureCamera.h"
 #include "Slate/SceneViewport.h"
 #include "Slate/SlateTextures.h"
 #include "Widgets/Images/SImage.h"
+#include "Widgets/SViewport.h"
 
 class FFICFeedView : public ISlateViewport
 {
@@ -79,6 +82,7 @@ void UFICRuntimeProcessCameraFeed::Start(AFICRuntimeProcessorCharacter* InCharac
 		.ForceVolatile(true)
 		.IsEnabled(true)
 		.RenderOpacity(1.0)
+		.EnableGammaCorrection(true)
 	]
 	.Title(FText::FromString(CameraArgument.GetName()))
 	.ClientSize(Resolution)
@@ -98,18 +102,33 @@ void UFICRuntimeProcessCameraFeed::Start(AFICRuntimeProcessorCharacter* InCharac
 	Camera->UpdateCaptureWithCameraData(Cast<UCameraComponent>(Cast<AFGCharacterPlayer>(GetWorld()->GetFirstPlayerController()->GetCharacter())->GetComponentByClass(UCameraComponent::StaticClass())));
 
 	OnPreviewUpdate.Broadcast();
+
+	//Exporter = MakeShared<FSequenceMP4Exporter>(Size, 5, "C:\\Users\\Yannic\\Desktop\\Test.mp4");
+	//Exporter = MakeShared<FSequenceImageExporter>(TEXT("C:\\Users\\Yannic\\Desktop\\Test"), Size);
+	if (Exporter) Exporter->Init();
 }
 
 void UFICRuntimeProcessCameraFeed::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {
 	CameraArgument.UpdateCameraSettings(Camera);
 	Camera->UpdateCaptureWithCameraData();
-	/*if (CameraArgument.CameraReference.IsAnimated()) {
-	} else {
-//		FSlateApplication::Get().GetGameViewport()->GetViewportInterface().Pin()->GetViewportRenderTargetTexture()-> 
-	}*/
+
+	if (false) {
+		Camera->CaptureComponent->bCaptureEveryFrame = false;
+		Camera->CaptureComponent->TextureTarget = nullptr;
+
+		FMinimalViewInfo ViewInfo;
+		Camera->Camera->GetCameraView(0, ViewInfo);
+		Renderer.Render(Camera->RenderTarget->GameThread_GetRenderTargetResource(), ViewInfo, GetWorld());
+	}
+
+	if (Exporter) {
+		AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(Exporter.ToSharedRef(), MakeShared<FFICRenderTarget_Raw>(Camera->RenderTarget->GameThread_GetRenderTargetResource()));
+	}
 }
 
 void UFICRuntimeProcessCameraFeed::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
+	if (Exporter) Exporter->Finish();
+
 	if (PreviewTexture == nullptr) {
 		PreviewTexture = NewObject<UFICProceduralTexture>(this);
 		PreviewTexture->OnTextureUpdate.AddDynamic(this, &UFICRuntimeProcessCameraFeed::OnTextureUpdate);
@@ -120,14 +139,17 @@ void UFICRuntimeProcessCameraFeed::Stop(AFICRuntimeProcessorCharacter* InCharact
 	
 	SaveWindowSettings();
 	if (Window) {
-		Window->DestroyWindowImmediately();
 		Window->SetContent(SNew(SBox));
+		Window->SetOnWindowClosed(FOnWindowClosed());
+		Window->RequestDestroyWindow();
 		Window.Reset();
+	}
+	if (View) {
+		View.Reset();
 	}
 	Camera->CaptureComponent->bCaptureEveryFrame = false;
 	Camera->Destroy();
 	Camera = nullptr;
-	Brush = FSlateImageBrush("CameraFeed", FVector2D(1,1));
 }
 
 UTexture* UFICRuntimeProcessCameraFeed::GetPreviewTexture() {

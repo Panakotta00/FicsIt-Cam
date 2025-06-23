@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CineCameraComponent.h"
+#include "CineCameraSettings.h"
 #include "FGGameUserSettings.h"
 #include "FICUtils.h"
 #include "Command/CommandSender.h"

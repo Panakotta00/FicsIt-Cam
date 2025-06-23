@@ -1,22 +1,23 @@
 #pragma once
-#include "CineCameraComponent.h"
-#include "Components/WorldPartitionStreamingSourceComponent.h"
 
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "FICCaptureCamera.generated.h"
 
 class UCameraComponent;
+
 UCLASS()
 class AFICCaptureCamera : public AActor {
 	GENERATED_BODY()
 public:
 	UPROPERTY()
-	UWorldPartitionStreamingSourceComponent* StreamingSource;
+	class UWorldPartitionStreamingSourceComponent* StreamingSource;
 	
 	UPROPERTY(BlueprintReadOnly)
-	USceneCaptureComponent2D* CaptureComponent;
+	class USceneCaptureComponent2D* CaptureComponent;
 
 	UPROPERTY(BlueprintReadOnly)
-	UTextureRenderTarget2D* RenderTarget;
+	class UTextureRenderTarget2D* RenderTarget;
 
 	UPROPERTY(BlueprintReadOnly)
 	UCameraComponent* Camera;

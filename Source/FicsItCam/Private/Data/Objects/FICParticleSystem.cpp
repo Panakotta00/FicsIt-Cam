@@ -5,6 +5,8 @@
 #include "Data/Objects/FICWorldSettings.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICParticleSystemSelection.h"
+#include "Components/SphereComponent.h"
+#include "NiagaraSystem.h"
 
 AFICParticleSystemActor::AFICParticleSystemActor() {
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));

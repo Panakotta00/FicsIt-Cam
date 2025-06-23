@@ -131,7 +131,7 @@ template<typename AttribType>
 class TFICEditorAttribute : public FFICEditorAttributeBase {
 private:
 	AttribType& Attribute;
-	typename AttribType::ValueType CurrentValue = AttribType::ValueType();
+	typename AttribType::ValueType CurrentValue = typename AttribType::ValueType();
 
 public:
 	TFICEditorAttribute(AttribType& inAttribute, FLinearColor GraphColor = FColor::White) : FFICEditorAttributeBase(GraphColor), Attribute(inAttribute) {
@@ -174,7 +174,7 @@ public:
 			NewKeyframe.Value = InValueFrame.Value;
 			NewKeyframe.KeyframeType = InType;
 		} else {
-			NewKeyframe = AttribType::KeyframeType(InValueFrame.Value, InType);
+			NewKeyframe = typename AttribType::KeyframeType(InValueFrame.Value, InType);
 		}
 		Attribute.SetKeyframe(InValueFrame.Frame, NewKeyframe);
 	}

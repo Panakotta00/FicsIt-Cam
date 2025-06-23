@@ -1,5 +1,9 @@
 ﻿#pragma once
 
+#include "DeclarativeSyntaxSupport.h"
+#include "FICEditorStyle.h"
+#include "SCompoundWidget.h"
+#include "SPanel.h"
 #include "Data/FICTypes.h"
 
 struct FFICSequencerStyle;
@@ -49,7 +53,7 @@ public:
  * Handles shared responsibilities and common functionality like row coloring.
  */
 class SFICSequencerRow : public SPanel {
-	SLATE_BEGIN_ARGS(SFICSequencerRow) : _Style(nullptr), _BackgroundColor(FLinearColor::White) {}
+	SLATE_BEGIN_ARGS(SFICSequencerRow) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICSequencerStyle>("Sequencer")), _BackgroundColor(FLinearColor::White) {}
 	SLATE_STYLE_ARGUMENT(FFICSequencerStyle, Style)
 	SLATE_ATTRIBUTE(FLinearColor, BackgroundColor)
 	SLATE_END_ARGS()
@@ -86,7 +90,7 @@ public:
 
 
 class SFICSequencerRowAttributeKeyframe : public SCompoundWidget {
-	SLATE_BEGIN_ARGS(SFICSequencerRowAttributeKeyframe) : _Style(nullptr) {}
+	SLATE_BEGIN_ARGS(SFICSequencerRowAttributeKeyframe) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICSequencerStyle>("Sequencer")) {}
 	SLATE_STYLE_ARGUMENT(FFICSequencerStyle, Style)
 
 	SLATE_ATTRIBUTE(FICFrame, Frame)
@@ -120,7 +124,7 @@ public:
 
 class SFICSequencerRowAttribute : public SFICSequencerRow {
 private:
-	SLATE_BEGIN_ARGS(SFICSequencerRowAttribute) : _Style(nullptr) {}
+	SLATE_BEGIN_ARGS(SFICSequencerRowAttribute) : _Style(&FFICEditorStyles::Get().GetWidgetStyle<FFICSequencerStyle>("Sequencer")) {}
 	SLATE_STYLE_ARGUMENT(FFICSequencerStyle, Style)
 	SLATE_ATTRIBUTE(FLinearColor, BackgroundColor)
 	SLATE_END_ARGS()

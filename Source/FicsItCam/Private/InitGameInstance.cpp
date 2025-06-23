@@ -5,3 +5,5 @@
 UInitGameInstanceFicsItCam::UInitGameInstanceFicsItCam() {
 	bRootModule = false;
 }
+
+#undef LOCTEXT_NAMESPACE

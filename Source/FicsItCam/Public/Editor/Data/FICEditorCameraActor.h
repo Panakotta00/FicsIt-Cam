@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PrimitiveSceneProxy.h"
+#include "SlateImageBrush.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/ITF/FICSelectionInteraction.h"
 #include "FICEditorCameraActor.generated.h"
@@ -61,7 +63,7 @@ public:
 	UPROPERTY()
 	ULineBatchComponent* LineBatcher = nullptr;
 	UPROPERTY()
-	UBoxComponent* SelectionHitBox = nullptr;
+	class UBoxComponent* SelectionHitBox = nullptr;
 	UPROPERTY()
 	UFICEditorCameraPathComponent* CameraPathComponent = nullptr;
 

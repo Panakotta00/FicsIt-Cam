@@ -1,9 +1,11 @@
 ﻿#include "Editor/UI/FICEditor.h"
 
-#include "EnhancedPlayerInput.h"
 #include "FICConfigurationStruct.h"
-#include "FICSubsystem.h"
 #include "FICUtils.h"
+#include "SButton.h"
+#include "SEditableTextBox.h"
+#include "SGridPanel.h"
+#include "SViewport.h"
 #include "Engine/World.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"
@@ -17,16 +19,17 @@
 #include "Editor/UI/FICSceneObjectOutliner.h"
 #include "Editor/UI/FICSceneSettings.h"
 #include "Editor/UI/FICViewport.h"
+#include "Engine/GameViewportClient.h"
 #include "Widgets/Layout/SDPIScaler.h"
 
 #define LOCTEXT_NAMESPACE "FicsItCam.Editor"
-
-FSlateColorBrush SFICEditor::Background = FSlateColorBrush(FColor::FromHex("030303"));
 
 void SFICEditor::Construct(const FArguments& InArgs, UFICEditorContext* InContext, TSharedPtr<SWidget> InGameWidget, TSharedPtr<SViewport> InViewport) {
 	Context = InContext;
 	GameWidget = InGameWidget;
 	GameViewport = InViewport;
+
+	Style = InArgs._Style;
 	
 	TSharedRef<SDockTab> MajorTab = SNew(SDockTab).TabRole(ETabRole::MajorTab);
 	TabManager = FGlobalTabmanager::Get()->NewTabManager(MajorTab);
@@ -61,7 +64,7 @@ void SFICEditor::Construct(const FArguments& InArgs, UFICEditorContext* InContex
 			SNew(SOverlay)
 			+SOverlay::Slot()[
 				SNew(SImage)
-				.Image(&Background)
+				.Image(&Style->Background)
 			]
 			+SOverlay::Slot()[
 				SNew(SVerticalBox)
@@ -82,7 +85,7 @@ void SFICEditor::RegisterTabs() {
 			.Content()[
 				SNew(SFICViewport, Context, GameWidget.ToSharedRef())
 				//GameWidget.ToSharedRef()
-			].OnCanCloseTab(false)
+			].OnCanCloseTab_Lambda([]() { return false; })
 			.Label(FText::FromString("Viewport"));
 		TabManager->SetMainTab(ViewportTab);
 		return ViewportTab;
@@ -165,7 +168,7 @@ FMenuBarBuilder SFICEditor::CreateMenuBar() {
 		AFICEditorSubsystem* SubSys = AFICEditorSubsystem::GetFICEditorSubsystem(Context);
 		if (SubSys->EditorLayouts.Num() > 0) {
 			MenuBuilder.AddSeparator();
-			for (const TPair<FString, FString> Layout : SubSys->EditorLayouts) {
+			for (const TPair<FString, FString>& Layout : SubSys->EditorLayouts) {
 				MenuBuilder.AddMenuEntry(FText::FromString(Layout.Key), TAttribute<FText>(), FSlateIcon(), FExecuteAction::CreateLambda([this, Layout]() {
 					LoadLayout(FTabManager::FLayout::NewFromString(Layout.Value));
 				}));
@@ -205,7 +208,7 @@ FMenuBarBuilder SFICEditor::CreateMenuBar() {
 			}), FSlateIcon());
 			if (SubSys->EditorLayouts.Num() > 0) {
 				MenuBuilder.AddSeparator();
-				for (const TPair<FString, FString> Layout : SubSys->EditorLayouts) {
+				for (const TPair<FString, FString>& Layout : SubSys->EditorLayouts) {
 					MenuBuilder.AddMenuEntry(FText::FromString(LOCTEXT("RemoveLayout", "Remove ").ToString() + Layout.Key), TAttribute<FText>(), FSlateIcon(), FExecuteAction::CreateLambda([this, Layout, SubSys]() {
 						SubSys->EditorLayouts.Remove(Layout.Key);
 					}));
@@ -360,3 +363,5 @@ void SFICEditor::OnFocusChanging(const FWeakWidgetPath& PreviousFocusPath, const
 		}
 	}
 }
+
+#undef LOCTEXT_NAMESPACE
