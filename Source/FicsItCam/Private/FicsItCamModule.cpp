@@ -1,6 +1,6 @@
 #include "FicsItCamModule.h"
 
-#include "CoreDelegates.h"
+#include "Misc/CoreDelegates.h"
 #include "FGGameMode.h"
 #include "FGItemRegrowSubsystem.h"
 #include "Editor/UI/FICEditorStyle.h"

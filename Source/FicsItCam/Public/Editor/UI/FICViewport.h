@@ -1,7 +1,7 @@
 #pragma once
 
-#include "SCompoundWidget.h"
-#include "SOverlay.h"
+#include "Widgets/SCompoundWidget.h"
+#include "Widgets/SOverlay.h"
 
 class UFICEditorContext;
 

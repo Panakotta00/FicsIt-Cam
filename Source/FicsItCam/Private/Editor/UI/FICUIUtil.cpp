@@ -1,6 +1,6 @@
 ﻿#include "Editor/UI/FICUIUtil.h"
 
-#include "SlateApplication.h"
+#include "Framework/Application/SlateApplication.h"
 
 FMenuBuilder FICCreateKeyframeTypeChangeMenu(UFICEditorContext* Context, TFunction<TSet<TPair<FFICAttribute*, FICFrame>>()> GetKeyframes) {
 	TFunction<void(EFICKeyframeType)> SetKeyframeType;
@@ -59,7 +59,8 @@ FMenuBuilder FICCreateKeyframeTypeChangeMenu(UFICEditorContext* Context, TFuncti
 	return MenuBuilder;
 }
 
-#include "MinWindows.h"
+#if PLATFORM_WINDOWS
+#include "Microsoft/MinWindows.h"
 #include "Microsoft/COMPointer.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include <commdlg.h>
@@ -113,6 +114,11 @@ TOptional<FString> FileDialog(bool bSave, const FString& Title, const FString& D
 	}
 	return {};
 }
+#else
+TOptional<FString> FileDialog(bool bSave, const FString& Title, const FString& DefaultFile, const FString& DefaultPath) {
+	return {};
+}
+#endif
 
 TOptional<FString> FICSaveSceneFileDialog(const FString& SceneName) {
 	FString DefaultFile = FString::Printf(TEXT("%ls.fic_scene"), *SceneName);

@@ -1,8 +1,7 @@
 ﻿#include "Rendering/FICRenderer.h"
 
 #include "EngineModule.h"
-#include "FGDockingStationInfo.h"
-#include "FICCommandRender.h"
+#include "Command/Scene/FICCommandRender.h"
 #include "LegacyScreenPercentageDriver.h"
 #include "SceneManagement.h"
 #include "Engine/Engine.h"
@@ -87,17 +86,17 @@ void FFICRenderer::Render(FRenderTarget* RenderTarget, FMinimalViewInfo ViewInfo
 
 	//TSharedRef<FFICRenderRequest> RenderRequest = MakeShared<FFICRenderRequest>(RenderTarget, Exporter, FRHIGPUTextureReadback(TEXT("FICSubsystem Texture Readback")));
 
-	/*FRHIGPUTextureReadback Readback("FIC Test");
+	/*TUniquePtr<FRHIGPUTextureReadback> Readback = MakeUnique<FRHIGPUTextureReadback>("FIC Test");
 	ENQUEUE_RENDER_COMMAND(SceneDrawCompletion)([&](FRHICommandListImmediate& RHICmdList){
 		FTexture2DRHIRef Target = Viewport->GetRenderTargetTexture();
-		Readback.EnqueueCopy(RHICmdList, Target);
+		Readback->EnqueueCopy(RHICmdList, Target);
 	});
 	FlushRenderingCommands();
 
 	FIntPoint TargetSize = Viewport->GetRenderTargetTexture()->GetSizeXY();
 	FIntPoint ReadSize;
 	ENQUEUE_RENDER_COMMAND(ReadbackFICCameraFootage)( [&](FRHICommandListImmediate& RHICmdList) {
-		void* data = Readback.Lock(ReadSize.X, &ReadSize.Y);
+		void* data = Readback->Lock(ReadSize.X, &ReadSize.Y);
 		if (data) SceneViewExporter->AddFrame(data, ReadSize, TargetSize);
 	});
 	FlushRenderingCommands();*/

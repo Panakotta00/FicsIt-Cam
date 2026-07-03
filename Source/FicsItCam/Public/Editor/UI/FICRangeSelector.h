@@ -2,7 +2,7 @@
 
 #include "FICEditorStyle.h"
 #include "FICEvents.h"
-#include "SLeafWidget.h"
+#include "Widgets/SLeafWidget.h"
 #include "Data/FICTypes.h"
 
 class SFICRangeSelector : public SLeafWidget {

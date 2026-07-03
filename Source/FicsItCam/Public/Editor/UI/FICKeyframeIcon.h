@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "FICKeyframeControl.h"
-#include "SCompoundWidget.h"
+#include "Widgets/SCompoundWidget.h"
 #include "Data/Attributes/FICKeyframe.h"
 
 class SFICKeyframeIcon : public SCompoundWidget {

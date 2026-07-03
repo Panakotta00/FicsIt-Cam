@@ -1,5 +1,5 @@
-#include "CoreStyle.h"
-#include "FICKeyframe.h"
+#include "Styling/CoreStyle.h"
+#include "Data/Attributes/FICKeyframe.h"
 #include "Editor/UI/FICEditorStyle.h"
 #include "Slate/SlateGameResources.h"
 #include "Styling/SlateStyleRegistry.h"

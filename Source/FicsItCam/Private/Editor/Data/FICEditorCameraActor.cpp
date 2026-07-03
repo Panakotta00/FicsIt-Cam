@@ -1,9 +1,9 @@
 #include "Editor/Data/FICEditorCameraActor.h"
 
 #include "EngineUtils.h"
-#include "FICDummyViewport.h"
+#include "Rendering/FICDummyViewport.h"
 #include "FICSubsystem.h"
-#include "SViewport.h"
+#include "Widgets/SViewport.h"
 #include "TextureResource.h"
 #include "Components/LineBatchComponent.h"
 #include "Components/SceneCaptureComponent2D.h"

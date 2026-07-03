@@ -1,6 +1,7 @@
 #include "Runtime/FICCameraReference.h"
 
 #include "FICSubsystem.h"
+#include "Internationalization/Regex.h"
 #include "Data/FICScene.h"
 #include "Runtime/Process/FICRuntimeProcessPlayScene.h"
 
@@ -18,7 +19,7 @@ UFICRuntimeProcessPlayScene* FFICCameraReference::GetCurrentScenePlay(UObject* W
 FFICCameraReference FFICCameraReference::FromString(UObject* WorldContext, FString ReferenceString, FString* OutName) {
 	static const FRegexPattern Pattern = FRegexPattern("^(>|#)?((-?\\d+)~)?(\\w+)(:(\\w+))?(\\[(.*)\\])?$");
 
-	if (OutName) *OutName = TEXT("");
+	if (OutName) *OutName = ReferenceString;
 
 	FRegexMatcher Matcher(Pattern, ReferenceString);
 	if (Matcher.FindNext()) {
@@ -31,9 +32,10 @@ FFICCameraReference FFICCameraReference::FromString(UObject* WorldContext, FStri
 		FString Data = Matcher.GetCaptureGroup(8);
 		Ref.Data = Data;
 		
+		*OutName = Scene;
+
 		if (Type == ">") Ref.bUsePlay = true;
 		else if (Type != "#") {
-			if (Type.Len() < 1 && Num.Len () < 1 && Camera.Len() < 1) *OutName = Scene;
 			return Ref;
 		}
 

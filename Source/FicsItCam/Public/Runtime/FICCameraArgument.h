@@ -2,10 +2,10 @@
 
 #include "CineCameraComponent.h"
 #include "CineCameraSettings.h"
-#include "DefaultValueHelper.h"
+#include "Misc/DefaultValueHelper.h"
 #include "FGGameUserSettings.h"
 #include "FICUtils.h"
-#include "GenericPlatformHttp.h"
+#include "GenericPlatform/GenericPlatformHttp.h"
 #include "Command/CommandSender.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/FICCameraReference.h"

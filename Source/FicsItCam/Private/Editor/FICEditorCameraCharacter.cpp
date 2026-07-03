@@ -4,9 +4,10 @@
 #include "Editor/FICEditorCameraCharacter.h"
 
 #include "CineCameraComponent.h"
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 #include "FGGameUserSettings.h"
 #include "FGPlayerController.h"
+#include "Editor/Data/FICEditorAttributeBool.h"
 #include "FICUtils.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"

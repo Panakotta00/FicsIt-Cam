@@ -2,13 +2,13 @@
 
 #include <string>
 
-#include "DefaultValueHelper.h"
+#include "Misc/DefaultValueHelper.h"
 #include "FicsItCamModule.h"
-#include "FileHelper.h"
-#include "GenericPlatformHttp.h"
+#include "Misc/FileHelper.h"
+#include "GenericPlatform/GenericPlatformHttp.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
-#include "Paths.h"
+#include "Misc/Paths.h"
 #include "Engine/EngineBaseTypes.h"
 
 #if PLATFORM_WINDOWS
@@ -51,8 +51,6 @@ bool FSequenceMP4Exporter::Init() {
 			}
 		}
 	}
-
-	TCHAR_TO_UTF8(*Format);
 
 	// Find Output Format Context by file-ending otherwise use mpeg
 	{
@@ -298,7 +296,7 @@ void FSequenceMP4Exporter::Finish() {
 	}
 }
 
-void FSequenceMP4Exporter::AddFrame(EPixelFormat Format, void* ptr, FIntPoint ReadSize, FIntPoint Size, double Time) {
+void FSequenceMP4Exporter::AddFrame(EPixelFormat InFormat, void* ptr, FIntPoint ReadSize, FIntPoint Size, double Time) {
 	if (bFinished) return;
 
 	int64 FramePts = VideoFrameNr++;

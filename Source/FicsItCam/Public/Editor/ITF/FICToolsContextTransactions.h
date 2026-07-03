@@ -33,7 +33,7 @@ class FFICToolsContextTransactions : public IToolsContextTransactionsAPI {
 		}
 	}
 
-	virtual bool RequestSelectionChange(const FSelectedOjectsChangeList& SelectionChange) override {
+	virtual bool RequestSelectionChange(const FSelectedObjectsChangeList& SelectionChange) override {
 		return false;
 	}
 };

@@ -78,7 +78,7 @@ void AFICSubsystem::Tick(float DeltaSeconds) {
 	if (!RenderRequestQueue.IsEmpty()) {
 		TSharedPtr<FFICRenderRequest> NextRequest = *RenderRequestQueue.Peek();
 		if (NextRequest) {
- 			if (NextRequest->RenderFence.IsFenceComplete() && NextRequest->Readback.IsReady()) {
+ 			if (NextRequest->RenderFence.IsFenceComplete() && NextRequest->Readback->IsReady()) {
 				HandleRenderRequest(NextRequest);
 				RenderRequestQueue.Pop();
 			}
@@ -218,21 +218,22 @@ void AFICSubsystem::DestoryRuntimeProcessorCharacter(AFICRuntimeProcessorCharact
 }
 
 void AFICSubsystem::ExportRenderTarget(TSharedRef<FSequenceExporter> Exporter, TSharedRef<FFICRenderTarget> RenderTarget, bool bInstant, double Time) {
-	TSharedRef<FFICRenderRequest> RenderRequest = MakeShared<FFICRenderRequest>(RenderTarget, Exporter, FRHIGPUTextureReadback(TEXT("FICSubsystem Texture Readback")), Time);
+	TUniquePtr<FRHIGPUTextureReadback> Readback = MakeUnique<FRHIGPUTextureReadback>(TEXT("FICSubsystem Texture Readback"));
+	TSharedRef<FFICRenderRequest> RenderRequest = MakeShared<FFICRenderRequest>(RenderTarget, Exporter, MoveTemp(Readback), Time);
 
 	ENQUEUE_RENDER_COMMAND(SceneDrawCompletion)([this, RenderTarget, RenderRequest](FRHICommandListImmediate& RHICmdList){
 		FTextureRHIRef Target = RenderTarget->GetRenderTarget();
-		RenderRequest->Readback.EnqueueCopy(RHICmdList, Target);
+		RenderRequest->Readback->EnqueueCopy(RHICmdList, Target);
 	});
 
 	if (bInstant) {
 		FlushRenderingCommands();
-		RenderRequest->RenderFence.BeginFence(true);
+		RenderRequest->RenderFence.BeginFence();
 		RenderRequest->RenderFence.Wait(true);
 		HandleRenderRequest(RenderRequest);
 	} else {
 		RenderRequestQueue.Enqueue(RenderRequest);
-		RenderRequest->RenderFence.BeginFence(true);
+		RenderRequest->RenderFence.BeginFence();
 	}
 }
 
@@ -240,8 +241,8 @@ void AFICSubsystem::HandleRenderRequest(TSharedPtr<FFICRenderRequest> InRequest)
 	FTextureRHIRef Target = InRequest->RenderTarget->GetRenderTarget();
 	FIntPoint Size = Target->GetSizeXY();
 	FIntPoint ReadSize;
-	ENQUEUE_RENDER_COMMAND(ReadbackFICCameraFootage)( [&](FRHICommandListImmediate& RHICmdList) {
-		void* data = InRequest->Readback.Lock(ReadSize.X, &ReadSize.Y);
+	ENQUEUE_RENDER_COMMAND(ReadbackFICCameraFootage)( [Target, InRequest, Size, &ReadSize](FRHICommandListImmediate& RHICmdList) {
+		void* data = InRequest->Readback->Lock(ReadSize.X, &ReadSize.Y);
 		if (!data) return;
 		if (Target->GetFormat() == PF_A2B10G10R10) {
 			FColor* ptrLinearColor = (FColor*)FMemory::Malloc(ReadSize.X * ReadSize.Y * sizeof(FColor));
@@ -252,7 +253,7 @@ void AFICSubsystem::HandleRenderRequest(TSharedPtr<FFICRenderRequest> InRequest)
 		} else {
 			InRequest->Exporter->AddFrame(PF_R8G8B8A8, data, ReadSize, Size, InRequest->Time);
 		}
-		InRequest->Readback.Unlock();
+		InRequest->Readback->Unlock();
 	});
 	FlushRenderingCommands();
 	if (InRequest->ExtraFunc) InRequest->ExtraFunc();

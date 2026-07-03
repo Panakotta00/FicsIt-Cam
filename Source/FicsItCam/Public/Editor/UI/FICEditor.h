@@ -1,8 +1,9 @@
 ﻿#pragma once
+
 #include "FICEditorStyle.h"
-#include "HorizontalBox.h"
-#include "MultiBoxBuilder.h"
-#include "TabManager.h"
+#include "Components/HorizontalBox.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
+#include "Framework/Docking/TabManager.h"
 
 class UFICEditorContext;
 

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "MultiBoxBuilder.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Editor/FICEditorContext.h"
 
 FMenuBuilder FICCreateKeyframeTypeChangeMenu(UFICEditorContext* Context, TFunction<TSet<TPair<FFICAttribute*, FICFrame>>()> Keyframes);

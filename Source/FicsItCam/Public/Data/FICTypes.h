@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Serialization/StructuredArchive.h"
 #include "FICTypes.generated.h"
 
 typedef int64 FICFrame;
@@ -101,8 +102,8 @@ struct FFICFrameRange {
 
 	bool Serialize(FStructuredArchive::FSlot Slot) {
 		FStructuredArchive::FRecord Record = Slot.EnterRecord();
-		Record.EnterField(SA_FIELD_NAME(TEXT("Begin"))) << Begin;
-		Record.EnterField(SA_FIELD_NAME(TEXT("End"))) << End;
+		Record.EnterField(TEXT("Begin")) << Begin;
+		Record.EnterField(TEXT("End")) << End;
 		return true;
 	}
 };

@@ -1,9 +1,9 @@
 #include "Data/Objects/FICCamera.h"
 
-#include "FICEditorAttributeGroup.h"
+#include "Editor/Data/FICEditorAttributeGroup.h"
 #include "FICUtils.h"
-#include "SButton.h"
-#include "SSlider.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SSlider.h"
 #include "Components/LineBatchComponent.h"
 #include "Editor/Data/FICEditorCameraActor.h"
 #include "Editor/FICEditorContext.h"
@@ -40,9 +40,9 @@ void UFICCamera::Tick(float DeltaTime) {
 				bool bIsKeyframe = KeyframePoints.Contains(i);
 				if (Hovered == i) PointColor = FColor::Green; 
 				else if (bIsKeyframe) PointColor = FColor::Yellow;
-				if (bIsKeyframe || Hovered == i || !PrevPoint || *PrevPoint != *Point) EditorContext->GetScene()->GetWorld()->LineBatcher->DrawLine(*Point, *Point, PointColor, SDPG_World, 20);
+				if (bIsKeyframe || Hovered == i || !PrevPoint || *PrevPoint != *Point) EditorContext->GetScene()->GetWorld()->GetLineBatcher(UWorld::ELineBatcherType::World)->DrawLine(*Point, *Point, PointColor, SDPG_World, 20);
 
-				if (PrevPoint) EditorContext->GetScene()->GetWorld()->LineBatcher->DrawLine(*PrevPoint, *Point,  FColor::Red, SDPG_World, 5);
+				if (PrevPoint) EditorContext->GetScene()->GetWorld()->GetLineBatcher(UWorld::ELineBatcherType::World)->DrawLine(*PrevPoint, *Point,  FColor::Red, SDPG_World, 5);
 
 				PrevPoint = Point;
 			}

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SlateStyle.h"
-#include "SlateWidgetStyle.h"
-#include "SlateWidgetStyleContainerBase.h"
+#include "Styling/SlateStyle.h"
+#include "Styling/SlateWidgetStyle.h"
+#include "Styling/SlateWidgetStyleContainerBase.h"
 #include "Styling/SlateTypes.h"
 #include "FICEditorStyle.generated.h"
 

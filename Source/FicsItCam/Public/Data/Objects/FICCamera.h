@@ -2,13 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "FGSaveInterface.h"
-#include "FICSceneObject3D.h"
-#include "FICSceneObjectActive.h"
+#include "FGSharedPostProcessSettings.h"
+#include "Data/Objects/FICSceneObject3D.h"
+#include "Data/Objects/FICSceneObjectActive.h"
+#include "StructUtils/InstancedStruct.h"
+#include "StructUtils/InstancedStructContainer.h"
 #include "Data/Attributes/FICAttributeBool.h"
 #include "Data/Attributes/FICAttributeFloat.h"
 #include "Data/Attributes/FICAttributePosition.h"
 #include "Data/Attributes/FICAttributeRotation.h"
 #include "Data/Objects/FICSceneObject.h"
+#include "Interfaces/Interface_PostProcessVolume.h"
 #include "FICCamera.generated.h"
 
 class AFICScene;
@@ -40,7 +44,7 @@ public:
 	FFICFloatAttribute FocusDistance;
 
 	FFICGroupAttribute LensSettings;
-	
+
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
 	UPROPERTY()

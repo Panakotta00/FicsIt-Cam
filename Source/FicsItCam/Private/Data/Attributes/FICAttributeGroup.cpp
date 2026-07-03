@@ -24,7 +24,10 @@ void FFICKeyframeGroup::SetType(EFICKeyframeType Type) {
 
 FFICGroupAttribute::~FFICGroupAttribute() {
 	for (const TPair<FString, FFICAttribute*>& Attrib : Children) {
-		Attrib.Value->OnUpdate.Remove(UpdateDelegateHandles[Attrib.Key]);
+		FDelegateHandle* handle = UpdateDelegateHandles.Find(Attrib.Key);
+		if (handle) {
+			Attrib.Value->OnUpdate.Remove(*handle);
+		}
 	}
 }
 

@@ -1,7 +1,7 @@
 ﻿#include "Editor/UI/FICKeyframeIcon.h"
 
-#include "SBox.h"
-#include "SImage.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Images/SImage.h"
 
 void SFICKeyframeIcon::Construct(const FArguments& InArgs) {
 	Style = InArgs._Style;
