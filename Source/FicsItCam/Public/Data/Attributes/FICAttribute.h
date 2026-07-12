@@ -21,6 +21,8 @@ public:
 	DECLARE_MULTICAST_DELEGATE(FOnUpdate)
 	FOnUpdate OnUpdate;
 
+	TSet<FFICAttribute*> SuperAttributes;
+
 	void LockUpdateEvent() { ++UpdateLocks; }
 	void UnlockUpdateEvent(bool bBroadcastIfFullUnlock = true) {
 		--UpdateLocks;
@@ -30,8 +32,24 @@ public:
 		}
 	}
 
-	virtual ~FFICAttribute() = default;
-	
+	FFICAttribute() {
+		OnUpdate.AddLambda([this]() {
+			for (FFICAttribute* attrib : SuperAttributes) {
+				attrib->OnUpdateBroadcast();
+			}
+		});
+	}
+
+	virtual ~FFICAttribute() {
+		OnUpdate.Clear();
+		for (FFICAttribute* attrib : SuperAttributes) {
+			attrib->RemoveSubAttribute(this);
+		}
+	}
+
+	FFICAttribute(const FFICAttribute& Other) {}
+	FFICAttribute& operator=(const FFICAttribute& Other) { return *this; }
+
 	virtual FName GetAttributeType() const { checkf(false, TEXT("Not Implemented!")); return FName(); }
 	
 	virtual EFICKeyframeType GetAllowedKeyframeTypes() const { return FIC_KF_NONE; }
@@ -52,6 +70,8 @@ public:
 		static TMap<FString, FFICAttribute*> Keyframes;
 		return Keyframes;
 	}
+
+	virtual void RemoveSubAttribute(FFICAttribute* Attribute) {}
 
 	virtual void RecalculateAllKeyframes();
 

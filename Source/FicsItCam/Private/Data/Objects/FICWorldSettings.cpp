@@ -4,6 +4,8 @@
 #include "FGGameState.h"
 #include "FGPlayerController.h"
 #include "FGTimeSubsystem.h"
+#include "FGWeatherReaction.h"
+#include "FGWorldSettings.h"
 #include "FICUtils.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/Data/FICEditorAttributeBase.h"
@@ -51,6 +53,21 @@ void UFICWorldSettings::Activate() {
 	//GetWorld()->GetFirstPlayerController()->EnableCheats();
 	OldDaySeconds = AFGTimeOfDaySubsystem::Get(this)->GetDaySeconds();
 	//OldTimeOfDay = IntFromClock(CheatManager->SetTimeOfDay_hour_Get(), CheatManager->SetTimeOfDay_minute_Get());
+
+	/*TArray<TSubclassOf<AFGWeatherReaction>> WeatherReactions;
+	for (TObjectIterator<UClass> It; It; ++It) {
+		if (It->IsChildOf(AFGWeatherReaction::StaticClass()) && !It->HasAnyClassFlags(CLASS_Abstract)) {
+			WeatherReactions.Add(*It);
+		}
+	}
+
+	AFGWorldSettings* settings = Cast<AFGWorldSettings>(GetWorld()->GetWorldSettings());
+	if (IsValid(settings)) {
+		AFGSkySphere* skySphere = settings->GetSkySphere();
+		if (IsValid(skySphere)) {
+			skySphere->ForceSetWeather(WeatherReactions[WeatherReactions.Num()-1]);
+		}
+	}*/
 }
 
 void UFICWorldSettings::Deactivate() {

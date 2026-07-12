@@ -34,7 +34,7 @@ public:
 protected:
 	TMap<FString, TSharedRef<FFICAttribute>> AttributeCache;
 	TMap<FString, FFICAttribute*> Children;
-	TMap<FString, FDelegateHandle> UpdateDelegateHandles;
+	TMap<FFICAttribute*, FString> AttribToChild;
 
 public:
 	virtual ~FFICGroupAttribute() override;
@@ -50,6 +50,7 @@ public:
 	virtual void RecalculateKeyframe(FICFrame Time) override;
 	virtual FICValue GetFloatValue(FICFrameFloat Time) override { return 0.0f; }
 	virtual bool HasKeyframe(FICFrame Time) const override;
+	virtual void RemoveSubAttribute(FFICAttribute* SubAttribute) override;
 
 	virtual void CopyFrom(TSharedRef<FFICAttribute> InAttrib) override;
 	virtual TSharedRef<FFICAttribute> CreateCopy() override;
