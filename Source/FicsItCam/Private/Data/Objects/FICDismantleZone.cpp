@@ -214,7 +214,6 @@ void UFICDismantleZone::ShutdownAnimation() {
 
 	HandleProgression({}); // Reset all dismantled things
 }
-UE_ENABLE_OPTIMIZATION_SHIP
 
 FTransform UFICDismantleZone::GetSceneObjectTransform() {
 	return FTransform(Rotation, Position, Size / 100);
@@ -236,8 +235,8 @@ AActor* UFICDismantleZone::GetActor() {
 void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bDrawProgression) {
 	auto manager = AAbstractInstanceManager::GetInstanceManager(this);
 
-	TSet<int64> seenInstances;
-	TMap<UObject*, int64> seenObjects;
+	TSet<TTuple<UClass*, int64>> seenInstances;
+	TSet<UObject*> seenObjects;
 
 	if (Progression.IsSet()) {
 		TArray<FOverlapResult> Overlaps;
@@ -267,18 +266,13 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 			if (manager->ResolveOverlap(result, instance)) {
 				FLightweightBuildableInstanceRef buildableDescriptor;
 				if (AFGLightweightBuildableSubsystem::ResolveLightweightInstance(instance, buildableDescriptor)) {
-					seenInstances.Add(instance.GetHandleID());
-					if (DismantledInstances.Contains(instance.GetHandleID())) continue;
-					DismantledInstances.Add(instance.GetHandleID());
+					TTuple<UClass*,int64> ID = {buildableDescriptor.GetBuildableClass(), instance.GetHandleID()};
+					seenInstances.Add(ID);
+					if (DismantledInstances.Contains(ID)) continue;
+					DismantledInstances.Add(ID);
 					if (AFGBuildable* buildable = buildableDescriptor.SpawnTemporaryBuildable()) {
-						if (const FRuntimeBuildableInstanceData* runtimeData = buildableDescriptor.ResolveBuildableInstanceData()) {
-							for (const FInstanceOwnerHandlePtr& handle : runtimeData->Handles) {
-								if (handle.IsValid()) {
-									handle->HideInstance();
-								}
-							}
-						}
-
+						buildable->SetBuildableHiddenInGame(true);
+						buildable->ToggleInstanceVisibility(false);
 						buildable->PlayDismantleEffects();
 						buildable->SetLifeSpan(0);
 						buildable->SetBlockCleanupOfTemporary(true);
@@ -289,8 +283,8 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 								buildable->SetActorHiddenInGame(true);
 							});
 						}
-						seenObjects.Add(buildable, instance.GetHandleID());
-						DismantledObjects.Add(buildable, instance.GetHandleID());
+						seenObjects.Add(buildable);
+						DismantledObjects.Add(buildable, ID);
 					}
 				} else {
 					rootBuildable = Cast<AFGBuildable>(instance.GetOwner());
@@ -303,7 +297,7 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 			if (IsValid(rootBuildable)) {
 				auto buildable = rootBuildable;
 
-				seenObjects.Add(buildable, INDEX_NONE);
+				seenObjects.Add(buildable);
 				if (buildable->GetIsLightweightTemporary()) continue;
 				if (DismantledObjects.Contains(buildable)) continue;
 
@@ -327,7 +321,7 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 						comp->WakeAllRigidBodies();
 					}
 				}
-				DismantledObjects.Add(buildable, INDEX_NONE);
+				DismantledObjects.Add(buildable, {nullptr,-1});
 			}
 		}
 	}
@@ -340,9 +334,8 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 		AFGBuildable* buildable = Cast<AFGBuildable>(obj);
 		if (!IsValid(buildable)) continue;
 
-		if (index > INDEX_NONE) {
-
-			bool bRestored = false;
+		if (IsValid(index.Key) && index.Value > INDEX_NONE) {
+			/*bool bRestored = false;
 			for (const FInstanceOwnerHandlePtr& handle : buildable->mInstanceHandles) {
 				if (handle.IsValid() && handle->GetHandleID() == (uint32)index) {
 					handle->UnHideInstance();
@@ -361,9 +354,18 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 						}
 					}
 				}
-			}
+			}*/
 
-			buildable->SetActorHiddenInGame(false);
+			UFGMaterialEffect_Build* effect = buildable->mActiveBuildEffect;
+			if (effect) {
+				buildable->mActiveBuildEffect = nullptr;
+				effect->mOnEnded.Unbind();
+				effect->Stop();
+				effect->DestroyComponent();
+			}
+			//buildable->SetActorHiddenInGame(false);
+			buildable->ToggleInstanceVisibility(true);
+			//buildable->SetBuildableHiddenInGame(false);
 			buildable->SetBlockCleanupOfTemporary(false);
 		} else {
 			UFGMaterialEffect_Build* effect = buildable->mActiveBuildEffect;
@@ -395,3 +397,4 @@ void UFICDismantleZone::UpdateActivation() {
 		AnimationProgression.Reset();
 	}
 }
+UE_ENABLE_OPTIMIZATION_SHIP

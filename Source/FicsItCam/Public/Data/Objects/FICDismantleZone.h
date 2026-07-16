@@ -34,9 +34,8 @@ public:
 
 	TOptional<FICFrameFloat> AnimationProgression;
 
-	TSet<int64> DismantledInstances;
-	UPROPERTY()
-	TMap<UObject*, int64> DismantledObjects;
+	TSet<TTuple<UClass*,int64>> DismantledInstances;
+	TMap<UObject*, TTuple<UClass*,int64>> DismantledObjects;
 
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
