@@ -140,7 +140,23 @@ TSharedRef<SWidget> UFICDismantleZone::CreateDetailsWidget(UFICEditorContext* In
 				DurationFrames = value;
 			})
 		]
-	];
+	]
+	+SVerticalBox::Slot().AutoHeight()[
+		SNew(SHorizontalBox)
+		+SHorizontalBox::Slot().AutoWidth()[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("Dismantle Effect: ")))
+		]
+		+SHorizontalBox::Slot().FillWidth(1)[
+			SNew(SCheckBox)
+			.IsChecked_Lambda([this]() {
+				return bDismantleEffect ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			})
+			.OnCheckStateChanged_Lambda([this](ECheckBoxState value) {
+				bDismantleEffect = value == ECheckBoxState::Checked;
+			})
+		]
+	];;
 }
 
 void UFICDismantleZone::InitEditor(UFICEditorContext* Context) {
@@ -271,17 +287,19 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 					if (DismantledInstances.Contains(ID)) continue;
 					DismantledInstances.Add(ID);
 					if (AFGBuildable* buildable = buildableDescriptor.SpawnTemporaryBuildable()) {
+						buildable->SetBlockCleanupOfTemporary(true);
 						buildable->SetBuildableHiddenInGame(true);
 						buildable->ToggleInstanceVisibility(false);
-						buildable->PlayDismantleEffects();
-						buildable->SetLifeSpan(0);
-						buildable->SetBlockCleanupOfTemporary(true);
-						if (buildable->mActiveBuildEffect) {
-							buildable->mActiveBuildEffect->SetAutoDestroy(false);
-							buildable->mActiveBuildEffect->mOnEnded.Unbind();
-							buildable->mActiveBuildEffect->mOnEnded.BindLambda([buildable]() {
-								buildable->SetActorHiddenInGame(true);
-							});
+						if (bDismantleEffect) {
+							buildable->PlayDismantleEffects();
+							buildable->SetLifeSpan(0);
+							if (buildable->mActiveBuildEffect) {
+								buildable->mActiveBuildEffect->SetAutoDestroy(false);
+								buildable->mActiveBuildEffect->mOnEnded.Unbind();
+								buildable->mActiveBuildEffect->mOnEnded.BindLambda([buildable]() {
+									buildable->SetActorHiddenInGame(true);
+								});
+							}
 						}
 						seenObjects.Add(buildable);
 						DismantledObjects.Add(buildable, ID);
@@ -301,17 +319,18 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 				if (buildable->GetIsLightweightTemporary()) continue;
 				if (DismantledObjects.Contains(buildable)) continue;
 
+				buildable->SetActorHiddenInGame(true);
 				buildable->ToggleInstanceVisibility(false);
-				buildable->PlayDismantleEffects();
-				buildable->SetLifeSpan(0);
-				if (buildable->mActiveBuildEffect) {
-					buildable->mActiveBuildEffect->SetAutoDestroy(false);
-					buildable->mActiveBuildEffect->mOnEnded.Unbind();
-					buildable->mActiveBuildEffect->mOnEnded.BindLambda([buildable]() {
-						buildable->SetActorHiddenInGame(true);
-					});
-				} else {
-					buildable->SetActorHiddenInGame(true);
+				if (bDismantleEffect) {
+					buildable->PlayDismantleEffects();
+					buildable->SetLifeSpan(0);
+					if (buildable->mActiveBuildEffect) {
+						buildable->mActiveBuildEffect->SetAutoDestroy(false);
+						buildable->mActiveBuildEffect->mOnEnded.Unbind();
+						buildable->mActiveBuildEffect->mOnEnded.BindLambda([buildable]() {
+							buildable->SetActorHiddenInGame(true);
+						});
+					}
 				}
 				buildable->SetActorEnableCollision(true);
 				TInlineComponentArray<UPrimitiveComponent*> comps( buildable );
