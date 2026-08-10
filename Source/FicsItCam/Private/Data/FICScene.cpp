@@ -53,6 +53,7 @@ void AFICScene::OnTextureUpdate() {
 	OnPreviewUpdate.Broadcast();
 }
 
+UE_DISABLE_OPTIMIZATION_SHIP
 void AFICScene::UpdatePreview() {
 	if (PreviewTexture == nullptr) {
 		PreviewTexture = NewObject<UFICProceduralTexture>(this);
@@ -63,11 +64,21 @@ void AFICScene::UpdatePreview() {
 	FTextureRHIRef Target;
 	UEngine* Engine = GEngine;
 	ENQUEUE_RENDER_COMMAND(UpdateScenePreview)([this, &Target, Engine](FRHICommandListImmediate& RHICmdList){
-		FViewportRHIRef Viewport = Engine->GameViewport->GetGameViewport()->GetViewportFrame()->GetViewport()->GetViewportRHI();
+		auto viewportClient = Engine->GameViewport;
+		if (!viewportClient) return;
+		auto viewport = viewportClient->GetGameViewport();
+		if (!viewport) return;
+		auto frame = viewport->GetViewportFrame();
+		if (!frame) return;
+		auto viewport2 = frame->GetViewport();
+		if (!viewport2) return;
+		FViewportRHIRef Viewport = viewport2->GetViewportRHI();
 		if (Viewport) {
 			Target = RHIGetViewportBackBuffer(Viewport);
 		}
-		FTextureRHIRef Texture = Engine->GameViewport->Viewport->GetRenderTargetTexture();
+		auto viewport3 = viewportClient->Viewport;
+		if (!viewport3) return;
+		FTextureRHIRef Texture = viewport3->GetRenderTargetTexture();
 		if (Texture) {
 			Target = Texture;
 		}
@@ -77,6 +88,7 @@ void AFICScene::UpdatePreview() {
 		AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(TextureExporter, MakeShared<FFICRenderTarget_Raw>(Target), true);
 	}
 }
+UE_ENABLE_OPTIMIZATION_SHIP
 
 bool AFICScene::IsSceneAlreadyInUse() {
 	AFICSubsystem* SubSys = AFICSubsystem::GetFICSubsystem(this);
