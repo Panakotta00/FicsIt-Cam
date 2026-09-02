@@ -28,6 +28,8 @@ public:
 	FVector Size;
 	UPROPERTY(SaveGame)
 	int64 DurationFrames = 600;
+	UPROPERTY(SaveGame)
+	bool bDismantleEffect = true;
 
 	UPROPERTY()
 	AFICDismantleZoneActor* DismantleZoneActor = nullptr;

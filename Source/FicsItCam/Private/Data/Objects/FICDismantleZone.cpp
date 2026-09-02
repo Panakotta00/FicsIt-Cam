@@ -291,7 +291,7 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 						buildable->SetBuildableHiddenInGame(true);
 						buildable->ToggleInstanceVisibility(false);
 						if (bDismantleEffect) {
-							buildable->PlayDismantleEffects();
+							buildable->PlayDismantleEffect();
 							buildable->SetLifeSpan(0);
 							if (buildable->mActiveBuildEffect) {
 								buildable->mActiveBuildEffect->SetAutoDestroy(false);
@@ -322,7 +322,7 @@ void UFICDismantleZone::HandleProgression(TOptional<double> Progression, bool bD
 				buildable->SetActorHiddenInGame(true);
 				buildable->ToggleInstanceVisibility(false);
 				if (bDismantleEffect) {
-					buildable->PlayDismantleEffects();
+					buildable->PlayDismantleEffect();
 					buildable->SetLifeSpan(0);
 					if (buildable->mActiveBuildEffect) {
 						buildable->mActiveBuildEffect->SetAutoDestroy(false);
