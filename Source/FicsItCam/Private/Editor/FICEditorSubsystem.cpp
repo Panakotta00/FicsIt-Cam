@@ -13,6 +13,7 @@
 #include "Editor/ITF/FICTransformInteraction.h"
 #include "Engine/GameEngine.h"
 #include "Input/FGInputMappingContext.h"
+#include "Kismet/GameplayStatics.h"
 #include "Slate/SceneViewport.h"
 #include "Slate/SGameLayerManager.h"
 
@@ -43,6 +44,7 @@ void AFICEditorSubsystem::InitInteractiveTools() {
 	// register tools
 	ToolsContext->ToolManager->RegisterToolType("Grab", NewObject<UFICGrabToolBuilder>(ToolsContext->ToolManager));
 
+	SetTickableWhenPaused(true);
 }
 
 void AFICEditorSubsystem::ShutdownInteractiveTools() {
@@ -234,8 +236,6 @@ void AFICEditorSubsystem::OpenEditor(AFICScene* InScene) {
 
 	// Save Original Player Character
 	OriginalPlayerCharacter = Controller->GetCharacter();
-
-
 	
 	// Create Editor Player character
 	AFICEditorCameraCharacter* Character = GetWorld()->SpawnActor<AFICEditorCameraCharacter>(InScene->GetActorLocation(), InScene->GetActorRotation());
@@ -331,8 +331,14 @@ void AFICEditorSubsystem::CloseEditor() {
 	GameOverlay->AddSlot()[
 		GameViewportContainer.ToSharedRef()
 	];
-	GEngine->GameViewport->GetGameViewportWidget()->SetRenderDirectlyToWindow(true);
-	GEngine->GameViewport->GetGameLayerManager()->SetSceneViewport(nullptr);
+	if (auto viewport = GEngine->GameViewport) {
+		if (auto viewportWidget = viewport->GetGameViewportWidget()) {
+			viewportWidget->SetRenderDirectlyToWindow(true);
+		}
+		if (auto manager = viewport->GetGameLayerManager()) {
+			manager->SetSceneViewport(nullptr);
+		}
+	}
 	Cast<UGameEngine>(GEngine)->CleanupGameViewport();
 	GSystemResolution = PrevResolution;
 	Cast<UGameEngine>(GEngine)->CreateGameViewport(GEngine->GameViewport);
@@ -340,9 +346,13 @@ void AFICEditorSubsystem::CloseEditor() {
 	// Enabled Game Inputs/WorldControl
 	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Controller);
 	UGameplayStatics::SetGamePaused(this, false);
-	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHUDVisibility(true);
-	Cast<AFGPlayerController>(Controller)->GetHUD<AFGHUD>()->SetHiddenHUDMode(false);
-	
+	if (auto player = Cast<AFGPlayerController>(Controller)) {
+		if (auto hud = player->GetHUD<AFGHUD>()) {
+			hud->SetHUDVisibility(true);
+			hud->SetHiddenHUDMode(false);
+		}
+	}
+
 	// Cleanup Editor Objects
 	EditorWidget = nullptr;
 	Character->Destroy();

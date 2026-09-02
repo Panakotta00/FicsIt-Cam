@@ -70,6 +70,9 @@ private:
 	UPROPERTY()
 	UInputAction* InputAction_Speed;
 
+	FPostProcessSettings LastPPSettings;
+	float LastPPWeight;
+
 public:
 	float MaxFlySpeed = 1000;
 

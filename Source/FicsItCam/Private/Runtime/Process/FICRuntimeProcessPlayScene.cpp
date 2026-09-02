@@ -56,6 +56,8 @@ void UFICRuntimeProcessPlayScene::Tick(AFICRuntimeProcessorCharacter* InCharacte
 			CineCamera->CurrentAperture = Aperture;
 			CineCamera->FocusSettings.ManualFocusDistance = FocusDistance;
 		}
+		InCharacter->Camera->PostProcessSettings = Camera->GetPostProcessingSettings(Time);
+		InCharacter->Camera->PostProcessBlendWeight = 1.0f;
 	}
 
 	for (UObject* SceneObject : Scene->GetSceneObjects()) {

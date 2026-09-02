@@ -122,5 +122,6 @@ FFICCameraSettingsSnapshot FFICCameraReference::GetSnapshot(UObject* WorldContex
 	Snapshot.FOV = CameraPtr->FOV.GetValue(Time);
 	Snapshot.Aperture = CameraPtr->Aperture.GetValue(Time);
 	Snapshot.FocusDistance = CameraPtr->FocusDistance.GetValue(Time);
+	Snapshot.PostProcessSettings = CameraPtr->GetPostProcessingSettings(Time);
 	return Snapshot;
 }

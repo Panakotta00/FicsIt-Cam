@@ -53,6 +53,9 @@ AFICEditorCameraCharacter::AFICEditorCameraCharacter() {
 	InputActionConstructionHelper(Grab);
 	InputActionConstructionHelper(FOV);
 	InputActionConstructionHelper(Speed);
+
+	GetCharacterMovement()->SetTickableWhenPaused(true);
+	SetTickableWhenPaused(true);
 }
 
 void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
@@ -69,6 +72,8 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 			} else {
 				Camera = NewObject<UCameraComponent>(this);
 			}
+			LastPPSettings = Camera->PostProcessSettings;
+			LastPPWeight = Camera->PostProcessBlendWeight;
 		
 			Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
@@ -94,6 +99,22 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 		}
 		if (EditorContext->GetCamera() && EditorContext->GetLockCameraToView()) Camera->SetFieldOfView(EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue());
 		else Camera->SetFieldOfView(FOV);
+
+		if (EditorContext->GetCamera() && EditorContext->GetLockCameraToView()) {
+			TSharedRef<FFICEditorAttributeBase> attribute = EditorContext->GetCameraEditor()->GetRef(TEXT("Post Processing"));
+			FPostProcessSettings settings = EditorContext->GetCamera()->GetPostProcessingSettings(attribute);
+
+			//settings.ColorGradingIntensity = 1;
+			//settings.ColorGradingLUT = LoadObject<UTexture2D>(nullptr, TEXT("/Game/FactoryGame/Interface/UI/InGame/PhotoMode/LUTs/LUT_Negative.LUT_Negative"));
+			//settings.bOverride_ColorGradingLUT = true;
+			//settings.bOverride_ColorGradingIntensity = true;
+
+			Camera->PostProcessSettings = settings;
+			Camera->PostProcessBlendWeight = 1.0;
+		} else {
+			Camera->PostProcessSettings = LastPPSettings;
+			Camera->PostProcessBlendWeight = LastPPWeight;
+		}
 		
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		GetCharacterMovement()->MaxFlySpeed = Cast<APlayerController>(GetController())->PlayerInput->IsShiftPressed() ? MaxFlySpeed * 10 : MaxFlySpeed;

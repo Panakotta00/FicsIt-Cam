@@ -27,15 +27,15 @@ private:
 public:
 	UPROPERTY(SaveGame)
 	FString SceneObjectName = TEXT("Camera");
-	
+
 	UPROPERTY(SaveGame)
 	FFICAttributeBool Active;
-	
+
 	UPROPERTY(SaveGame)
 	FFICAttributePosition Position;
 	UPROPERTY(SaveGame)
 	FFICAttributeRotation Rotation;
-	
+
 	UPROPERTY(SaveGame)
 	FFICFloatAttribute FOV;
 	UPROPERTY(SaveGame)
@@ -45,25 +45,26 @@ public:
 
 	FFICGroupAttribute LensSettings;
 
+	FPostProcessSettings PostProcessing;
+
 	UPROPERTY()
 	UFICEditorContext* EditorContext = nullptr;
 	UPROPERTY()
 	AFICEditorCameraActor* EditorCameraActor = nullptr;
-	
-	UFICCamera() {
-		Active.SetDefaultValue(true);
-		Aperture.SetDefaultValue(10);
-		FocusDistance.SetDefaultValue(10000);
-		
-		LensSettings.AddChildAttribute(TEXT("FOV"), &FOV);
-		LensSettings.AddChildAttribute(TEXT("Aperture"), &Aperture);
-		LensSettings.AddChildAttribute(TEXT("Focus Distance"), &FocusDistance);
 
-		RootAttribute.AddChildAttribute(TEXT("Active"), &Active);
-		RootAttribute.AddChildAttribute(TEXT("Position"), &Position);
-		RootAttribute.AddChildAttribute(TEXT("Rotation"), &Rotation);
-		RootAttribute.AddChildAttribute(TEXT("Lens Settings"), &LensSettings);
-	}
+	TMap<FString, TTuple<FBoolProperty*, FProperty*>> PPPropertyMap;
+	UPROPERTY()
+	TMap<FString, TInstancedStruct<FFICAttributeBool>> PPOverrideAttribMap;
+	UPROPERTY()
+	TMap<FString, TInstancedStruct<FFICAttribute>> PPValueAttribMap;
+
+	FFICGroupAttribute PostProcessingSettings;
+
+	UFICCamera();
+	
+	virtual void Serialize(FStructuredArchive::FRecord Record) override;
+
+	virtual void PostInitProperties() override;
 
 	// Begin FTickableGameObject
 	virtual void Tick(float DeltaTime) override;
@@ -101,4 +102,7 @@ public:
 	virtual FString GetActiveType() { return TEXT("Camera"); }
 	virtual FFICAttributeBool& GetActiveAttribute() { return Active; }
 	// End IFICSceneObjectActive
+
+	FPostProcessSettings GetPostProcessingSettings(FICFrameFloat Frame);
+	FPostProcessSettings GetPostProcessingSettings(TSharedRef<FFICEditorAttributeBase> Attribute);
 };
