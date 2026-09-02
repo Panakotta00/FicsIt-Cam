@@ -46,6 +46,7 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 	Super::Start(InCharacter);
 
 	WwiseSoundEngineAPI = IWwiseSoundEngineAPI::Get();
+	fgcheck(WwiseSoundEngineAPI && WwiseSoundEngineAPI->IsInitialized());
 
 	auto* Settings = GetWorld()->GetWorldSettings();
 	PrevMinUndilatedFrameTime = Settings->MinUndilatedFrameTime;

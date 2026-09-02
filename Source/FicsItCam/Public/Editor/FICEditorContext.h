@@ -32,7 +32,7 @@ DECLARE_MULTICAST_DELEGATE(FFICCurrentFrameChanged)
 DECLARE_MULTICAST_DELEGATE(FFICOverlayWidgetsChanged)
 
 UCLASS()
-class UFICEditorContext : public UObject, public FTickableGameObject {
+class FICSITCAM_API UFICEditorContext : public UObject, public FTickableGameObject {
 	GENERATED_BODY()
 
 private:
