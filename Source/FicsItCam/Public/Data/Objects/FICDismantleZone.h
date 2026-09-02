@@ -10,7 +10,7 @@
 
 class AFICParticleSystemActor;
 
-UCLASS()
+UCLASS(Abstract)
 class FICSITCAM_API UFICDismantleZone : public UObject, public FTickableGameObject, public IFGSaveInterface, public IFICSceneObject, public IFICSceneObject3D {
 	GENERATED_BODY()
 public:
