@@ -27,6 +27,10 @@ struct FFICAttributeBool : public FFICAttribute {
 
 	friend class FFICKeyframeBoolTrampoline;
 
+public:
+	typedef FFICKeyframeBool KeyframeType;
+	typedef bool ValueType;
+
 private:
 	UPROPERTY(SaveGame)
 	TMap<int64, FFICKeyframeBool> Keyframes;

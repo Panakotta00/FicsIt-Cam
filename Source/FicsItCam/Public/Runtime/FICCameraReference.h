@@ -29,6 +29,9 @@ struct FFICCameraSettingsSnapshot {
 	UPROPERTY(SaveGame, BlueprintReadWrite)
 	float FocusDistance;
 
+	UPROPERTY(SaveGame, BlueprintReadWrite)
+	FPostProcessSettings PostProcessSettings;
+
 	bool IsValid() { return !!Camera; }
 };
 

@@ -1,6 +1,5 @@
 #include "Editor/UI/FICDragDrop.h"
 
-#include "FicsItCamModule.h"
 #include "Editor/FICChangeList.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICSequencer.h"

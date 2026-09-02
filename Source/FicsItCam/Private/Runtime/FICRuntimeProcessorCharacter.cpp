@@ -1,7 +1,7 @@
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 
 #include "CineCameraComponent.h"
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 #include "EnhancedInputSubsystems.h"
 #include "FGInputSettings.h"
 #include "Engine/World.h"

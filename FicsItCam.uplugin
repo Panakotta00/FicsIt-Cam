@@ -1,18 +1,18 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
-	"SemVersion": "1.2.0",
-	"GameVersion": ">=416835",
+	"VersionName": "1.4",
+	"SemVersion": "1.4.0",
+	"GameVersion": ">=491125",
 	"AcceptsAnyRemoteVersion": true,
 	"FriendlyName": "FicsIt-Cam",
 	"Description": "Camera-Animations, Timelapse-Cameras, additional Camera-Feeds & more! Everything a cinematographer needs.",
 	"Category": "Modding",
-	"CreatedBy": "Panakotta00, Deantendo",
+	"CreatedBy": "Panakotta00",
 	"CreatedByURL": "https://panakotta00.dev/",
 	"DocsURL": "https://github.com/Panakotta00/FicsIt-Cam",
 	"MarketplaceURL": "",
-	"SupportURL": "https://patreon.com/panakotta00",
+	"SupportURL": "https://ko-fi.com/panakotta00",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
@@ -27,8 +27,23 @@
 	"Plugins": [
 		{
 			"Name": "SML",
-			"SemVersion": "^3.11.3",
+			"SemVersion": "^3.12.0",
 			"Enabled": true
+		},
+		{
+			"Name": "Niagara",
+			"Enabled": true,
+			"BasePlugin": true
+		},
+		{
+			"Name": "Wwise",
+			"Enabled": true,
+			"BasePlugin": true
+		},
+		{
+			"Name": "AbstractInstance",
+			"Enabled": true,
+			"BasePlugin": true
 		}
 	]
 }

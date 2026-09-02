@@ -3,7 +3,7 @@
 #include "FICEditorStyle.h"
 #include "Data/FICTypes.h"
 #include "FICEvents.h"
-#include "SBox.h"
+#include "Widgets/Layout/SBox.h"
 #include "SelectionManager.h"
 #include "Data/Attributes/FICKeyframe.h"
 #include "Editor/Data/FICEditorAttributeBase.h"

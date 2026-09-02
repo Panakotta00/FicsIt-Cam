@@ -1,12 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WwiseSoundEngineAPI.h"
+#include "Wwise/API/WwiseSoundEngineAPI.h"
 #include "CanvasTypes.h"
-#include "FICDummyViewport.h"
+#include "Rendering/FICDummyViewport.h"
 #include "FICRuntimeProcessPlayScene.h"
 #include "FICSubsystem.h"
-#include "Viewport.h"
+#include "Components/Viewport.h"
 #include "Util/SequenceExporter.h"
 #include "FICRuntimeProcessRenderScene.generated.h"
 
@@ -79,7 +79,7 @@ public:
 	// End FRenderResource Interface
 
 	// Begin FFICRenderTarget
-	virtual FTexture2DRHIRef GetRenderTarget() override { return this->GetRenderTargetTexture(); }
+	virtual FTextureRHIRef GetRenderTarget() override { return this->GetRenderTargetTexture(); }
 	// End FFICRenderTarget
 	
 private:

@@ -1,7 +1,6 @@
 ﻿#include "Editor/FICEditorContext.h"
 
 #include "FGInputLibrary.h"
-#include "FicsItCamModule.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Data/Objects/FICCamera.h"
 #include "Data/Objects/FICSceneObject.h"

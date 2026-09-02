@@ -1,8 +1,8 @@
 #include "Editor/UI/FICViewport.h"
 
-#include "FGSessionInformationModel.h"
+#include "UI/FGSessionInformationModel.h"
 #include "FICSubsystem.h"
-#include "SOverlay.h"
+#include "Widgets/SOverlay.h"
 #include "Components/LineBatchComponent.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICSceneObjectCreation.h"

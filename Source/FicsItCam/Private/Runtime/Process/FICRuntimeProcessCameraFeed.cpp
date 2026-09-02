@@ -3,8 +3,8 @@
 #include "FGCharacterPlayer.h"
 #include "FGCineCameraComponent.h"
 #include "FICSubsystem.h"
-#include "SBox.h"
-#include "SlateApplication.h"
+#include "Widgets/Layout/SBox.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/FICCaptureCamera.h"
@@ -42,7 +42,9 @@ void UFICRuntimeProcessCameraFeed::Start(AFICRuntimeProcessorCharacter* InCharac
 
 	FString ExportPath = CameraArgument.CameraReference.GetData();
 	if (!ExportPath.IsEmpty()) {
+#if PLATFORM_WINDOWS
 		Exporter = MakeShared<FSequenceMP4Exporter>(Size, 60, ExportPath, 0);
+#endif
 	} else {
 		View = MakeShared<FFICDummyViewport>(Camera->RenderTarget->GameThread_GetRenderTargetResource()->GetRenderTargetTexture(), Size);
 

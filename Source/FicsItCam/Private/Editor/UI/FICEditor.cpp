@@ -1,12 +1,12 @@
 ﻿#include "Editor/UI/FICEditor.h"
 
 #include "FICConfigurationStruct.h"
-#include "FICUIUtil.h"
+#include "Editor/UI/FICUIUtil.h"
 #include "FICUtils.h"
-#include "SButton.h"
-#include "SEditableTextBox.h"
-#include "SGridPanel.h"
-#include "SViewport.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SEditableTextBox.h"
+#include "Widgets/Layout/SGridPanel.h"
+#include "Widgets/SViewport.h"
 #include "Engine/World.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/FICEditorSubsystem.h"
@@ -372,7 +372,7 @@ bool SFICEditor::SupportsKeyboardFocus() const {
 
 void SFICEditor::OnFocusChanging(const FWeakWidgetPath& PreviousFocusPath, const FWidgetPath& NewWidgetPath, const FFocusEvent& InFocusEvent) {
 	SCompoundWidget::OnFocusChanging(PreviousFocusPath, NewWidgetPath, InFocusEvent);
-	if (!PreviousFocusPath.ContainsWidget(GameWidget.ToSharedRef()) && NewWidgetPath.ContainsWidget(GameWidget.ToSharedRef())) {
+	if (!PreviousFocusPath.ContainsWidget(GameWidget.Get()) && NewWidgetPath.ContainsWidget(GameWidget.Get())) {
 		if (FSlateApplication::Get().GetPressedMouseButtons().Contains(EKeys::RightMouseButton)) {
 			Context->GetPlayerCharacter()->SetControlView(true, true);
 		}

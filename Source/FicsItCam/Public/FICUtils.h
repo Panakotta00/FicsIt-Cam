@@ -9,7 +9,7 @@
 #include "FICUtils.generated.h"
 
 UCLASS(Abstract)
-class UFICUtils : public UObject {
+class FICSITCAM_API UFICUtils : public UObject {
 	GENERATED_BODY()
 
 public:

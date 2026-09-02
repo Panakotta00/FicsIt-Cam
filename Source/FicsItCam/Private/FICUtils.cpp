@@ -1,8 +1,7 @@
 ﻿#include "FICUtils.h"
-#include "FicsItCam/Public/FICUtils.h"
 
 #include "EnhancedPlayerInput.h"
-#include "Regex.h"
+#include "Internationalization/Regex.h"
 #include "Editor/FICEditorSubsystem.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"

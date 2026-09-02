@@ -175,7 +175,7 @@ TUniqueFunction<void(TArray<UFICToolsContextRenderComponent::FPDILine>&, TArray<
 
 FPrimitiveSceneProxy* UFICToolsContextRenderComponent::CreateSceneProxy() {
 	return Super::CreateSceneProxy();
-	return new FToolsContextRenderComponentSceneProxy(this, MakeGetCurrentGeometryQueryFunc());
+	//return new FToolsContextRenderComponentSceneProxy(this, MakeGetCurrentGeometryQueryFunc());
 }
 
 bool UFICToolsContextRenderComponent::LineTraceComponent(FHitResult& OutHit, const FVector Start, const FVector End, const FCollisionQueryParams& Params)

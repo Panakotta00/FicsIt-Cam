@@ -1,15 +1,134 @@
 #include "Data/Objects/FICCamera.h"
 
-#include "FICEditorAttributeGroup.h"
+#include "Editor/Data/FICEditorAttributeGroup.h"
 #include "FICUtils.h"
-#include "SButton.h"
-#include "SSlider.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SSlider.h"
 #include "Components/LineBatchComponent.h"
 #include "Editor/Data/FICEditorCameraActor.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/Data/FICEditorAttributeBase.h"
+#include "Editor/Data/FICEditorAttributeBool.h"
 #include "Widgets/Layout/SConstraintCanvas.h"
 #include "Widgets/Layout/SScaleBox.h"
+
+UFICCamera::UFICCamera() {
+	Active.SetDefaultValue(true);
+	Aperture.SetDefaultValue(10);
+	FocusDistance.SetDefaultValue(10000);
+
+	LensSettings.AddChildAttribute(TEXT("FOV"), &FOV);
+	LensSettings.AddChildAttribute(TEXT("Aperture"), &Aperture);
+	LensSettings.AddChildAttribute(TEXT("Focus Distance"), &FocusDistance);
+
+	RootAttribute.AddChildAttribute(TEXT("Active"), &Active);
+	RootAttribute.AddChildAttribute(TEXT("Position"), &Position);
+	RootAttribute.AddChildAttribute(TEXT("Rotation"), &Rotation);
+	RootAttribute.AddChildAttribute(TEXT("Lens Settings"), &LensSettings);
+	RootAttribute.AddChildAttribute(TEXT("Post Processing"), &PostProcessingSettings);
+}
+
+template<typename T>
+FArchive& operator<<(FArchive& Ar, TInstancedStruct<T>& InstancedStruct) {
+	InstancedStruct.Serialize(Ar);
+	return Ar;
+}
+
+void UFICCamera::Serialize(FStructuredArchive::FRecord Record) {
+	Super::Serialize(Record);
+
+	if (!Record.GetUnderlyingArchive().IsSaveGame()) return;
+
+	auto PostProcessingAttributes = Record.EnterField(TEXT("PostProcessingAttributes"));
+
+	for (auto& [name, overrideAttrib] : PPOverrideAttribMap) {
+		auto valueAttrib = PPValueAttribMap.Find(name);
+		if (!valueAttrib) continue;
+
+		auto entry = PostProcessingAttributes.TryEnterAttribute(*name, true);
+		if (!entry.IsSet()) continue;
+		auto entryRecord = entry->EnterRecord();
+
+		if (entryRecord.GetUnderlyingArchive().IsSaving()) {
+			PostProcessingSettings.RemoveChildAttribute(TEXT("Override ") + name);
+		}
+		if (auto field = entryRecord.TryEnterField(TEXT("OverrideAttrib"), true)) {
+			overrideAttrib.Serialize(field->GetUnderlyingArchive());
+		}
+		if (entryRecord.GetUnderlyingArchive().IsSaving()) {
+			PostProcessingSettings.AddChildAttribute(TEXT("Override ") + name, overrideAttrib.GetMutablePtr());
+		}
+
+		if (entryRecord.GetUnderlyingArchive().IsSaving()) {
+			entryRecord << SA_VALUE(TEXT("ValueAttrib"), *valueAttrib);
+		} else {
+			PostProcessingSettings.RemoveChildAttribute(name);
+			TInstancedStruct<FFICAttribute> value;
+			entryRecord << SA_VALUE(TEXT("ValueAttrib"), value);
+			if (value.GetScriptStruct() == valueAttrib->GetScriptStruct()) {
+				*valueAttrib = value;
+			}
+			PostProcessingSettings.AddChildAttribute(name, valueAttrib->GetMutablePtr());
+		}
+	}
+}
+
+void UFICCamera::PostInitProperties() {
+	Super::PostInitProperties();
+
+	for (TFieldIterator<FProperty> iter(FPostProcessSettings::StaticStruct()); iter; ++iter) {
+		FProperty* prop = *iter;
+		FString name = prop->GetNameCPP();
+		if (name.RemoveFromStart(TEXT("bOverride_"))) {
+			if (auto boolProp = CastField<FBoolProperty>(prop)) {
+				auto entry = PPPropertyMap.Find(name);
+				if (entry) {
+					entry->Key = boolProp;
+				} else {
+					PPPropertyMap.Add(name, {boolProp, nullptr});
+				}
+			}
+		} else {
+			auto entry = PPPropertyMap.Find(name);
+			if (entry) {
+				entry->Value = prop;
+			} else {
+				PPPropertyMap.Add(name, {nullptr, prop});
+			}
+		}
+	}
+	TArray<FString> toClean;
+	for (auto& [name, props] : PPPropertyMap) {
+		auto& [overrideProp, valueProp] = props;
+		if (!overrideProp || !valueProp) {
+			toClean.Add(name);
+			continue;
+		}
+
+		if (!PPOverrideAttribMap.Contains(name)) {
+			PPOverrideAttribMap.Add(name, TInstancedStruct<FFICAttributeBool>::Make());
+		}
+
+		if (!PPValueAttribMap.Contains(name)) {
+			TInstancedStruct<FFICAttribute> valueAttrib;
+			if (auto boolProp = CastField<FBoolProperty>(valueProp)) {
+				valueAttrib = TInstancedStruct<FFICAttribute>::Make<FFICAttributeBool>();
+			} else if (auto floatProp = CastField<FFloatProperty>(valueProp)) {
+				valueAttrib = TInstancedStruct<FFICAttribute>::Make<FFICFloatAttribute>();
+			} else if (auto intProp = CastField<FIntProperty>(valueProp)) {
+				valueAttrib = TInstancedStruct<FFICAttribute>::Make<FFICFloatAttribute>();
+			} else {
+				toClean.Add(name);
+				continue;
+			}
+			PPValueAttribMap.Add(name, MoveTemp(valueAttrib));
+		}
+
+		PostProcessingSettings.AddChildAttribute(TEXT("Override ") + name, PPOverrideAttribMap.Find(name)->GetMutablePtr());
+		PostProcessingSettings.AddChildAttribute(name, PPValueAttribMap.Find(name)->GetMutablePtr());
+	}
+	for (FString name : toClean) PPPropertyMap.Remove(name);
+}
 
 void UFICCamera::Tick(float DeltaTime) {
 	// Draw Path
@@ -40,9 +159,9 @@ void UFICCamera::Tick(float DeltaTime) {
 				bool bIsKeyframe = KeyframePoints.Contains(i);
 				if (Hovered == i) PointColor = FColor::Green; 
 				else if (bIsKeyframe) PointColor = FColor::Yellow;
-				if (bIsKeyframe || Hovered == i || !PrevPoint || *PrevPoint != *Point) EditorContext->GetScene()->GetWorld()->LineBatcher->DrawLine(*Point, *Point, PointColor, SDPG_World, 20);
+				if (bIsKeyframe || Hovered == i || !PrevPoint || *PrevPoint != *Point) EditorContext->GetScene()->GetWorld()->GetLineBatcher(UWorld::ELineBatcherType::World)->DrawLine(*Point, *Point, PointColor, SDPG_World, 20);
 
-				if (PrevPoint) EditorContext->GetScene()->GetWorld()->LineBatcher->DrawLine(*PrevPoint, *Point,  FColor::Red, SDPG_World, 5);
+				if (PrevPoint) EditorContext->GetScene()->GetWorld()->GetLineBatcher(UWorld::ELineBatcherType::World)->DrawLine(*PrevPoint, *Point,  FColor::Red, SDPG_World, 5);
 
 				PrevPoint = Point;
 			}
@@ -185,3 +304,50 @@ void UFICCamera::SetSceneObjectTransform(FTransform InTransform) {
 }
 
 AActor* UFICCamera::GetActor() { return EditorCameraActor; }
+
+FPostProcessSettings UFICCamera::GetPostProcessingSettings(FICFrameFloat Frame) {
+	FPostProcessSettings settings;
+	for (auto [name, props] : PPPropertyMap) {
+		auto& [overrideProp, valueProp] = props;
+
+		bool overrideVal = PPOverrideAttribMap.Find(name)->GetMutable<FFICAttributeBool>().GetValue(Frame);
+		overrideProp->SetPropertyValue_InContainer(&settings, overrideVal);
+
+		if (auto boolProp = CastField<FBoolProperty>(valueProp)) {
+			bool val = PPValueAttribMap.Find(name)->GetMutable<FFICAttributeBool>().GetValue(Frame);
+			boolProp->SetPropertyValue_InContainer(&settings, val);
+		} else if (auto floatProp = CastField<FFloatProperty>(valueProp)) {
+			float val = PPValueAttribMap.Find(name)->GetMutable<FFICFloatAttribute>().GetValue(Frame);
+			floatProp->SetPropertyValue_InContainer(&settings, val);
+		} else if (auto intProp = CastField<FIntProperty>(valueProp)) {
+			int val = PPValueAttribMap.Find(name)->GetMutable<FFICFloatAttribute>().GetValue(Frame);
+			intProp->SetPropertyValue_InContainer(&settings, val);
+		}
+	}
+
+	return settings;
+}
+
+FPostProcessSettings UFICCamera::GetPostProcessingSettings(TSharedRef<FFICEditorAttributeBase> ppAttrib) {
+	FPostProcessSettings settings;
+	for (auto [name, props] : PPPropertyMap) {
+		auto& [overrideProp, valueProp] = props;
+
+		bool overrideVal = ppAttrib->Get<FFICEditorAttributeBool>(TEXT("Override ") + name).GetActiveValue();
+		overrideProp->SetPropertyValue_InContainer(&settings, overrideVal);
+
+		if (auto boolProp = CastField<FBoolProperty>(valueProp)) {
+			bool val = ppAttrib->Get<FFICEditorAttributeBool>(name).GetActiveValue();
+			boolProp->SetPropertyValue_InContainer(&settings, val);
+		} else if (auto floatProp = CastField<FFloatProperty>(valueProp)) {
+			float val = ppAttrib->Get<TFICEditorAttribute<FFICFloatAttribute>>(name).GetValue();
+			floatProp->SetPropertyValue_InContainer(&settings, val);
+		} else if (auto intProp = CastField<FIntProperty>(valueProp)) {
+			int val = ppAttrib->Get<TFICEditorAttribute<FFICFloatAttribute>>(name).GetValue();
+			intProp->SetPropertyValue_InContainer(&settings, val);
+		}
+	}
+	return settings;
+}
+
+

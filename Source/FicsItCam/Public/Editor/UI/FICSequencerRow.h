@@ -1,10 +1,9 @@
 ﻿#pragma once
 
-#include "DeclarativeSyntaxSupport.h"
 #include "FICEditorStyle.h"
 #include "FICKeyframeIcon.h"
-#include "SCompoundWidget.h"
-#include "SPanel.h"
+#include "Widgets/SCompoundWidget.h"
+#include "Widgets/SPanel.h"
 #include "Data/FICTypes.h"
 
 struct FFICSequencerStyle;

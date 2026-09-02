@@ -1,9 +1,9 @@
 #include "Editor/Data/FICEditorCameraActor.h"
 
 #include "EngineUtils.h"
-#include "FICDummyViewport.h"
+#include "Rendering/FICDummyViewport.h"
 #include "FICSubsystem.h"
-#include "SViewport.h"
+#include "Widgets/SViewport.h"
 #include "TextureResource.h"
 #include "Components/LineBatchComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -175,6 +175,8 @@ void AFICEditorCameraActor::UpdateValues(TSharedRef<FFICEditorAttributeBase> Att
 	SetActorLocation(Pos);
 	SetActorRotation(Rot);
 	CaptureComponent->FOVAngle = Attribute->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue();
+	CaptureComponent->PostProcessSettings = Camera->GetPostProcessingSettings(Attribute->GetRef(TEXT("Post Processing")));
+	CaptureComponent->PostProcessBlendWeight = 1.0f;
 }
 
 TSharedRef<SWidget> AFICEditorCameraActor::GetCameraPreview() {

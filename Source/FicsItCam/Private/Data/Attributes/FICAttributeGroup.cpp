@@ -23,9 +23,13 @@ void FFICKeyframeGroup::SetType(EFICKeyframeType Type) {
 }
 
 FFICGroupAttribute::~FFICGroupAttribute() {
-	for (const TPair<FString, FFICAttribute*>& Attrib : Children) {
-		Attrib.Value->OnUpdate.Remove(UpdateDelegateHandles[Attrib.Key]);
+	for (const auto& [name, attribute] : Children) {
+		if (attribute) {
+			attribute->SuperAttributes.Remove(this);
+		}
 	}
+	Children.Empty();
+	AttribToChild.Empty();
 }
 
 EFICKeyframeType FFICGroupAttribute::GetAllowedKeyframeTypes() const {
@@ -64,6 +68,14 @@ bool FFICGroupAttribute::HasKeyframe(FICFrame Time) const {
 	return false;
 }
 
+void FFICGroupAttribute::RemoveSubAttribute(FFICAttribute* SubAttribute) {
+	if (!SubAttribute) return;
+	auto name = AttribToChild.Find(SubAttribute);
+	if (name) {
+		RemoveChildAttribute(*name);
+	}
+}
+
 void FFICGroupAttribute::CopyFrom(TSharedRef<FFICAttribute> InAttrib) {
 	TSharedRef<FFICGroupAttribute> Attrib = StaticCastSharedRef<FFICGroupAttribute>(InAttrib);
 	for (const TPair<FString, FFICAttribute*>& Attr : Children) {
@@ -90,19 +102,15 @@ const TMap<FString, FFICAttribute*>& FFICGroupAttribute::GetChildAttributes() co
 
 void FFICGroupAttribute::AddChildAttribute(FString Name, FFICAttribute* Attribute) {
 	Children.Add(Name, Attribute);
-	UpdateDelegateHandles.Add(Name, Attribute->OnUpdate.AddLambda([this]() {
-		OnUpdateBroadcast();
-	}));
+	AttribToChild.Add(Attribute, Name);
+	Attribute->SuperAttributes.Add(this);
 }
 
 void FFICGroupAttribute::RemoveChildAttribute(FString Name) {
-	FFICAttribute** Attribute = Children.Find(Name);
-	FDelegateHandle* Handle = UpdateDelegateHandles.Find(Name);
-	if (Handle) {
-		Children[Name]->OnUpdate.Remove(UpdateDelegateHandles[Name]);
-		Children.Remove(Name);
-	}
-	if (Attribute) {
-		UpdateDelegateHandles.Remove(Name);
-	}
+	FFICAttribute* Attribute = Children.FindRef(Name);
+	if (!Attribute) return;
+	
+	Attribute->SuperAttributes.Remove(this);
+	Children.Remove(Name);
+	AttribToChild.Remove(Attribute);
 }

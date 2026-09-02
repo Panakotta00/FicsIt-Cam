@@ -75,6 +75,7 @@ void SFICSceneObjectCreation::Construct(const FArguments& InArgs, UFICEditorCont
 
 	for (TObjectIterator<UClass> Class; Class; ++Class) {
 		if (!Class->ImplementsInterface(UFICSceneObject::StaticClass())) continue;
+		if (Class->GetClassFlags() & CLASS_Abstract) continue;
 		UObject* Obj = Class->GetDefaultObject();
 		IFICSceneObject* SceneObj = Cast<IFICSceneObject>(Obj);
 

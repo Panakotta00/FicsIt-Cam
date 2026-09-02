@@ -27,7 +27,7 @@ struct FFICRenderTarget {
 struct FFICRenderRequest {
 	FRenderCommandFence RenderFence = FRenderCommandFence();
 	
-	FRHIGPUTextureReadback Readback;
+	TUniquePtr<FRHIGPUTextureReadback> Readback;
 
 	TSharedRef<FFICRenderTarget> RenderTarget;
 	TSharedRef<FSequenceExporter> Exporter;
@@ -36,7 +36,7 @@ struct FFICRenderRequest {
 
 	TFunction<void()> ExtraFunc;
 
-	FFICRenderRequest(TSharedRef<FFICRenderTarget> RenderTarget, TSharedRef<FSequenceExporter> Exporter, FRHIGPUTextureReadback Readback, double Time) : Readback(Readback), RenderTarget(RenderTarget), Exporter(Exporter), Time(Time) {}
+	FFICRenderRequest(TSharedRef<FFICRenderTarget> RenderTarget, TSharedRef<FSequenceExporter> Exporter, TUniquePtr<FRHIGPUTextureReadback> Readback, double Time) : Readback(MoveTemp(Readback)), RenderTarget(RenderTarget), Exporter(Exporter), Time(Time) {}
 };
 
 struct FFICRenderTarget_Raw : public FFICRenderTarget {

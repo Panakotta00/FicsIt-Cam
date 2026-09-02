@@ -3,6 +3,7 @@
 using UnrealBuildTool;
 using System.IO;
 using System;
+using EpicGames.Core;
 
 public class FicsItCam : ModuleRules
 {
@@ -10,6 +11,10 @@ public class FicsItCam : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	    CppStandard = CppStandardVersion.Cpp20;
+
+	    // Force WITH_MGPU to 0 for this module to match game binaries
+	    PublicDefinitions.Add("WITH_MGPU=0");
+	    PrivateDefinitions.Add("WITH_MGPU=0");
 
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
@@ -38,7 +43,7 @@ public class FicsItCam : ModuleRules
 
         PrivateDependencyModuleNames.AddRange(new string[]
         {
-	        "AbstractInstance"
+	        "AbstractInstance",
         });
 
         if (Target.Platform == UnrealTargetPlatform.Win64)

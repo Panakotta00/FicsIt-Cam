@@ -4,15 +4,15 @@
 #include "AudioDevice.h"
 #include "CanvasTypes.h"
 #include "EngineModule.h"
-#include "FICDummyViewport.h"
+#include "Rendering/FICDummyViewport.h"
 #include "FicsItCamModule.h"
 #include "FICSubsystem.h"
 #include "IImageWrapperModule.h"
-#include "PlatformFileManager.h"
-#include "SBorder.h"
-#include "SCanvas.h"
+#include "HAL/PlatformFileManager.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/SCanvas.h"
 #include "SlateMaterialBrush.h"
-#include "SScaleBox.h"
+#include "Widgets/Layout/SScaleBox.h"
 #include "Algo/Accumulate.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Editor/FICEditorSubsystem.h"
@@ -32,7 +32,9 @@ static void CaptureCallback(AkAudioBuffer& in_CaptureBuffer, AkOutputDeviceID /*
 	if (!uSampleCount || !in_CaptureBuffer.GetInterleavedData())
 		return;
 
+#if PLATFORM_WINDOWS
 	StaticCastSharedPtr<FSequenceMP4Exporter>(self->Exporter)->AddAudioFrame((float*)in_CaptureBuffer.GetInterleavedData(), in_CaptureBuffer.uValidFrames);
+#endif
 }
 UE_ENABLE_OPTIMIZATION_SHIP
 
@@ -44,6 +46,7 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 	Super::Start(InCharacter);
 
 	WwiseSoundEngineAPI = IWwiseSoundEngineAPI::Get();
+	fgcheck(WwiseSoundEngineAPI && WwiseSoundEngineAPI->IsInitialized());
 
 	auto* Settings = GetWorld()->GetWorldSettings();
 	PrevMinUndilatedFrameTime = Settings->MinUndilatedFrameTime;
@@ -185,9 +188,10 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 void UFICRuntimeProcessRenderScene::Tick(AFICRuntimeProcessorCharacter* InCharacter, float DeltaSeconds) {
 	if (!bStarted) return;
 
-	if(GetWorld()->IsLevelStreamingRequestPending(GetWorld()->GetFirstPlayerController())) {
+	// TODO: Evaluate if something similar / an replacement could be used
+	/*if(GetWorld()->IsLevelStreamingRequestPending(GetWorld()->GetFirstPlayerController())) {
 		UE_LOG(LogFicsItCam, Warning, TEXT("Level streaming is pending, skipping frame"));
-	}
+	}*/
 
 	ETAStatistics.Insert(GetWorld()->DeltaRealTimeSeconds, 0);
 	while (ETAStatistics.Num() > 60) ETAStatistics.Pop();

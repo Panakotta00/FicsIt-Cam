@@ -5,7 +5,7 @@
 #include "FICKeyframe.generated.h"
 
 UENUM()
-enum EFICKeyframeType {
+enum EFICKeyframeType : int {
 	FIC_KF_NONE			= 0b0000000,
 	FIC_KF_HANDLES		= 0b1000000,
 	FIC_KF_EASE			= 0b1000001,

@@ -1,12 +1,12 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "SlateTextures.h"
+#include "Slate/SlateTextures.h"
 #include "Slate/SceneViewport.h"
 
 class FFICDummyViewport : public ISlateViewport {
 public:
-	FFICDummyViewport(FTexture2DRHIRef RenderTargetTexture, FIntPoint InSize)
+	FFICDummyViewport(FTextureRHIRef RenderTargetTexture, FIntPoint InSize)
 		: RenderTarget( new FSlateRenderTargetRHI(RenderTargetTexture, InSize.X, InSize.Y))
 		, Size(InSize) {
 		BeginInitResource(RenderTarget);

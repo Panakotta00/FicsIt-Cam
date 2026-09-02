@@ -2,8 +2,8 @@
 
 #include "FGPlayerController.h"
 #include "FICSubsystem.h"
-#include "PlatformFileManager.h"
-#include "SceneViewport.h"
+#include "HAL/PlatformFileManager.h"
+#include "Slate/SceneViewport.h"
 #include "TextureResource.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Runtime/FICCaptureCamera.h"

@@ -1,4 +1,4 @@
-﻿#include "FicsItCam/Public/Data/FICAnimation.h"
+﻿#include "Data/FICAnimation.h"
 
 #include "FGGameUserSettings.h"
 

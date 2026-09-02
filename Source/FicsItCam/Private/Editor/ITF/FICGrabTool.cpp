@@ -66,13 +66,13 @@ void UFICGrabTool::Render(IToolsContextRenderAPI* RenderAPI) {
 	FVector Z = InitialTransform.TransformVector(FVector(0,0,1));
 	switch (AxisLock) {
 	case FIC_GrabTool_Lock_X:
-		SceneObject->GetWorld()->LineBatcher->DrawLine(Origin - X*Length, Origin + X*Length, FColor::Red, SDPG_World, 10);
+		SceneObject->GetWorld()->GetLineBatcher(UWorld::ELineBatcherType::World)->DrawLine(Origin - X*Length, Origin + X*Length, FColor::Red, SDPG_World, 10);
 		break;
 	case FIC_GrabTool_Lock_Y:
-		SceneObject->GetWorld()->LineBatcher->DrawLine(Origin - Y*Length, Origin + Y*Length, FColor::Green, SDPG_World, 10);
+		SceneObject->GetWorld()->GetLineBatcher(UWorld::ELineBatcherType::World)->DrawLine(Origin - Y*Length, Origin + Y*Length, FColor::Green, SDPG_World, 10);
 		break;
 	case FIC_GrabTool_Lock_Z:
-		SceneObject->GetWorld()->LineBatcher->DrawLine(Origin - Z*Length, Origin + Z*Length, FColor::Blue, SDPG_World, 10);
+		SceneObject->GetWorld()->GetLineBatcher(UWorld::ELineBatcherType::World)->DrawLine(Origin - Z*Length, Origin + Z*Length, FColor::Blue, SDPG_World, 10);
 	default: ;
 	}
 }

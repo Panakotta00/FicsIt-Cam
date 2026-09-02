@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FICRenderer.h"
+#include "Rendering/FICRenderer.h"
 #include "FICRuntimeProcess.h"
 #include "Runtime/FICCameraArgument.h"
 #include "Brushes/SlateImageBrush.h"

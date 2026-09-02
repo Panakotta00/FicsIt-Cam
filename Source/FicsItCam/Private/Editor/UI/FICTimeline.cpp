@@ -1,7 +1,7 @@
 ﻿#include "Editor/UI/FICTimeline.h"
 
-#include "SButton.h"
-#include "SGridPanel.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SGridPanel.h"
 #include "Editor/FICEditorContext.h"
 #include "Editor/UI/FICSequencerTreeView.h"
 #include "Editor/Data/FICEditorAttributeGroupDynamic.h"

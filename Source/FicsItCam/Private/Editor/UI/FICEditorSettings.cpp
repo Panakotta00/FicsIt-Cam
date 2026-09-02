@@ -1,8 +1,8 @@
 #include "Editor/UI/FICEditorSettings.h"
 
 #include "FICUtils.h"
-#include "SCheckBox.h"
-#include "STextBlock.h"
+#include "Widgets/Input/SCheckBox.h"
+#include "Widgets/Text/STextBlock.h"
 #include "Editor/FICEditorContext.h"
 #include "Widgets/Layout/SScrollBox.h"
 

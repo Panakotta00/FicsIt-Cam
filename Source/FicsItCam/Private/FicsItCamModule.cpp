@@ -1,6 +1,6 @@
 #include "FicsItCamModule.h"
 
-#include "CoreDelegates.h"
+#include "Misc/CoreDelegates.h"
 #include "FGGameMode.h"
 #include "FGItemRegrowSubsystem.h"
 #include "Editor/UI/FICEditorStyle.h"
@@ -34,9 +34,6 @@ void FFicsItCamModule::StartupModule() {
 
 		SUBSCRIBE_METHOD(AFGGameMode::DispatchBeginPlay, &FGGameMode_Play);
 #endif
-
-		AFGGameMode* gm = const_cast<AFGGameMode*>(GetDefault<AFGGameMode>());
-		gm->ReplaySpectatorPlayerControllerClass = gm->PlayerControllerClass;
 	});
 
 	//av_log_set_level(AV_LOG_DEBUG);

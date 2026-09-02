@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include "FICEditorStyle.h"
-#include "SCompoundWidget.h"
-#include "SlateWidgetStyleAsset.h"
+#include "Widgets/SCompoundWidget.h"
+#include "Styling/SlateWidgetStyleAsset.h"
 #include "Data/FICTypes.h"
 
 class FFICEditorAttributeBase;
