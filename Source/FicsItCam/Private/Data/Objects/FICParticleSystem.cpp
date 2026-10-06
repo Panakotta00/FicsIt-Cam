@@ -120,7 +120,7 @@ void UFICParticleSystem::Unselect(UFICEditorContext* Context) {
 	
 }
 
-void UFICParticleSystem::InitAnimation() {
+void UFICParticleSystem::InitAnimation(AFICScene* InScene) {
 	FVector Pos = Position.Get(0);
 	FRotator Rot = Rotation.Get(0);
 	bool bActive = Active.GetValue(0); 

@@ -28,7 +28,7 @@ struct FFICKeyframeData {
 };
 
 USTRUCT(BlueprintType)
-struct FFICKeyframe {
+struct FICSITCAM_API FFICKeyframe {
 	GENERATED_BODY()
 
 public:

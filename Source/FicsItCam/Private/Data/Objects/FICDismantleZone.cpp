@@ -203,7 +203,7 @@ void UFICDismantleZone::Unselect(UFICEditorContext* Context) {
 	
 }
 
-void UFICDismantleZone::InitAnimation() {
+void UFICDismantleZone::InitAnimation(AFICScene* InScene) {
 
 }
 

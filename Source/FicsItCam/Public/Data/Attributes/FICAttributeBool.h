@@ -4,7 +4,7 @@
 #include "FICAttributeBool.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFICKeyframeBool : public FFICKeyframe {
+struct FICSITCAM_API FFICKeyframeBool : public FFICKeyframe {
 	GENERATED_BODY()
 
 	UPROPERTY(SaveGame)
@@ -22,7 +22,7 @@ struct FFICKeyframeBool : public FFICKeyframe {
 };
 
 USTRUCT(BlueprintType)
-struct FFICAttributeBool : public FFICAttribute {
+struct FICSITCAM_API FFICAttributeBool : public FFICAttribute {
 	GENERATED_BODY()
 
 	friend class FFICKeyframeBoolTrampoline;
@@ -62,7 +62,7 @@ public:
 	void SetDefaultValue(bool Value) { FallBackValue = Value; }
 };
 
-class FFICKeyframeBoolTrampoline : public FFICKeyframe {
+class FICSITCAM_API FFICKeyframeBoolTrampoline : public FFICKeyframe {
 private:
 	FFICAttributeBool* Attribute;
 	FICFrame Frame;

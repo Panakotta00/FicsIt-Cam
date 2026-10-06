@@ -18,7 +18,7 @@ void UFICRuntimeProcessPlayScene::Start(AFICRuntimeProcessorCharacter* InCharact
 
 	for (UObject* Object : Scene->GetSceneObjects()) {
 		if (auto SceneObject = Cast<IFICSceneObject>(Object)) {
-			SceneObject->InitAnimation();
+			SceneObject->InitAnimation(Scene);
 		}
 	}
 

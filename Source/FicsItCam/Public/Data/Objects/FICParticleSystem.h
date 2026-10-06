@@ -70,7 +70,7 @@ public:
 	virtual void Select(UFICEditorContext* Context) override;
 	virtual void Unselect(UFICEditorContext* Context) override;
 
-	virtual void InitAnimation() override;
+	virtual void InitAnimation(AFICScene* InScene) override;
 	virtual void TickAnimation(FICFrameFloat Frame) override;
 	virtual void ShutdownAnimation() override;
 	// End IFICSceneObject-Interface

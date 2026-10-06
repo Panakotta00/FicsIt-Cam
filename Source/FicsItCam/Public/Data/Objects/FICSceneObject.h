@@ -35,7 +35,7 @@ public:
 	virtual void Select(UFICEditorContext* Context) {}
 	virtual void Unselect(UFICEditorContext* Context) {}
 	
-	virtual void InitAnimation() {}
+	virtual void InitAnimation(AFICScene* InScene) {}
 	virtual void ShutdownAnimation() {}
 	virtual void TickAnimation(FICFrameFloat Frame) {}
 

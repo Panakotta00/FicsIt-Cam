@@ -6,7 +6,7 @@
 class FFICEditorAttributeBase;
 
 USTRUCT(BlueprintType)
-struct FFICAttribute {
+struct FICSITCAM_API  FFICAttribute {
 	GENERATED_BODY()
 
 private:
