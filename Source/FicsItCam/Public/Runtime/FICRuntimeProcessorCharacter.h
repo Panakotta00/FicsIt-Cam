@@ -2,13 +2,11 @@
 
 #include "GameFramework/Actor.h"
 #include "Camera/CameraComponent.h"
-#include "Data/FICAnimation.h"
 #include "GameFramework/Character.h"
 
 #include "FICRuntimeProcessorCharacter.generated.h"
 
 class UFICRuntimeProcess;
-class UCineCameraComponent;
 class UInputAction;
 
 UCLASS()
@@ -50,5 +48,5 @@ public:
 
 	void SetTimeDilation(float InTimeDilation);
 
-	void SetCamera(bool bEnabled, bool bCinematic);
+	void SetCamera(bool bEnabled = true);
 };

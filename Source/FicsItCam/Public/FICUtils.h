@@ -23,7 +23,7 @@ public:
 	static float BezierInterpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVector2D P3, float t);
 
 	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContext"))
-	static FFICCameraSettingsSnapshot CreateCameraSettingsSnapshotFromView(UObject* WorldContext);
+	static FMinimalViewInfo CreateViewInfoFromView(UObject* WorldContext);
 
 	UFUNCTION(BlueprintCallable)
 	static bool IsValidFICObjectName(const FString& InName);

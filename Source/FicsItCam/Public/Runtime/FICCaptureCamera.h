@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Camera/CameraTypes.h"
 #include "GameFramework/Actor.h"
 #include "FICCaptureCamera.generated.h"
 
@@ -24,6 +25,7 @@ public:
 
 	AFICCaptureCamera();
 	
-	void SetCamera(bool bEnabled, bool bCinematic);
+	void SetCamera(bool bEnabled = true);
 	void UpdateCaptureWithCameraData(UCameraComponent* Camera = nullptr);
+	void UpdateCaptureWithViewInfo(const FMinimalViewInfo& InViewInfo);
 };

@@ -1,4 +1,5 @@
 #pragma once
+#include "Camera/CameraTypes.h"
 #include "Data/FICTypes.h"
 
 #include "FICCameraReference.generated.h"
@@ -6,34 +7,6 @@
 class UFICRuntimeProcessPlayScene;
 class UFICCamera;
 class AFICScene;
-
-USTRUCT(BlueprintType)
-struct FFICCameraSettingsSnapshot {
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadWrite)
-	UFICCamera* Camera = nullptr;
-	
-	UPROPERTY(SaveGame, BlueprintReadWrite)
-	FVector Location;
-
-	UPROPERTY(SaveGame, BlueprintReadWrite)
-	FRotator Rotation;
-
-	UPROPERTY(SaveGame, BlueprintReadWrite)
-	float FOV;
-
-	UPROPERTY(SaveGame, BlueprintReadWrite)
-	float Aperture;
-
-	UPROPERTY(SaveGame, BlueprintReadWrite)
-	float FocusDistance;
-
-	UPROPERTY(SaveGame, BlueprintReadWrite)
-	FPostProcessSettings PostProcessSettings;
-
-	bool IsValid() { return !!Camera; }
-};
 
 USTRUCT(BlueprintType)
 struct FFICCameraReference {
@@ -71,5 +44,5 @@ public:
 	FString GetData() const { return Data; }
 	bool IsAnimated() const { return bUsePlay; }
 
-	FFICCameraSettingsSnapshot GetSnapshot(UObject* WorldContext) const;
+	FMinimalViewInfo GetViewInfo(UObject* WorldContext) const;
 };

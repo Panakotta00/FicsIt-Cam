@@ -30,9 +30,7 @@ public:
 		NewScene->FPS = OldScene->FPS;
 		NewScene->ResolutionHeight = OldScene->ResolutionHeight;
 		NewScene->ResolutionWidth = OldScene->ResolutionWidth;
-		NewScene->SensorDimension = OldScene->SensorDimension;
 		NewScene->bBulletTime = OldScene->bBulletTime;
-		NewScene->bUseCinematic = OldScene->bUseCinematic;
 		NewScene->bLooping = OldScene->bLooping;
 		NewScene->LastCameraTransform = OldScene->LastCameraTransform;
 		NewScene->bViewportEverSaved = OldScene->bViewportEverSaved;

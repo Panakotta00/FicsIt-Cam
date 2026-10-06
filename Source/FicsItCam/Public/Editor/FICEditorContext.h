@@ -74,8 +74,6 @@ public:
 	bool bForceResolution = false;
 	bool bInAutoKeyframeSet = false;
 
-	float SensorWidthAdjust = 1.0f;
-
 	FFICChangeList ChangeList;
 	
 	FFICSceneObjectsChanged OnSceneObjectsChanged;
@@ -104,6 +102,9 @@ public:
 	UFICCamera* GetActiveCamera() {
 		return GetCamera();
 	}
+	
+	FMinimalViewInfo CalculateView() const;
+	bool CalculateView(FMinimalViewInfo& InOutViewInfo) const;
 	
 	void SetCurrentFrame(int64 inFrame);
 	int64 GetCurrentFrame() const;

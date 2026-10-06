@@ -170,13 +170,21 @@ UObject* AFICEditorCameraActor::Select() {
 }
 
 void AFICEditorCameraActor::UpdateValues(TSharedRef<FFICEditorAttributeBase> Attribute) {
-	FVector Pos = FFICAttributePosition::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Position"));
-	FRotator Rot = FFICAttributeRotation::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Rotation"));
-	SetActorLocation(Pos);
-	SetActorRotation(Rot);
-	CaptureComponent->FOVAngle = Attribute->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue();
-	CaptureComponent->PostProcessSettings = Camera->GetPostProcessingSettings(Attribute->GetRef(TEXT("Post Processing")));
-	CaptureComponent->PostProcessBlendWeight = 1.0f;
+	FMinimalViewInfo ViewInfo;
+	Camera->ModifyViewEditor(EditorContext, Attribute, ViewInfo);
+	SetActorLocation(ViewInfo.Location);
+	SetActorRotation(ViewInfo.Rotation);
+	CaptureComponent->SetCameraView(ViewInfo);
+
+	CaptureComponent->bAutoCalculateOrthoPlanes = ViewInfo.bAutoCalculateOrthoPlanes;
+	CaptureComponent->AutoPlaneShift = ViewInfo.AutoPlaneShift;
+	CaptureComponent->bUpdateOrthoPlanes = ViewInfo.bUpdateOrthoPlanes;
+	CaptureComponent->bUseCameraHeightAsViewTarget = ViewInfo.bUseCameraHeightAsViewTarget;
+	CaptureComponent->bEnableFirstPersonFieldOfView = ViewInfo.bUseFirstPersonParameters;
+	CaptureComponent->Overscan = ViewInfo.GetOverscan();
+
+	CaptureComponent->PostProcessSettings = ViewInfo.PostProcessSettings;
+	CaptureComponent->PostProcessBlendWeight = ViewInfo.PostProcessBlendWeight;
 }
 
 TSharedRef<SWidget> AFICEditorCameraActor::GetCameraPreview() {

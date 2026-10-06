@@ -258,14 +258,6 @@ void SFICEditor::Tick(const FGeometry& AllottedGeometry, const double InCurrentT
 			KeyPressTime -= 0.2;
 		}
 	}
-
-	FVector2D ViewportSize = GameWidget->GetCachedGeometry().GetAbsoluteSize();
-	FVector2D GameSize = FVector2D(Context->GetScene()->ResolutionWidth, Context->GetScene()->ResolutionHeight);
-	FVector2D Size = Context->GetScene()->GetWorld()->GetGameViewport()->GetGameViewport()->GetSizeXY();
-	Size *= Scalability::GetResolutionScreenPercentage() / 100.0;
-	float SecondaryPercentage = IConsoleManager::Get().FindConsoleVariable(TEXT("r.SecondaryScreenPercentage.GameViewport"))->GetFloat();
-	if (SecondaryPercentage) Size *= SecondaryPercentage / 100.0;
-	Context->SensorWidthAdjust = GameSize.X / Size.X;
 }
 
 FReply SFICEditor::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) {

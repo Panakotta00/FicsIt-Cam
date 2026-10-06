@@ -41,8 +41,14 @@ void UFICEditorContext::Load(AFICEditorCameraCharacter* InEditorPlayerCharacter,
 		return StaticCastSharedRef<FFICEditorAttributeBool>(*Attrib)->GetActiveValue();
 	});
 
+	for (UObject* SceneObject : Scene->GetSceneObjects()) {
+		if (UFICCamera* Camera = Cast<UFICCamera>(SceneObject)) {
+			SetSelectedSceneObject(Camera);
+			break;
+		}
+	}
+
 	if (Scene->bViewportEverSaved) {
-		if (Scene->GetSceneObjects().Contains(Scene->LastSelectedSceneObject)) SetSelectedSceneObject(Scene->LastSelectedSceneObject);
 		InEditorPlayerCharacter->SetActorLocation(Scene->LastCameraTransform.GetLocation());
 		InEditorPlayerCharacter->SetActorRotation(Scene->LastCameraTransform.GetRotation().Rotator());
 	}
@@ -206,6 +212,33 @@ TSharedPtr<FFICEditorAttributeBase> UFICEditorContext::GetCameraEditor() {
 	UFICCamera* Camera = GetCamera();
 	if (!Camera) return nullptr;
 	return GetEditorAttributes()[GetCamera()];
+}
+
+bool UFICEditorContext::CalculateView(FMinimalViewInfo& InOutViewInfo) const {
+	bool bModified = false;
+	if (Scene) {
+		if (Scene->ResolutionHeight > 0) {
+			InOutViewInfo.AspectRatio = (float)Scene->ResolutionWidth / (float)Scene->ResolutionHeight;
+		}
+		InOutViewInfo.ProjectionMode = ECameraProjectionMode::Perspective;
+		
+		for (UObject* SceneObject : Scene->GetSceneObjects()) {
+			if (SceneObject && SceneObject->Implements<UFICSceneObject>()) {
+				if (const TSharedRef<FFICEditorAttributeBase>* Attrib = EditorAttributes.Find(SceneObject)) {
+					bModified |= Cast<IFICSceneObject>(SceneObject)->ModifyViewEditor(const_cast<UFICEditorContext*>(this), *Attrib, InOutViewInfo);
+				} else {
+					bModified |= Cast<IFICSceneObject>(SceneObject)->ModifyView(InOutViewInfo, CurrentFrame);
+				}
+			}
+		}
+	}
+	return bModified;
+}
+
+FMinimalViewInfo UFICEditorContext::CalculateView() const {
+	FMinimalViewInfo ViewInfo;
+	CalculateView(ViewInfo);
+	return ViewInfo;
 }
 
 void UFICEditorContext::SetCurrentFrame(FICFrame inFrame) {

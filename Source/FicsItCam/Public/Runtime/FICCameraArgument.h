@@ -1,7 +1,5 @@
 #pragma once
 
-#include "CineCameraComponent.h"
-#include "CineCameraSettings.h"
 #include "Misc/DefaultValueHelper.h"
 #include "FGGameUserSettings.h"
 #include "FICUtils.h"
@@ -20,16 +18,10 @@ struct FFICCameraArgument {
 	FFICCameraReference CameraReference = FFICCameraReference();
 
 	UPROPERTY(SaveGame, BlueprintReadWrite, meta=(ExposeOnSpawn))
-	FFICCameraSettingsSnapshot CameraSettingsSnapshot = FFICCameraSettingsSnapshot();
+	FMinimalViewInfo ViewInfo;
 
 	UPROPERTY(SaveGame, BlueprintReadWrite, meta=(ExposeOnSpawn))
 	FVector2D Resolution = FVector2D(256, 256);
-
-	UPROPERTY(SaveGame, BlueprintReadWrite, meta=(ExposeOnSpawn))
-	FVector2D SensorDimensions = FVector2D(23.76, 13.365);
-
-	UPROPERTY(SaveGame, BlueprintReadWrite, meta=(ExposeOnSpawn))
-	bool bUseCinematic = false;
 
 	UPROPERTY(SaveGame, BlueprintReadWrite, meta=(ExposeOnSpawn))
 	FString Name = TEXT("");
@@ -53,22 +45,11 @@ struct FFICCameraArgument {
 		return res;
 	}
 
-	FVector2D GetSensorDimensions(UObject* WorldContext) const {
-		AFICScene* Scene = CameraReference.GetScene(WorldContext);
-		if (!Scene) return SensorDimensions;
-		return Scene->SensorDimension;
-	}
-
-	bool GetUseCinematic(UObject* WorldContext) const {
-		AFICScene* Scene = CameraReference.GetScene(WorldContext);
-		if (!Scene) return bUseCinematic;
-		return Scene->bUseCinematic;
-	}
-
-	FFICCameraSettingsSnapshot GetCameraSettingsSnapshot(UObject* WorldContext) const {
-		FFICCameraSettingsSnapshot Snapshot = CameraReference.GetSnapshot(WorldContext);
-		if (!Snapshot.IsValid()) return CameraSettingsSnapshot;
-		return Snapshot;
+	FMinimalViewInfo GetViewInfo(UObject* WorldContext) const {
+		if (CameraReference.IsValid(WorldContext)) {
+			return CameraReference.GetViewInfo(WorldContext);
+		}
+		return ViewInfo;
 	}
 
 	FString GetName() const {
@@ -86,33 +67,22 @@ struct FFICCameraArgument {
 	}
 
 	void InitalizeCaptureCamera(AFICCaptureCamera* CaptureCamera) const {
-		CaptureCamera->SetCamera(true, GetUseCinematic(CaptureCamera));
+		CaptureCamera->SetCamera(true);
 		FVector2D ResolutionValue = GetResolution(CaptureCamera);
 		CaptureCamera->RenderTarget->ResizeTarget(ResolutionValue.X, ResolutionValue.Y);
-		UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(CaptureCamera->Camera);
-		if (CineCamera) {
-			FVector2D SensorDimensionsValue = GetSensorDimensions(CaptureCamera);
-			CineCamera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
-			CineCamera->Filmback.SensorWidth = SensorDimensionsValue.X;
-			CineCamera->Filmback.SensorHeight = SensorDimensionsValue.Y;
-		} else {
+		if (CaptureCamera->Camera && ResolutionValue.Y > 0) {
 			CaptureCamera->Camera->SetAspectRatio(ResolutionValue.X / ResolutionValue.Y);
 		}
 	}
 
 	void UpdateCameraSettings(AFICCaptureCamera* CaptureCamera) const {
-		FFICCameraSettingsSnapshot CameraSettings = GetCameraSettingsSnapshot(CaptureCamera);
-		CaptureCamera->SetActorLocation(CameraSettings.Location);
-		CaptureCamera->SetActorRotation(CameraSettings.Rotation);
-		CaptureCamera->Camera->SetFieldOfView(CameraSettings.FOV);
-		UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(CaptureCamera->Camera);
-		if (CineCamera) {
-			CineCamera->CurrentAperture = CameraSettings.Aperture;
-			CineCamera->FocusSettings.ManualFocusDistance = CameraSettings.FocusDistance;
+		FMinimalViewInfo CamView = GetViewInfo(CaptureCamera);
+		CaptureCamera->UpdateCaptureWithViewInfo(CamView);
+		if (CaptureCamera->Camera) {
+			CaptureCamera->Camera->SetFieldOfView(CamView.FOV);
+			CaptureCamera->Camera->PostProcessSettings = CamView.PostProcessSettings;
+			CaptureCamera->Camera->PostProcessBlendWeight = CamView.PostProcessBlendWeight;
 		}
-		//CaptureCamera->CopyCameraData(CaptureCamera->Camera);
-		CaptureCamera->Camera->PostProcessSettings = CameraSettings.PostProcessSettings;
-		CaptureCamera->Camera->PostProcessBlendWeight = 1.0f;
 	}
 
 	static FFICCameraArgument FromCli(UCommandSender* InSender, const FFICCameraReference& CameraRef, const FString& Name, TArray<FString> Array) {
@@ -120,7 +90,7 @@ struct FFICCameraArgument {
 		Arg.CameraReference = CameraRef;
 		if (CameraRef.IsValid(nullptr)) return Arg;
 		Arg.Name = Name;
-		Arg.CameraSettingsSnapshot = UFICUtils::CreateCameraSettingsSnapshotFromView(InSender);
+		Arg.ViewInfo = UFICUtils::CreateViewInfoFromView(InSender);
 		FIntPoint Resolution = UFGGameUserSettings::GetFGGameUserSettings()->GetScreenResolution();
 		FURL url(nullptr, *CameraRef.GetData(), TRAVEL_Absolute);
 		Arg.Resolution = FVector2D(Resolution.X, Resolution.Y);
@@ -138,18 +108,8 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, meta=(WorldContext = "WorldContext"))
-	static FVector2D GetSensorDimensions(UObject* WorldContext, const FFICCameraArgument& CameraArgument) {
-		return CameraArgument.GetSensorDimensions(WorldContext);
-	}
-	
-	UFUNCTION(BlueprintCallable, BlueprintPure, meta=(WorldContext = "WorldContext"))
-	static bool GetUseCinematic(UObject* WorldContext, const FFICCameraArgument& CameraArgument) {
-		return CameraArgument.GetUseCinematic(WorldContext);
-	}
-	
-	UFUNCTION(BlueprintCallable, BlueprintPure, meta=(WorldContext = "WorldContext"))
-	static FFICCameraSettingsSnapshot GetCameraSettingsSnapshot(UObject* WorldContext, const FFICCameraArgument& CameraArgument) {
-		return CameraArgument.GetCameraSettingsSnapshot(WorldContext);
+	static FMinimalViewInfo GetViewInfo(UObject* WorldContext, const FFICCameraArgument& CameraArgument) {
+		return CameraArgument.GetViewInfo(WorldContext);
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure)

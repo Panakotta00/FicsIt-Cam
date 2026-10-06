@@ -3,7 +3,6 @@
 
 #include "Editor/FICEditorCameraCharacter.h"
 
-#include "CineCameraComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "FGGameUserSettings.h"
 #include "FGPlayerController.h"
@@ -62,16 +61,8 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 	Super::Tick(DeltaSeconds);
 
 	if (GetController() == GetWorld()->GetFirstPlayerController()) {
-		bool bUseCinematic = EditorContext->GetScene()->bUseCinematic && EditorContext->GetLockCameraToView();
-		if (!IsValid(Camera) || Camera->IsA<UCineCameraComponent>() != bUseCinematic) {
-			if (Camera) Camera->DestroyComponent();
-			if (bUseCinematic) {
-				UCineCameraComponent* CineCamera = NewObject<UCineCameraComponent>(this);
-				CineCamera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
-				Camera = CineCamera;
-			} else {
-				Camera = NewObject<UCameraComponent>(this);
-			}
+		if (!IsValid(Camera)) {
+			Camera = NewObject<UCameraComponent>(this);
 			LastPPSettings = Camera->PostProcessSettings;
 			LastPPWeight = Camera->PostProcessBlendWeight;
 		
@@ -90,28 +81,22 @@ void AFICEditorCameraCharacter::Tick(float DeltaSeconds) {
 		Cast<ULocalPlayer>(GetNetOwningPlayer())->Size = FVector2D(0.5,0.5);
 
 		Camera->bConstrainAspectRatio = EditorContext->bForceResolution;
-		if (Camera->IsA<UCineCameraComponent>()) {
-			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
-			CineCamera->Filmback.SensorWidth = EditorContext->GetScene()->SensorDimension.X * EditorContext->SensorWidthAdjust;
-			CineCamera->Filmback.SensorHeight = EditorContext->GetScene()->SensorDimension.Y * EditorContext->SensorWidthAdjust;
-		} else {
-			Camera->SetAspectRatio(EditorContext->GetScene()->ResolutionHeight / EditorContext->GetScene()->ResolutionWidth);
+		if (EditorContext && EditorContext->GetScene() && EditorContext->GetScene()->ResolutionWidth > 0 && EditorContext->GetScene()->ResolutionHeight > 0) {
+			Camera->SetAspectRatio((float)EditorContext->GetScene()->ResolutionWidth / (float)EditorContext->GetScene()->ResolutionHeight);
 		}
-		if (EditorContext->GetCamera() && EditorContext->GetLockCameraToView()) Camera->SetFieldOfView(EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue());
-		else Camera->SetFieldOfView(FOV);
-
-		if (EditorContext->GetCamera() && EditorContext->GetLockCameraToView()) {
-			TSharedRef<FFICEditorAttributeBase> attribute = EditorContext->GetCameraEditor()->GetRef(TEXT("Post Processing"));
-			FPostProcessSettings settings = EditorContext->GetCamera()->GetPostProcessingSettings(attribute);
-
-			//settings.ColorGradingIntensity = 1;
-			//settings.ColorGradingLUT = LoadObject<UTexture2D>(nullptr, TEXT("/Game/FactoryGame/Interface/UI/InGame/PhotoMode/LUTs/LUT_Negative.LUT_Negative"));
-			//settings.bOverride_ColorGradingLUT = true;
-			//settings.bOverride_ColorGradingIntensity = true;
-
-			Camera->PostProcessSettings = settings;
-			Camera->PostProcessBlendWeight = 1.0;
+		
+		bool bViewModified = false;
+		FMinimalViewInfo ViewInfo;
+		if (EditorContext && EditorContext->GetLockCameraToView()) {
+			bViewModified = EditorContext->CalculateView(ViewInfo);
+		}
+		
+		if (bViewModified) {
+			Camera->SetFieldOfView(ViewInfo.FOV);
+			Camera->PostProcessSettings = ViewInfo.PostProcessSettings;
+			Camera->PostProcessBlendWeight = ViewInfo.PostProcessBlendWeight;
 		} else {
+			Camera->SetFieldOfView(FOV);
 			Camera->PostProcessSettings = LastPPSettings;
 			Camera->PostProcessBlendWeight = LastPPWeight;
 		}
@@ -252,7 +237,7 @@ void AFICEditorCameraCharacter::Rotate(const FInputActionValue& ActionValue) {
 void AFICEditorCameraCharacter::ChangeFOV(const FInputActionValue& ActionValue) {
 	float Delta = ActionValue.GetMagnitude();
 	// if (bIsSprinting) Delta *= 2; TODO: Check if SpeedUp
-	if (EditorContext->GetLockCameraToView()) {
+	if (EditorContext && EditorContext->GetLockCameraToView() && EditorContext->GetActiveCamera() && EditorContext->GetCameraEditor()) {
 		TFICEditorAttribute<FFICFloatAttribute>& FOV_Attr = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV");
 		EditorContext->CommitAutoKeyframe(this);
 		FOV_Attr.SetValue(FOV_Attr.GetValue() + Delta);
@@ -362,26 +347,30 @@ void AFICEditorCameraCharacter::SetEditorContext(UFICEditorContext* InEditorCont
 }
 
 void AFICEditorCameraCharacter::UpdateValues() {
-	if (EditorContext && EditorContext->GetCamera() && !bChangedByMovement) {
-		FVector Pos = FFICAttributePosition::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Position"));
-		FRotator Rot = FFICAttributeRotation::FromEditorAttribute(EditorContext->GetCameraEditor()->Get<FFICEditorAttributeGroup>("Rotation"));
+	if (EditorContext && !bChangedByMovement) {
 		if (EditorContext->GetLockCameraToView()) {
-			SetActorLocation(Pos);
-			SetActorRotation(Rot);
-			if (GetController()) {
-				GetController()->SetControlRotation(Rot);
-				RollRotationFixValue = Rot.Roll;
-				Cast<APlayerController>(GetController())->PlayerCameraManager->UnlockFOV();
-			}
-			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(Camera);
-			if (CineCamera) {
-				CineCamera->Filmback.SensorWidth = EditorContext->GetScene()->SensorDimension.X * EditorContext->SensorWidthAdjust;
-				CineCamera->Filmback.SensorHeight = EditorContext->GetScene()->SensorDimension.Y * EditorContext->SensorWidthAdjust;
-			}
-			Camera->SetFieldOfView(EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue());
-			if (CineCamera) {
-				CineCamera->CurrentAperture = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Aperture").GetValue();
-				CineCamera->FocusSettings.ManualFocusDistance = EditorContext->GetCameraEditor()->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Focus Distance").GetValue();
+			FMinimalViewInfo ViewInfo;
+			if (EditorContext->CalculateView(ViewInfo)) {
+				SetActorLocation(ViewInfo.Location);
+				SetActorRotation(ViewInfo.Rotation);
+				if (GetController()) {
+					GetController()->SetControlRotation(ViewInfo.Rotation);
+					RollRotationFixValue = ViewInfo.Rotation.Roll;
+					if (APlayerController* PC = Cast<APlayerController>(GetController())) {
+						if (PC->PlayerCameraManager) PC->PlayerCameraManager->UnlockFOV();
+					}
+				}
+				if (Camera) {
+					Camera->SetFieldOfView(ViewInfo.FOV);
+					Camera->PostProcessSettings = ViewInfo.PostProcessSettings;
+					Camera->PostProcessBlendWeight = ViewInfo.PostProcessBlendWeight;
+				}
+			} else {
+				if (Camera) {
+					Camera->SetFieldOfView(FOV);
+					Camera->PostProcessSettings = LastPPSettings;
+					Camera->PostProcessBlendWeight = LastPPWeight;
+				}
 			}
 		}
 	}

@@ -10,17 +10,6 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 		SNew(SScrollBox)
 		+SScrollBox::Slot().Padding(5)[
 			SNew(SCheckBox)
-			.Content()[SNew(STextBlock).Text(FText::FromString("Use Cinematic Camera"))]
-			.IsChecked_Lambda([this]() {
-				return Context->GetScene()->bUseCinematic ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-			})
-			.OnCheckStateChanged_Lambda([this](ECheckBoxState State) {
-				Context->GetScene()->bUseCinematic = State == ECheckBoxState::Checked;
-			})
-			.ToolTipText(FText::FromString(TEXT("If enabled, tries to use a more fancy camera which f.e. can do Depth-Of-Field,\ntho it will require more performance hence using it in combination with the play command is not reccomended.")))
-		]
-		+SScrollBox::Slot().Padding(5)[
-			SNew(SCheckBox)
 			.Content()[SNew(STextBlock).Text(FText::FromString("Bullet Time"))]
 			.IsChecked_Lambda([this]() {
 				return Context->GetScene()->bBulletTime ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
@@ -107,50 +96,6 @@ void SFICSceneSettings::Construct(const FArguments& InArgs, UFICEditorContext* I
 				})
 				.TypeInterface(MakeShared<TDefaultNumericTypeInterface<int>>())
 				.ToolTipText(FText::FromString(TEXT("Resolution Height")))
-			]
-		]
-		+SScrollBox::Slot().Padding(5).HAlign(HAlign_Fill)[
-			SNew(SHorizontalBox)
-			.ToolTipText(FText::FromString(TEXT("The sensor size used to adjust the DOF and aspect ration. (only functional with cinematic camera)")))
-			+SHorizontalBox::Slot().AutoWidth()[
-				SNew(STextBlock).Text(FText::FromString("Sensor Size: "))
-			]
-			+SHorizontalBox::Slot().FillWidth(1)[
-				SNew(SNumericEntryBox<float>)
-				.Value_Lambda([this]() {
-					return Context->GetScene()->SensorDimension.X;
-				})
-				.SupportDynamicSliderMaxValue(true)
-				.SliderExponent(1)
-				.Delta(0.1)
-				.MinValue(0)
-				.LinearDeltaSensitivity(10)
-				.AllowSpin(false)
-				.OnValueCommitted_Lambda([this](float Val, auto) {
-					Context->GetScene()->SensorDimension.X = FMath::Max(0.0f, Val);
-				})
-				.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
-				.ToolTipText(FText::FromString(TEXT("Sensor Width")))
-			]
-			+SHorizontalBox::Slot().AutoWidth()[
-				SNew(STextBlock).Text(FText::FromString(" x "))
-			]
-			+SHorizontalBox::Slot().FillWidth(1)[
-				SNew(SNumericEntryBox<float>)
-				.Value_Lambda([this]() {
-					return Context->GetScene()->SensorDimension.Y;
-				})
-				.SupportDynamicSliderMaxValue(true)
-				.SliderExponent(1)
-				.Delta(0.1)
-				.MinValue(0)
-				.LinearDeltaSensitivity(10)
-				.AllowSpin(false)
-				.OnValueCommitted_Lambda([this](float Val, auto) {
-					Context->GetScene()->SensorDimension.Y = FMath::Max(0.0f, Val);
-				})
-				.TypeInterface(MakeShared<TDefaultNumericTypeInterface<float>>())
-				.ToolTipText(FText::FromString(TEXT("Sensor Height")))
 			]
 		]
 	];

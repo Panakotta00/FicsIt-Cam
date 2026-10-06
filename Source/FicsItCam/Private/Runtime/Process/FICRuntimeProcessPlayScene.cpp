@@ -1,6 +1,5 @@
 #include "Runtime/Process/FICRuntimeProcessPlayScene.h"
 
-#include "CineCameraComponent.h"
 #include "FICSubsystem.h"
 #include "Command/CommandSender.h"
 
@@ -10,20 +9,17 @@ void UFICRuntimeProcessPlayScene::Initialize() {
 }
 
 void UFICRuntimeProcessPlayScene::Start(AFICRuntimeProcessorCharacter* InCharacter) {
-	if (!bBackground) {
-		InCharacter->SetCamera(true, Scene->bUseCinematic);
-		if (Scene->bUseCinematic) {
-			UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(InCharacter->Camera);
-			CineCamera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
-			CineCamera->Filmback.SensorWidth = Scene->SensorDimension.X;
-			CineCamera->Filmback.SensorHeight = Scene->SensorDimension.Y;
-		} else {
-			InCharacter->Camera->SetAspectRatio(Scene->ResolutionHeight / Scene->ResolutionWidth);
+	if (!bBackground && InCharacter) {
+		InCharacter->SetCamera(true);
+		if (Scene->ResolutionWidth > 0 && Scene->ResolutionHeight > 0) {
+			InCharacter->Camera->SetAspectRatio((float)Scene->ResolutionWidth / (float)Scene->ResolutionHeight);
 		}
 	}
 
-	for (UObject* SceneObject : Scene->GetSceneObjects()) {
-		Cast<IFICSceneObject>(SceneObject)->InitAnimation();
+	for (UObject* Object : Scene->GetSceneObjects()) {
+		if (auto SceneObject = Cast<IFICSceneObject>(Object)) {
+			SceneObject->InitAnimation();
+		}
 	}
 
 	ActiveSceneObjectManager.Initialize(Scene);
@@ -38,30 +34,28 @@ void UFICRuntimeProcessPlayScene::Tick(AFICRuntimeProcessorCharacter* InCharacte
 	
 	ActiveSceneObjectManager.UpdateActiveObjects(Time);
 	
-	UFICCamera* Camera = Scene->GetActiveCamera(Time);
-	FVector Pos = Camera->Position.Get(Time);
-	FRotator Rot = Camera->Rotation.Get(Time);
-	float FOV = Camera->FOV.GetValue(Time);
-	float Aperture = Camera->Aperture.GetValue(Time);
-	float FocusDistance = Camera->FocusDistance.GetValue(Time);
+	FMinimalViewInfo ViewInfo = Scene->CalculateView(Time);
 
-	if (!bBackground) {
-		InCharacter->SetActorLocation(Pos);
-		InCharacter->SetActorRotation(Rot);
-		InCharacter->GetController()->SetControlRotation(Rot);
-		Cast<APlayerController>(InCharacter->GetController())->PlayerCameraManager->UnlockFOV();
-		UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(InCharacter->Camera);
-		InCharacter->Camera->SetFieldOfView(FOV);
-		if (CineCamera) {
-			CineCamera->CurrentAperture = Aperture;
-			CineCamera->FocusSettings.ManualFocusDistance = FocusDistance;
+	if (!bBackground && InCharacter) {
+		InCharacter->SetActorLocation(ViewInfo.Location);
+		InCharacter->SetActorRotation(ViewInfo.Rotation);
+		if (InCharacter->GetController()) {
+			InCharacter->GetController()->SetControlRotation(ViewInfo.Rotation);
+			if (APlayerController* PC = Cast<APlayerController>(InCharacter->GetController())) {
+				if (PC->PlayerCameraManager) PC->PlayerCameraManager->UnlockFOV();
+			}
 		}
-		InCharacter->Camera->PostProcessSettings = Camera->GetPostProcessingSettings(Time);
-		InCharacter->Camera->PostProcessBlendWeight = 1.0f;
+		if (InCharacter->Camera) {
+			InCharacter->Camera->SetFieldOfView(ViewInfo.FOV);
+			InCharacter->Camera->PostProcessSettings = ViewInfo.PostProcessSettings;
+			InCharacter->Camera->PostProcessBlendWeight = ViewInfo.PostProcessBlendWeight;
+		}
 	}
 
-	for (UObject* SceneObject : Scene->GetSceneObjects()) {
-		Cast<IFICSceneObject>(SceneObject)->TickAnimation(Time);
+	for (UObject* Object : Scene->GetSceneObjects()) {
+		if (auto SceneObject = Cast<IFICSceneObject>(Object)) {
+			SceneObject->TickAnimation(Time);
+		}
 	}
 	
 	if (Time > Scene->AnimationRange.End) {
@@ -79,8 +73,10 @@ void UFICRuntimeProcessPlayScene::Tick(AFICRuntimeProcessorCharacter* InCharacte
 
 void UFICRuntimeProcessPlayScene::Stop(AFICRuntimeProcessorCharacter* InCharacter) {
 	ActiveSceneObjectManager.Shutdown();
-	for (UObject* SceneObject : Scene->GetSceneObjects()) {
-		Cast<IFICSceneObject>(SceneObject)->ShutdownAnimation();
+	for (UObject* Object : Scene->GetSceneObjects()) {
+		if (auto SceneObject = Cast<IFICSceneObject>(Object)) {
+			SceneObject->ShutdownAnimation();
+		}
 	}
 }
 

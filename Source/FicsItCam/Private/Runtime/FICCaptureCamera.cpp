@@ -1,9 +1,9 @@
 #include "Runtime/FICCaptureCamera.h"
 
-#include "CineCameraComponent.h"
 #include "FGGameViewportClient.h"
 #include "FGSettings.h"
 #include "Blueprint/GameViewportSubsystem.h"
+#include "Camera/CameraComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/WorldPartitionStreamingSourceComponent.h"
 #include "Engine/Engine.h"
@@ -42,30 +42,33 @@ AFICCaptureCamera::AFICCaptureCamera() {
 	CaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
 }
 
-void AFICCaptureCamera::SetCamera(bool bEnabled, bool bCinematic) {
+void AFICCaptureCamera::SetCamera(bool bEnabled) {
 	if (Camera) {
 		Camera->DestroyComponent();
 		Camera = nullptr;
 	}
 	if (bEnabled) {
-		if (bCinematic) {
-			Camera = NewObject<UCineCameraComponent>(this);
-		} else {
-			Camera = NewObject<UCameraComponent>(this);
-		}
+		Camera = NewObject<UCameraComponent>(this);
 		Camera->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	}
 }
 
 void AFICCaptureCamera::UpdateCaptureWithCameraData(UCameraComponent* InCamera) {
 	if (!InCamera) InCamera = Camera;
-	
-	SetActorLocation(InCamera->GetComponentLocation());
-	SetActorRotation(InCamera->GetComponentRotation());
-	
-	FMinimalViewInfo ViewInfo;
-	InCamera->GetCameraView(0, ViewInfo);
-	CaptureComponent->SetCameraView(ViewInfo);
+	if (InCamera) {
+		SetActorLocation(InCamera->GetComponentLocation());
+		SetActorRotation(InCamera->GetComponentRotation());
+		
+		FMinimalViewInfo ViewInfo;
+		InCamera->GetCameraView(0, ViewInfo);
+		UpdateCaptureWithViewInfo(ViewInfo);
+	}
+}
+
+void AFICCaptureCamera::UpdateCaptureWithViewInfo(const FMinimalViewInfo& InViewInfo) {
+	SetActorLocation(InViewInfo.Location);
+	SetActorRotation(InViewInfo.Rotation);
+	CaptureComponent->SetCameraView(InViewInfo);
 
 	CaptureComponent->PostProcessSettings.AutoExposureSpeedDown = 100.0f;
 	CaptureComponent->PostProcessSettings.AutoExposureSpeedUp = 100.0f;

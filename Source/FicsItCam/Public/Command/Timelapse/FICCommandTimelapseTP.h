@@ -22,7 +22,7 @@ public:
 		UFICRuntimeProcessTimelapseCamera* Process = Cast<UFICRuntimeProcessTimelapseCamera>(SubSys->FindRuntimeProcess(Key));
 		AFGPlayerController* Player = InSender->GetPlayer();
 		if (Player) {
-			FFICCameraSettingsSnapshot Camera = Process->CameraArgument.GetCameraSettingsSnapshot(this);
+			FMinimalViewInfo Camera = Process->CameraArgument.GetViewInfo(this);
 			Player->GetCharacter()->SetActorLocation(Camera.Location);
 			Player->SetControlRotation(Camera.Rotation);
 		}

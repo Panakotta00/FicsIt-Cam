@@ -31,6 +31,27 @@ void AFICScene::MoveSceneObject(UObject* Object, int Delta) {
 	SceneObjects.Insert(Object, UFICUtils::Modulo(Index + Delta, SceneObjects.Num()+1));
 }
 
+bool AFICScene::CalculateView(FMinimalViewInfo& InOutViewInfo, FICFrameFloat Time) {
+	if (ResolutionHeight > 0) {
+		InOutViewInfo.AspectRatio = (float)ResolutionWidth / (float)ResolutionHeight;
+	}
+	InOutViewInfo.ProjectionMode = ECameraProjectionMode::Perspective;
+	
+	bool bModified = false;
+	for (UObject* SceneObject : GetSceneObjects()) {
+		if (auto obj = Cast<IFICSceneObject>(SceneObject)) {
+			bModified |= obj->ModifyView(InOutViewInfo, Time);
+		}
+	}
+	return bModified;
+}
+
+FMinimalViewInfo AFICScene::CalculateView(FICFrameFloat Time) {
+	FMinimalViewInfo ViewInfo;
+	CalculateView(ViewInfo, Time);
+	return ViewInfo;
+}
+
 UFICCamera* AFICScene::GetActiveCamera(FICFrameFloat Time) {
 	for (UObject* SceneObject : GetSceneObjects()) {
 		UFICCamera* Camera = Cast<UFICCamera>(SceneObject);

@@ -5,7 +5,6 @@
 #include "FICEditorCameraCharacter.generated.h"
 
 class UFICCamera;
-class UCineCameraComponent;
 class AFICEditorCameraActor;
 class UTransformProxy;
 class UFICEditorContext;

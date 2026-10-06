@@ -14,12 +14,19 @@
 
 UFICCamera::UFICCamera() {
 	Active.SetDefaultValue(true);
-	Aperture.SetDefaultValue(10);
-	FocusDistance.SetDefaultValue(10000);
+	FOV.SetDefaultValue(90.0f);
+	Aperture.SetDefaultValue(2.8f);
+	FocusDistance.SetDefaultValue(0.0f);
+	FocalRegion.SetDefaultValue(0.0f);
+	BlurIntensity.SetDefaultValue(1.0f);
+	SqueezeFactor.SetDefaultValue(1.0f);
 
 	LensSettings.AddChildAttribute(TEXT("FOV"), &FOV);
-	LensSettings.AddChildAttribute(TEXT("Aperture"), &Aperture);
 	LensSettings.AddChildAttribute(TEXT("Focus Distance"), &FocusDistance);
+	LensSettings.AddChildAttribute(TEXT("Focal Region"), &FocalRegion);
+	LensSettings.AddChildAttribute(TEXT("Aperture"), &Aperture);
+	LensSettings.AddChildAttribute(TEXT("Blur Intensity"), &BlurIntensity);
+	LensSettings.AddChildAttribute(TEXT("Squeeze Factor"), &SqueezeFactor);
 
 	RootAttribute.AddChildAttribute(TEXT("Active"), &Active);
 	RootAttribute.AddChildAttribute(TEXT("Position"), &Position);
@@ -172,10 +179,10 @@ void UFICCamera::Tick(float DeltaTime) {
 UObject* UFICCamera::CreateNewObject(UObject* InOuter, AFICScene* InScene) {
 	UFICCamera* Camera = NewObject<UFICCamera>(InOuter);
 	Camera->SceneObjectName = UFICUtils::AdjustSceneObjectName(InScene, Camera->SceneObjectName);
-	FFICCameraSettingsSnapshot Snapshot = UFICUtils::CreateCameraSettingsSnapshotFromView(InOuter);
-	Camera->Position.SetDefaultValue(Snapshot.Location);
-	Camera->Rotation.SetDefaultValue(Snapshot.Rotation);
-	Camera->FOV.SetDefaultValue(Snapshot.FOV);
+	FMinimalViewInfo ViewInfo = UFICUtils::CreateViewInfoFromView(InOuter);
+	Camera->Position.SetDefaultValue(ViewInfo.Location);
+	Camera->Rotation.SetDefaultValue(ViewInfo.Rotation);
+	Camera->FOV.SetDefaultValue(ViewInfo.FOV);
 	return Camera;
 }
 UE_DISABLE_OPTIMIZATION_SHIP
@@ -348,6 +355,99 @@ FPostProcessSettings UFICCamera::GetPostProcessingSettings(TSharedRef<FFICEditor
 		}
 	}
 	return settings;
+}
+
+bool UFICCamera::ModifyView(FMinimalViewInfo& InOutViewInfo, FICFrameFloat Frame) {
+	if (!Active.GetValue(Frame)) {
+		return false;
+	}
+
+	InOutViewInfo.Location = Position.Get(Frame);
+	InOutViewInfo.Rotation = Rotation.Get(Frame);
+	InOutViewInfo.FOV = FOV.GetValue(Frame);
+	InOutViewInfo.PostProcessSettings = GetPostProcessingSettings(Frame);
+
+	float FocusDist = FocusDistance.GetValue(Frame);
+	if (FocusDist > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFocalDistance) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldFocalDistance = FocusDist;
+	}
+
+	float FStop = Aperture.GetValue(Frame);
+	if (FStop > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFstop) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFstop = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldFstop = FStop;
+	}
+
+	float Region = FocalRegion.GetValue(Frame);
+	if (Region > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFocalRegion) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFocalRegion = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldFocalRegion = Region;
+	}
+
+	float Blur = BlurIntensity.GetValue(Frame);
+	if (Blur > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldScale) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldScale = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldScale = Blur;
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldDepthBlurAmount = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldDepthBlurAmount = Blur;
+	}
+
+	float Squeeze = SqueezeFactor.GetValue(Frame);
+	if (Squeeze > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldSqueezeFactor) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldSqueezeFactor = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldSqueezeFactor = Squeeze;
+	}
+
+	InOutViewInfo.PostProcessBlendWeight = 1.0f;
+
+	return true;
+}
+
+bool UFICCamera::ModifyViewEditor(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute, FMinimalViewInfo& InOutViewInfo) {
+	if (!Attribute->Get<FFICEditorAttributeBool>("Active").GetActiveValue()) {
+		return false;
+	}
+	InOutViewInfo.Location = FFICAttributePosition::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Position"));
+	InOutViewInfo.Rotation = FFICAttributeRotation::FromEditorAttribute(Attribute->Get<FFICEditorAttributeGroup>("Rotation"));
+	InOutViewInfo.FOV = Attribute->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("FOV").GetValue();
+	InOutViewInfo.PostProcessSettings = GetPostProcessingSettings(Attribute->GetRef(TEXT("Post Processing")));
+
+	float FocusDist = Attribute->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Focus Distance").GetValue();
+	if (FocusDist > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFocalDistance) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldFocalDistance = FocusDist;
+	}
+
+	float FStop = Attribute->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Aperture").GetValue();
+	if (FStop > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFstop) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFstop = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldFstop = FStop;
+	}
+
+	float Region = Attribute->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Focal Region").GetValue();
+	if (Region > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFocalRegion) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldFocalRegion = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldFocalRegion = Region;
+	}
+
+	float Blur = Attribute->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Blur Intensity").GetValue();
+	if (Blur > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldScale) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldScale = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldScale = Blur;
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldDepthBlurAmount = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldDepthBlurAmount = Blur;
+	}
+
+	float Squeeze = Attribute->Get("Lens Settings").Get<TFICEditorAttribute<FFICFloatAttribute>>("Squeeze Factor").GetValue();
+	if (Squeeze > 0.0f || !InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldSqueezeFactor) {
+		InOutViewInfo.PostProcessSettings.bOverride_DepthOfFieldSqueezeFactor = true;
+		InOutViewInfo.PostProcessSettings.DepthOfFieldSqueezeFactor = Squeeze;
+	}
+
+	InOutViewInfo.PostProcessBlendWeight = 1.0f;
+
+	return true;
 }
 
 

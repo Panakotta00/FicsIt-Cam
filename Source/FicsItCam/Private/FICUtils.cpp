@@ -53,13 +53,15 @@ float UFICUtils::BezierInterpolate(FVector2D P0, FVector2D P1, FVector2D P2, FVe
 	return CurrentV;
 }
 
-FFICCameraSettingsSnapshot UFICUtils::CreateCameraSettingsSnapshotFromView(UObject* WorldContext) {
-	FFICCameraSettingsSnapshot Snapshot;
-	APlayerCameraManager* CameraManager = WorldContext->GetWorld()->GetFirstPlayerController()->PlayerCameraManager;
-	Snapshot.Location = CameraManager->GetCameraLocation();
-	Snapshot.Rotation = CameraManager->GetCameraRotation();
-	Snapshot.FOV = CameraManager->GetFOVAngle();
-	return Snapshot;
+
+FMinimalViewInfo UFICUtils::CreateViewInfoFromView(UObject* WorldContext) {
+	FMinimalViewInfo ViewInfo;
+	if (WorldContext && WorldContext->GetWorld() && WorldContext->GetWorld()->GetFirstPlayerController()) {
+		if (APlayerCameraManager* CameraManager = WorldContext->GetWorld()->GetFirstPlayerController()->PlayerCameraManager) {
+			ViewInfo = CameraManager->GetCameraCacheView();
+		}
+	}
+	return ViewInfo;
 }
 
 bool UFICUtils::IsValidFICObjectName(const FString& InName) {

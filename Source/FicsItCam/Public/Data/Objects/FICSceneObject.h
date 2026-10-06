@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Camera/CameraTypes.h"
 #include "Data/FICTypes.h"
 #include "Data/Attributes/FICAttributeGroup.h"
 #include "UObject/Interface.h"
@@ -37,4 +38,7 @@ public:
 	virtual void InitAnimation() {}
 	virtual void ShutdownAnimation() {}
 	virtual void TickAnimation(FICFrameFloat Frame) {}
+
+	virtual bool ModifyView(FMinimalViewInfo& InOutViewInfo, FICFrameFloat Frame) { return false; }
+	virtual bool ModifyViewEditor(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute, FMinimalViewInfo& InOutViewInfo) { return ModifyView(InOutViewInfo, 0.0f); }
 };

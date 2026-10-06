@@ -71,9 +71,14 @@ bool FFICCameraReference::IsValid(UObject* WorldContext) const {
 	AFICScene* ScenePtr = GetScene(WorldContext);
 	if (!ScenePtr) return false;
 
-	for (UObject* SceneObject : ScenePtr->GetSceneObjects()) {
-		UFICCamera* CameraPtr = Cast<UFICCamera>(SceneObject);
-		if (CameraPtr && (Camera.Len() < 1 || CameraPtr->GetSceneObjectName() == Camera)) return true;
+	if (Camera.Len() < 1) {
+		return true;
+	}
+
+	for (UObject* Object : ScenePtr->GetSceneObjects()) {
+		if (auto SceneObject = Cast<IFICSceneObject>(Object)) {
+			if (SceneObject->GetSceneObjectName() == Camera) return true;
+		}
 	}
 	return false;
 }
@@ -111,17 +116,30 @@ UFICCamera* FFICCameraReference::GetCamera(UObject* WorldContext, UFICRuntimePro
 	return nullptr;
 }
 
-FFICCameraSettingsSnapshot FFICCameraReference::GetSnapshot(UObject* WorldContext) const {
-	FICFrameFloat Time;
-	UFICCamera* CameraPtr = GetCamera(WorldContext, nullptr, &Time);
-	if (!CameraPtr) return FFICCameraSettingsSnapshot();
-	FFICCameraSettingsSnapshot Snapshot;
-	Snapshot.Camera = CameraPtr;
-	Snapshot.Location = CameraPtr->Position.Get(Time);
-	Snapshot.Rotation = CameraPtr->Rotation.Get(Time);
-	Snapshot.FOV = CameraPtr->FOV.GetValue(Time);
-	Snapshot.Aperture = CameraPtr->Aperture.GetValue(Time);
-	Snapshot.FocusDistance = CameraPtr->FocusDistance.GetValue(Time);
-	Snapshot.PostProcessSettings = CameraPtr->GetPostProcessingSettings(Time);
-	return Snapshot;
+FMinimalViewInfo FFICCameraReference::GetViewInfo(UObject* WorldContext) const {
+	UFICRuntimeProcessPlayScene* PlayScene;
+	FICFrameFloat Time = GetTime(WorldContext, &PlayScene);
+	AFICScene* UsedScene = PlayScene ? PlayScene->Scene : GetScene(WorldContext);
+	if (UsedScene) {
+		if (Camera.Len() < 1) {
+			return UsedScene->CalculateView(Time);
+		} else {
+			for (UObject* Object : UsedScene->GetSceneObjects()) {
+				if (auto SceneObject = Cast<IFICSceneObject>(Object)) {
+					IFICSceneObject* Obj = Cast<IFICSceneObject>(SceneObject);
+					if (Obj->GetSceneObjectName() == Camera) {
+						FMinimalViewInfo ViewInfo;
+						if (UsedScene->ResolutionHeight > 0) {
+							ViewInfo.AspectRatio = (float)UsedScene->ResolutionWidth / (float)UsedScene->ResolutionHeight;
+						}
+						ViewInfo.ProjectionMode = ECameraProjectionMode::Perspective;
+						Obj->ModifyView(ViewInfo, Time);
+						return ViewInfo;
+					}
+				}
+			}
+			return UsedScene->CalculateView(Time);
+		}
+	}
+	return FMinimalViewInfo();
 }

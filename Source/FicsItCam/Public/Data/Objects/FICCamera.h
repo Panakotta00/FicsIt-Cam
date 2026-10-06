@@ -42,6 +42,12 @@ public:
 	FFICFloatAttribute Aperture;
 	UPROPERTY(SaveGame)
 	FFICFloatAttribute FocusDistance;
+	UPROPERTY(SaveGame)
+	FFICFloatAttribute FocalRegion;
+	UPROPERTY(SaveGame)
+	FFICFloatAttribute BlurIntensity;
+	UPROPERTY(SaveGame)
+	FFICFloatAttribute SqueezeFactor;
 
 	FFICGroupAttribute LensSettings;
 
@@ -88,6 +94,8 @@ public:
 	virtual void EditorUpdate(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute) override;
 	virtual void Select(UFICEditorContext* Context) override;
 	virtual void Unselect(UFICEditorContext* Context) override;
+	virtual bool ModifyView(FMinimalViewInfo& InOutViewInfo, FICFrameFloat Frame) override;
+	virtual bool ModifyViewEditor(UFICEditorContext* Context, TSharedRef<FFICEditorAttributeBase> Attribute, FMinimalViewInfo& InOutViewInfo) override;
 	// End IFICSceneObject-Interface
 
 	// Begin IFICSceneObject3D

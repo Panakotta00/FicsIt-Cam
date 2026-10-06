@@ -52,12 +52,6 @@ public:
 	int64 ResolutionHeight = 1080;
 
 	UPROPERTY(SaveGame, BlueprintReadWrite)
-	FVector2D SensorDimension = FVector2D(23.76, 13.365);
-
-	UPROPERTY(SaveGame, BlueprintReadWrite)
-	bool bUseCinematic = true;
-
-	UPROPERTY(SaveGame, BlueprintReadWrite)
 	bool bBulletTime = false;
 
 	UPROPERTY(SaveGame, BlueprintReadWrite)
@@ -92,6 +86,10 @@ public:
 	}
 
 	void MoveSceneObject(UObject* Object, int Delta);
+
+	UFUNCTION(BlueprintCallable)
+	FMinimalViewInfo CalculateView(double Time);
+	bool CalculateView(FMinimalViewInfo& InOutViewInfo, FICFrameFloat Time);
 
 	UFICCamera* GetActiveCamera(FICFrameFloat Time);
 	

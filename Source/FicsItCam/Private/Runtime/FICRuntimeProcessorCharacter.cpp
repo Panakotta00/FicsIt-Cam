@@ -1,6 +1,5 @@
 #include "Runtime/FICRuntimeProcessorCharacter.h"
 
-#include "CineCameraComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "EnhancedInputSubsystems.h"
 #include "FGInputSettings.h"
@@ -103,7 +102,7 @@ void AFICRuntimeProcessorCharacter::SetTimeDilation(float InTimeDilation) {
 	CustomTimeDilation = 1.0f/InTimeDilation;
 }
 
-void AFICRuntimeProcessorCharacter::SetCamera(bool bEnabled, bool bCinematic) {
+void AFICRuntimeProcessorCharacter::SetCamera(bool bEnabled) {
 	if (Camera) {
 		Camera->SetActive(false);
 		Camera->DestroyComponent();
@@ -111,8 +110,7 @@ void AFICRuntimeProcessorCharacter::SetCamera(bool bEnabled, bool bCinematic) {
 	}
 
 	if (bEnabled) {
-		if (bCinematic) Camera = NewObject<UCineCameraComponent>(this);
-		else Camera = NewObject<UCameraComponent>(this);
+		Camera = NewObject<UCameraComponent>(this);
 		Camera->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		Camera->SetActive(true);
 	}

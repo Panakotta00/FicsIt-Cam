@@ -1,7 +1,6 @@
 #include "Runtime/Process/FICRuntimeProcessCameraFeed.h"
 
 #include "FGCharacterPlayer.h"
-#include "FGCineCameraComponent.h"
 #include "FICSubsystem.h"
 #include "Widgets/Layout/SBox.h"
 #include "Framework/Application/SlateApplication.h"
