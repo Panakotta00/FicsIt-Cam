@@ -53,12 +53,6 @@ void AFICSubsystem::BeginPlay() {
 		StartRuntimeProcess(Process);
 	}
 
-	// Convert deprecated AFICAnimation Actors to Scene Actors
-	for (TActorIterator<AFICAnimation> Animation(GetWorld()); Animation; ++Animation) {
-		Animation->CreateScene();
-		Animation->Destroy();
-	}
-
 	// Add Scenes to Scene List
 	for (TActorIterator<AFICScene> Scene(GetWorld()); Scene; ++Scene) {
 		Scenes.Add(*Scene);

@@ -12,7 +12,6 @@ class UFICRuntimeProcess;
 class AFICScene;
 class AFICTimelapseCamera;
 class UFICEditorContext;
-class AFICAnimation;
 class AFICRuntimeProcessorCharacter;
 class UFICCommand;
 class UEnhancedInputComponent;

@@ -6,7 +6,6 @@
 #include "FGPlayerController.h"
 #include "Command/CommandSender.h"
 #include "Command/FICCommand.h"
-#include "Data/FICAnimation.h"
 #include "Editor/FICEditorSubsystem.h"
 #include "Misc/DefaultValueHelper.h"
 #include "Runtime/FICTimelapseCamera.h"
