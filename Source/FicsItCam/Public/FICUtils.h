@@ -48,6 +48,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	static FString AdjustSceneObjectName(AFICScene* Scene, FString Name);
+
+	UFUNCTION(BlueprintCallable)
+	static FString GetSaveDirectory(const FString& SubDir = TEXT(""), bool bCreateDirectory = true);
 };
 
 

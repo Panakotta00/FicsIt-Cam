@@ -7,6 +7,9 @@
 #include "GameFramework/PlayerInput.h"
 #include "Input/FGEnhancedInputComponent.h"
 #include "Runtime/FICCameraReference.h"
+#include "HAL/PlatformFileManager.h"
+#include "Misc/App.h"
+#include "Misc/Paths.h"
 
 FRotator UFICUtils::NormalizeRotator(FRotator Rot) {
 	while (Rot.Pitch > 180.0) Rot.Pitch -= 360.0f;
@@ -138,4 +141,18 @@ FString UFICUtils::AdjustSceneObjectName(AFICScene* Scene, FString Name) {
 		}
 	}
 	return NewName;
+}
+
+FString UFICUtils::GetSaveDirectory(const FString& SubDir, bool bCreateDirectory) {
+	FString SaveDir = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved"), TEXT("FicsItCam"));
+	if (!SubDir.IsEmpty()) {
+		SaveDir = FPaths::Combine(SaveDir, SubDir);
+	}
+	if (bCreateDirectory) {
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		if (!PlatformFile.DirectoryExists(*SaveDir)) {
+			PlatformFile.CreateDirectoryTree(*SaveDir);
+		}
+	}
+	return SaveDir;
 }

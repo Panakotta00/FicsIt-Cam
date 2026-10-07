@@ -3,6 +3,7 @@
 #include "FGGameUserSettings.h"
 #include "FGPlayerController.h"
 #include "FICSubsystem.h"
+#include "FICUtils.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/Process/FICRuntimeProcessTimelapseCamera.h"
@@ -55,17 +56,7 @@ void AFICTimelapseCamera::CaptureTick() {
 	
 	CaptureComponent->CaptureSceneDeferred();
 
-	FString FSP;
-	// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
-	if (FSP.IsEmpty()) {
-		FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/"));
-	}
-
-	FSP = FPaths::Combine(FSP, TEXT("FicsItCam/"), Name);
-
-	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
-
+	FString FSP = UFICUtils::GetSaveDirectory(Name);
 	FSP = FPaths::Combine(FSP, FString::Printf(TEXT("%s-%06d.jpg"), *CaptureStart.ToString(), CaptureIncrement));
 	
 	//AFICSubsystem::GetFICSubsystem(this)->ExportRenderTarget(FSP, MakeShared<FFICRenderTarget_Raw>(RenderTarget->GameThread_GetRenderTargetResource()));

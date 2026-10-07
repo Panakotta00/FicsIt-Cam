@@ -12,13 +12,13 @@ Currently the best way to get to know all the features of FicsIt-Cam is [this in
 
 ## Quick Help
 Animation Rendering:
-Animations can be render into a mp4 (without audio). These mp4 files are located at `%localappdata%\FactoryGame\Saved\SaveGames\FicsItCam\<Scene Name>`.
+Animations can be render into a mp4 (without audio). These mp4 files are located at `%localappdata%\FactoryGame\Saved\FicsItCam\<Scene Name>`.
 The video should have the resolution set in the scene and as name the timestamp at start of the recording.
 
 Timelapse Cameras:
 Timelapse cameras can be used to take images of you factory in prediodic intervals and store these images in your filesystem.
 Your gameplay wont bit disrupted, tho depending on your hardware you might experience a small lag when the image gets taken.
-Images are named with the timestamp of start of the timelapse (per game save session) and a incrementing number and are located under `%localappdata%\FactoryGame\Saved\SaveGames\FicsItCam\<Timelapse Camera Name>`.
+Images are named with the timestamp of start of the timelapse (per game save session) and a incrementing number and are located under `%localappdata%\FactoryGame\Saved\FicsItCam\<Timelapse Camera Name>`.
 Most Video Editing software does recognize the image sequences automatically on import, but sometimes you may need to use a tool like FFmpeg to convert them to a video with your specefied settings like framerate.
 
 ## Written Documentation

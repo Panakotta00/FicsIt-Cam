@@ -7,6 +7,7 @@
 #include "Rendering/FICDummyViewport.h"
 #include "FicsItCamModule.h"
 #include "FICSubsystem.h"
+#include "FICUtils.h"
 #include "IImageWrapperModule.h"
 #include "HAL/PlatformFileManager.h"
 #include "Widgets/Layout/SBorder.h"
@@ -106,14 +107,7 @@ void UFICRuntimeProcessRenderScene::Start(AFICRuntimeProcessorCharacter* InChara
 	DummyViewportInterface = MakeShared<FFICDummyViewport>(DummyViewport->GetRenderTarget(), FIntPoint(Scene->ResolutionWidth, Scene->ResolutionHeight));
 
 	// Create Save Path
-	FString FSP;
-	// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
-	if (FSP.IsEmpty()) {
-		FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/") TEXT("FicsItCam/"), Scene->SceneName);
-	}
-	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
-	
+	FString FSP = UFICUtils::GetSaveDirectory(Scene->SceneName);
 	Path = FPaths::Combine(FSP, FDateTime::Now().ToString() + TEXT(".mp4"));
 
 #if PLATFORM_WINDOWS

@@ -2,6 +2,7 @@
 
 #include "FGPlayerController.h"
 #include "FICSubsystem.h"
+#include "FICUtils.h"
 #include "HAL/PlatformFileManager.h"
 #include "Slate/SceneViewport.h"
 #include "TextureResource.h"
@@ -21,14 +22,7 @@ void UFICRuntimeProcessTimelapseCamera::Start(AFICRuntimeProcessorCharacter* InC
 	CameraArgument.InitalizeCaptureCamera(CaptureCamera);
 	Time = 0.0f;
 	
-	FString FSP;
-	// TODO: Get UFGSaveSystem::GetSaveDirectoryPath() working
-	if (FSP.IsEmpty()) {
-		FSP = FPaths::Combine(FPlatformProcess::UserSettingsDir(), FApp::GetProjectName(), TEXT("Saved/") TEXT("SaveGames/"));
-	}
-	FSP = FPaths::Combine(FSP, TEXT("FicsItCam/"), CameraArgument.GetSimpleName());
-	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-	if (!PlatformFile.DirectoryExists(*FSP)) PlatformFile.CreateDirectoryTree(*FSP);
+	FString FSP = UFICUtils::GetSaveDirectory(CameraArgument.GetSimpleName());
 
 	Exporter = MakeShared<FSequenceImageExporter>(FSP, FIntPoint(CaptureCamera->RenderTarget->SizeX, CaptureCamera->RenderTarget->SizeY));
 	Exporter->Init();
